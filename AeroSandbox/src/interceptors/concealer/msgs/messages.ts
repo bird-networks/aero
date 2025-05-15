@@ -1,6 +1,7 @@
 // TODO: Rename this to window.js and move it to concealer
 
-import { APIInterceptor, ExposedContextsEnum } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { ExposedContextsEnum } from "$types/enums/apiInterceptors";
 
 // Utility
 import { afterPrefix } from "$intUtil/getProxyURL";

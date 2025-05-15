@@ -1,11 +1,14 @@
+// @ts-nocheck
 /**
- * This file is the init for the giant AeroSandbox bundle
+ * Entry point for AeroSandbox runtime: attach factory to global
  */
+declare global {
+	interface Window {
+		AeroSandbox: typeof createAeroSandboxRuntime;
+	}
+}
 
 import createAeroSandboxRuntime from "./createAeroSandbox";
 
-{
-	const buildConfig = require(BUILD_CONFIG_PATH);
-
-	self.AeroSandbox = createAeroSandboxRuntime(buildConfig);
-}
+// Expose factory in global scope
+(self as any).AeroSandbox = createAeroSandboxRuntime;

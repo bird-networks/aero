@@ -1,6 +1,7 @@
 // TODO: Import @types for WebSQL
 
-import { type APIInterceptor, SupportEnum } from "$types/apiInterceptors.d.ts";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { SupportEnum } from "$types/enums/apiInterceptors";
 
 import { escapeWithOrigin } from "$src/shared/escaping/escape";
 import { prefixKey } from "$util/storage";

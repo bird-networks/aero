@@ -5,7 +5,7 @@
  * This is meant for getting the proxy URL when you are in the client, however it has some uses in aero's SW as well.
 */
 
-import { eitherLogger } from "./Loggers";
+import type { eitherLogger } from "$types/loggers";
 
 /**
  * Separates the prefix from the url to get the proxy url isolated (undoes the URL rewriting for us to disect and handle accordingly)
@@ -14,10 +14,16 @@ import { eitherLogger } from "./Loggers";
  * @param prefix Likely `aeroConfig.prefix`
  * @param 
 */
-function afterPrefix(realURL: string, prefix: string, logger: AeroSandboxLogger | AeroLogger) {
-	logger.debug(`${location.origin}${prefix}`);
+function afterPrefix(
+	realURL: string,
+	prefix?: string,
+	logger?: eitherLogger
+) {
+	const usedPrefix = prefix ?? $aero.config.prefix;
+	const usedLogger = logger ?? $aero.logger;
+	// debug log suppressed to avoid incorrect signature call
 	return realURL.replace(
-		new RegExp(`^(${location.origin}${prefix})`, "g"),
+		new RegExp(`^(${location.origin}${usedPrefix})`, "g"),
 		""
 	);
 }

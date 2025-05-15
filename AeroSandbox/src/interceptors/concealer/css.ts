@@ -6,10 +6,8 @@
  */
 
 import { afterPrefix } from "$util/getProxyURL";
-import {
-	type APIInterceptor,
-	ExposedContextsEnum
-} from "$types/apiInterceptors.d.ts";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { ExposedContextsEnum } from "$types/enums/apiInterceptors";
 
 // Proxy the getters for shadow root stylesheets
 

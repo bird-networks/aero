@@ -3,14 +3,16 @@
  * This module contains generic code used by both aero and AeroSandbox's build system
  */
 
-import type { Result, AsyncResult } from "neverthrow";
+import type { Result, ResultAsync } from "neverthrow";
 import { ok as nOk, err as nErr, okAsync, errAsync as nErrAsync } from "neverthrow";
+
+import Logger from "./Logger";
 
 import InitDist from "../scripts/InitDist";
 import genWebIDL from "../scripts/initApiTypes";
 import initApis from "../scripts/initApis";
 
-import type { FeatureFlags } from "./featureFlags.ts";
+import type { FeatureFlags } from "./featureFlags";
 
 import importSync from "import-sync";
 
@@ -21,8 +23,10 @@ interface Dirs {
 interface MiscRequiredArgs {
 	verboseMode: boolean;
 	// TODO: Import this type instead
-	properDirType: "debug" | "prop";
+	properDirType: "debug" | "prod";
 }
+
+// Removed module-level logger that relied on global DEBUG
 
 /**
  * This method runs all of the scripts in the scripts directory for AeroSandbox
@@ -30,9 +34,13 @@ interface MiscRequiredArgs {
 export async function initAll(
 	requiredDirs: Dirs,
 	miscRequiredArgs: MiscRequiredArgs
-): AsyncResult<void, Error> {
+): Promise<Result<void, Error>> {
 	const { dist: distDir, proper: properDir } = requiredDirs;
 	const { verboseMode, properDirType } = miscRequiredArgs;
+
+	// This specific logger can use verboseMode if a different level of detail is needed for initAll steps
+	// Or it could also use the global DEBUG. For now, let's use verboseMode as passed.
+	const initAllStepLogger = new Logger(verboseMode);
 
 	const initDist = new InitDist(
 		{
@@ -43,17 +51,29 @@ export async function initAll(
 		verboseMode
 	);
 
-	const initDistRes = await initDist.init()
-	if (initDistRes.isErr())
-		return nErrAsync(new Error(`Failed to initialize the dist folder: ${initDistRes.error}`));
-	const genWebIDLRes = genWebIDL(miscRequiredArgs.verboseMode);
-	if (genWebIDLRes.isErr())
-		return nErrAsync(new Error(`Failed to generate WebIDL: ${genWebIDLRes.error}`));
-	const initApisRes = initApis();
-	if (initApisRes.isErr())
-		return nErrAsync(new Error(`Failed to initialize the API Bitwise Enum: ${initApisRes.error}`));
+	initAllStepLogger.log("Initializing the dist folder...");
 
-	return okAsync(undefined);
+	const initDistRes = await initDist.init();
+	if (initDistRes.isErr()) {
+		const actualResult = await initDistRes;
+		if (actualResult.isErr()) return nErr(actualResult.error);
+	}
+
+	// genWebIDL and initApis might use their own loggers internally which would pick up global DEBUG
+	// or they accept logStatus/verboseMode parameters.
+	const genWebIDLRes = genWebIDL(miscRequiredArgs.verboseMode); // Pass verboseMode as logStatus
+	if (genWebIDLRes.isErr()) {
+		return nErr(genWebIDLRes.error);
+	}
+
+	// initApis will use global DEBUG for its iterator's logger.
+	// Pass verboseMode for its logStatus parameter.
+	const initApisRes = initApis(undefined, undefined, miscRequiredArgs.verboseMode);
+	if (initApisRes.isErr()) {
+		return nErr(initApisRes.error);
+	}
+
+	return nOk(undefined);
 }
 
 export function importFeatureFlagOverrides(): Result<
@@ -66,7 +86,7 @@ export function importFeatureFlagOverrides(): Result<
 		).default;
 		return nOk(featureFlagOverrides);
 	} catch (err) {
-		return nErr(err);
+		return nErr(err as Error);
 	}
 }
 
@@ -94,7 +114,8 @@ export class ErrUnwrapper {
 	unwrap(
 		res: Result<any | void, Error>,
 		msgDesc: string,
-		debugMode = true,
+		// Default debugMode for ErrUnwrapper can be the global DEBUG
+		debugMode = typeof DEBUG !== 'undefined' ? DEBUG : true,
 		msgPreview = "⚠️ "
 	): void {
 		if (res.isErr()) {

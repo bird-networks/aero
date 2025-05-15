@@ -2,7 +2,8 @@
  * @module
  */
 
-import { type APIInterceptor, SupportEnum } from "$types/apiInterceptors.d.ts";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { SupportEnum } from "$types/enums/apiInterceptors";
 
 import { createStorageNomenclatureHandlers, unprefixKey } from "./storage";
 import { escapeWithOrigin } from "$shared/escaping/escape";

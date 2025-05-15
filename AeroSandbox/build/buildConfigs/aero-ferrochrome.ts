@@ -1,6 +1,6 @@
-import type { AeroSandboxFeaturesConfig } from "../../../types/aeroSandbox";
-import { defaultSWProxyFeatures } from "../../../types/featureMembers";
-import { type BuildConfig, BrowserEmulationFeatures, OsPassthroughFeatures } from "../../../types/buildConfig";
+import type { AeroSandboxFeaturesConfig } from "../../types/aeroSandbox";
+import { defaultSWProxyFeatures } from "../../types/featureMembers";
+import { type BuildConfig, BrowserEmulationFeatures, OsPassthroughFeatures } from "../../types/buildConfig";
 
 export default {
 	proxyNamespaceObj: "$aero",

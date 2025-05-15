@@ -1,4 +1,5 @@
-import { type APIInterceptor, ExposedContextsEnum } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { ExposedContextsEnum } from "$types/enums/apiInterceptors";
 
 const osPassthroughNewDirBc = new BroadcastChannel("$aero-os-passthrough-new-dir");
 const osPassthroughNewFileBc = new BroadcastChannel("$aero-os-passthrough-new-file");

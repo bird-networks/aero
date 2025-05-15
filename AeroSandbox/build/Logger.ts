@@ -8,7 +8,7 @@
  * logger.log("Hello, world!");
  */
 
-export class Logger {
+export default class Logger {
 	/**
 	 * @param verboseMode Should the log method do anything?
 	 */

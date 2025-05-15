@@ -1,4 +1,4 @@
-import type { APIInterceptor } from "$types/apiInterceptors.d.ts";
+import type { APIInterceptor } from "$types/apiInterceptors";
 import { proxyLocation } from "$shared/proxyLocation";
 
 /**

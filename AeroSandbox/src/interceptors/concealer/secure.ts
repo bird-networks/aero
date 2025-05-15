@@ -1,7 +1,5 @@
-import {
-	type APIInterceptor,
-} from "$types/apiInterceptors";
-import { ExposedContextsEnum } from "$types/apiInterceptors"
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { ExposedContextsEnum } from "$types/enums/apiInterceptors";
 
 import { proxyLocation } from "$shared/proxyLocation";
 

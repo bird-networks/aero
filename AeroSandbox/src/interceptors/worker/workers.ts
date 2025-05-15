@@ -1,9 +1,9 @@
-import { type APIInterceptor, ExposedContextsEnum } from "$types/apiInterceptors";
-import { URL_IS } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { ExposedContextsEnum, URL_IS_ESCAPE } from "$types/enums/apiInterceptors";
 
 import { proxyLocation, upToProxyOrigin } from "$shared/proxyLocation";
-import { afterPrefix } from "$util/getProxyURL";
-import rewriteSrc from "$shared/src";
+import { afterPrefix } from "$interceptorUtil/getProxyURL";
+import rewriteSrc from "$interceptorUtil/src";
 
 /*
 export default {
@@ -18,8 +18,7 @@ export default [
 			apply(target, that, args) {
 				const [path, opts] = args;
 				// Rewrite this here so that the SW can handle it and nest the scripts accordingly
-				args[0] = `${rewriteSrc(path, proxyLocation().href)}?mod=${opts.type === "module"
-					}`;
+				args[0] = `${rewriteSrc(path, proxyLocation().href, $aero.logger)}?mod=${opts.type === "module"}`;
 				$aero.logger.log(
 					`Registering a nested service worker\n${path} ➜ ${args[0]}`
 				);
@@ -69,7 +68,7 @@ export default [
 						apiMethod: "add",
 						type: {
 							what: "URL_STRING",
-							is: URL_IS.ANY_URL
+							is: URL_IS_ESCAPE.FULL_URL
 						},
 					}]
 				}
@@ -102,7 +101,7 @@ const rewriteReg = reg => {
 					return new Proxy(target.add, {
 						apply(target, that, args) {
 							const [url] = args;
-							args[0] = rewriteSrc(url);
+							args[0] = rewriteSrc(url, proxyLocation().href, $aero.logger);
 							return Reflect.apply(target, that, args);
 						},
 					});

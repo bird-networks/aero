@@ -1,8 +1,8 @@
 import { getProxyConfig } from "$shared/getConfig";
 
-import { proxyLocation } from "./proxyLocation";
+import { proxyLocation } from "$shared/proxyLocation";
 
-import { AeroSandboxLogger, AeroLogger } from "./Loggers";
+import { AeroSandboxLogger, AeroLogger } from "$shared/Loggers";
 
 const protocolRegExp = /^https?:\/\//;
 
@@ -16,12 +16,12 @@ const protocolRegExp = /^https?:\/\//;
  * @returns The rewritten url
  */
 function rewriteSrc(url: string, prefix: string, logger: AeroSandboxLogger | AeroLogger, proxyHref = proxyLocation(prefix, logger).href): string {
-    // Protocol
-    const rewrittenUrl = protocolRegExp.test(url)
-        ? prefix + url
-        : new URL(url, proxyHref).href;
+	// Protocol
+	const rewrittenUrl = protocolRegExp.test(url)
+		? prefix + url
+		: new URL(url, proxyHref).href;
 
-    return rewrittenUrl;
+	return rewrittenUrl;
 }
 
 export default rewriteSrc;

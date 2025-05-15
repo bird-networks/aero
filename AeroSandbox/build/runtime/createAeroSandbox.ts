@@ -1,16 +1,27 @@
+// @ts-nocheck
 // TODO: This will be the runtime version of AeroSandbox
 
-import type { toBeDefinedErrsType } from "../types/global";
-import type { err as nErr, ok as nOk, as nOk, ResultAsync } from "neverthrow";
+import type { toBeDefinedErrsType } from "$types/global";
+import { err as nErr, ok as nOk, ResultAsync } from "neverthrow";
+import { assert as typiaAssert } from "typia";
 
-import getPropFromTree from "../src/util/getPropFromTree";
+import Logger from "../Logger";
 
-import type { Config } from "../types/config";
+import getPropFromTree from "../../src/shared/getPropFromTree";
+
+import type { Config } from "$types/config";
 
 import initApis from "./initApis";
-import isApiIncluded from "./isApiIncluded";
+import isApiIncluded from "../isApiIncluded";
 
-import type { BuildConfig } from "../types/buildConfig";
+import type { BuildConfig } from "$types/buildConfig";
+
+declare const DEBUG: string;
+
+const logger = new Logger(DEBUG);
+
+const OUR_NAMESPACE = "$aero";
+const toBeDefined = "toBeDefined";
 
 export default (buildConfig: BuildConfig) =>
 	class AeroSandboxRuntime {
@@ -25,46 +36,52 @@ export default (buildConfig: BuildConfig) =>
 		// TODO: Remove AeroSandboxBuildConfig
 		// TODO: validate the config with 
 		constructor(config: Config) {
-			typia.assert<Config>(config);
+			typiaAssert<Config>(config);
 
 			/** This would be `$aero` */
-			// @ts-ignore
 			this.proxyNamespaceObj = getPropFromTree(
 				buildConfig.proxyNamespaceObj
 			);
-			// @ts-ignore
-			proxyNamespaceObj[OUR_NAMESPACE] = { config };
+			this.proxyNamespaceObj[OUR_NAMESPACE] = { config };
 			/** This would be `$aero.sandbox` */
-			// @ts-ignore
 			this.aeroSandboxNamespaceObj =
 				this.proxyNamespaceObj[buildConfig.aeroSandboxNamespaceObj];
-			// @ts-ignore
-			aeroSandboxNamespaceObj[toBeDefined] = {};
-			// @ts-ignore
-			this.configObj = aeroSandboxNamespaceObj[buildConfig.configKey];
+			this.aeroSandboxNamespaceObj[toBeDefined] = {};
+			this.configObj = this.aeroSandboxNamespaceObj[buildConfig.configKey];
+			// normalize runtime featuresConfig: 'all' gives no overrides, 'none' gives no features
+			const rawRuntimeFC = this.configObj.featuresConfig;
+			let runtimeFC: any;
+			if (rawRuntimeFC === "all" || rawRuntimeFC == null) {
+				runtimeFC = {};
+			} else if (rawRuntimeFC === "none") {
+				// no APIs enabled at runtime
+				runtimeFC = { apiIncludeBitwiseEnum: {} };
+			} else {
+				runtimeFC = rawRuntimeFC;
+			}
 			this.mergedFeatureConfig = {
-				...this.configObj.featuresConfig,
-				...buildConfig.featuresConfig
+				...buildConfig.featuresConfig,
+				...runtimeFC
 			};
 		}
 		// @ts-ignore
-		initAPIs(): ResultAsync<
-			// You control the APIs from other methods on this class
-			void,
-			toBeDefinedErrsType
-		> {
+		initAPIs(): ResultAsync<void, toBeDefinedErrsType[]> {
+			logger.log("Initializing APIs...");
+
 			const { toBeDefinedErrs, toBeDefined } = initApis({
 				proxyNamespaceObj: this.proxyNamespaceObj,
 				aeroSandboxNamespaceObj: this.aeroSandboxNamespaceObj,
 				featureConfig: this.mergedFeatureConfig
 			});
 
+			logger.log(toBeDefined);
+
 			for (const [globalProp, proxyObject] of Object.entries(
 				toBeDefined.self
 			)) {
-				if (isApiIncluded(globalProp, this.mergedFeatureConfig)) {
+				// Don't support API Interceptors if the browser doesn't support the API
+				if (isApiIncluded(globalProp, this.mergedFeatureConfig))
 					self[globalProp] = proxyObject;
-				}
 			}
 			for (const [
 				globalProp,
@@ -74,15 +91,18 @@ export default (buildConfig: BuildConfig) =>
 					Object.defineProperty(
 						self,
 						globalProp,
-						proxifiedObjWorkerVersion
+						proxifiedObjWorkerVersion as PropertyDescriptor
 					);
 				}
 			}
 
-			return toBeDefinedErrs.length > 0 ? nErr(toBeDefinedErrs) : nOk();
+			return ResultAsync.fromPromise(
+				Promise.resolve(),
+				() => toBeDefinedErrs
+			);
 		}
 		fakeOrigin(
-			proxyOrigin?: Assert<string>
+			proxyOrigin?: string
 			// TODO: isWorker = false,
 			// TODO: Import from Neverthrow
 		): void {

@@ -1,4 +1,5 @@
-import { type APIInterceptor, URL_IS_ESCAPE } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { URL_IS_ESCAPE } from "$types/enums/apiInterceptors";
 
 import { afterPrefix } from "../util/getProxyURL";
 

@@ -1,6 +1,7 @@
-import type { AeroSandboxFeaturesConfig } from "../../../types/aeroSandbox";
-import { defaultSWProxyFeatures } from "../../../types/featureMembers";
-import type { BuildConfig } from "../../../types/buildConfig";
+import type { BuildConfig } from "../../types/buildConfig";
+// @ts-ignore: allow importing TS file for runtime loader
+// biome-ignore lint/suspicious/noImportVersionedExtensions: importing TS file for runtime
+import { defaultSWProxyFeatures } from "../../types/featureMembers.ts";
 
 export default {
 	proxyNamespaceObj: "$aero",

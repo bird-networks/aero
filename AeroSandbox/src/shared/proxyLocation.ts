@@ -5,7 +5,7 @@
 
 import getConfig from "$shared/getConfig";
 
-import { afterPrefix } from "../shared/getProxyURL";
+import { afterPrefix } from "$interceptorUtil/getProxyURL";
 
 import { AeroLogger, AeroSandboxLogger } from "./Loggers";
 

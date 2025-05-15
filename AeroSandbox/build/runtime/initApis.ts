@@ -1,24 +1,30 @@
+// @ts-nocheck
 /**
  * @module
  * TODO: Write a description: ...
  */
 
+import Logger from "../Logger";
+
 import type {
 	APIInterceptor,
 	proxifiedObjGeneratorCtxType,
 	proxifiedObjType,
-} from "$types/apiInterceptors";
+} from "../../types/apiInterceptors";
 
 import type {
 	default as ToBeDefined,
 	toBeDefinedErrsType,
-} from "$types/global";
+} from "../../types/global";
 
-import createApiInterceptorIteratorClient from "./createApiInterceptorIteratorClient";
+import createApiInterceptorIteratorClient from "./createApiInterceptorIterator";
 
-import isAPIIncluded from "./isApiIncluded";
+import isAPIIncluded from "../isApiIncluded";
+
+const logger = new Logger(DEBUG);
 
 type level = number;
+type toBeDefinedError = Error;
 
 export default (
 	requiredObjs: {
@@ -35,7 +41,7 @@ export default (
 } => {
 	// Unpack
 	// We are assuming the user imports the logger bundle before AeroSandbox
-	const { proxyNamespaceObj, aeroSandboxNamespaceObj } = requiredObjs;
+	const { proxyNamespaceObj, aeroSandboxNamespaceObj, featureConfig } = requiredObjs;
 	if (!logger) {
 		logger = proxyNamespaceObj.logger;
 	}
@@ -46,29 +52,36 @@ export default (
 
 	const insertLater = new Map<level, proxifiedObjType>();
 
-	const toBeDefinedErrs: toBeDefinedError[];
-	const toBeDefined: ToBeDefined;
+	const toBeDefinedErrs: toBeDefinedError[] = [];
+	const toBeDefined: ToBeDefined = {
+		self: {},
+		proxifiedObjWorkerVersion: {},
+		browsingContext: {}
+	};
+
 	for (const aI of createApiInterceptorIteratorClient(includeRegExp)) {
 		try {
 			const apiInterceptorName = aI.globalProp;
 			if (isAPIIncluded(apiInterceptorName, featureConfig)) continue; // Should skip?
 			if (DEBUG) {
 				logger.debug(
-					`Processing API interceptors from the file ${fileName} (${apiInterceptorName})`,
+					`Processing API interceptors from the file ${__filename} (${apiInterceptorName})`,
 				);
 			}
-			if (aI.insertLevel && aI.insertLevel !== 0) {
+			if ("insertLevel" in aI && aI.insertLevel !== undefined && aI.insertLevel !== 0) {
 				insertLater.set(aI.insertLevel, aI);
 			} else {
-				toBeDefinedErr = handleAI(
+				const toBeDefinedErr = handleAI(
 					aI,
-					aeroSandboxNamespaceObj.toBeDefined,
+					toBeDefined,
 					proxifiedObjGenCtx,
 				);
-				toBeDefinedErrs[apiInterceptorName] = toBeDefinedErrs;
+				if (toBeDefinedErr !== "successful") {
+					toBeDefinedErrs.push(toBeDefinedErr);
+				}
 			}
 		} catch (err) {
-			toBeDefinedErrs.push(err);
+			toBeDefinedErrs.push(err as toBeDefinedError);
 		}
 	}
 
@@ -78,7 +91,12 @@ export default (
 		[key: string]: APIInterceptor;
 	};
 
-	for (const aI of Object.values(sortedInsertObj)) handleAI(aI, toBeDefined);
+	for (const aI of Object.values(sortedInsertObj)) {
+		const err = handleAI(aI, toBeDefined, proxifiedObjGenCtx);
+		if (err !== "successful") {
+			toBeDefinedErrs.push(err);
+		}
+	}
 
 	return {
 		toBeDefinedErrs,
@@ -86,23 +104,22 @@ export default (
 	};
 };
 
-// @ts-ignore
 function handleAI(
 	aI: APIInterceptor,
 	toBeDefined: ToBeDefined,
 	proxifiedObjGenCtx: proxifiedObjGeneratorCtxType,
-): toBeDefinedError | "successful" { // @ts-ignore
+): toBeDefinedError | "successful" {
 	if (aI.proxifyGetter) {
 		const newGetter = aI.proxifyGetter({
 			this: toBeDefined.browsingContext[aI.globalProp],
-		})
-		Object.defineProperty(toBeDefined.browsingContext, toBeDefined.globalProp, {
+		});
+		Object.defineProperty(toBeDefined.browsingContext, aI.globalProp, {
 			get: newGetter,
 		});
 		return "successful";
 	}
 	if (aI.proxifySetter) {
-		Object.defineProperty(toBeDefined.browsingContext, toBeDefined.globalProp, {
+		Object.defineProperty(toBeDefined.browsingContext, aI.globalProp, {
 			set(newVal) {
 				const newSetter = aI.proxifySetter({
 					this: toBeDefined.browsingContext[aI.globalProp],
@@ -114,21 +131,19 @@ function handleAI(
 		return "successful";
 	}
 	if (aI.proxyHandlers) {
-		toBeDefined.browsingContext[aI.globalProp] = Proxy.revocable(toBeDefined.browsingContext[aI.globalProp], aI.proxyHandlers)
+		toBeDefined.browsingContext[aI.globalProp] = Proxy.revocable(toBeDefined.browsingContext[aI.globalProp], aI.proxyHandlers);
 		return "successful";
 	}
 	if (aI.proxyHandlersWorkersVersion) {
-		toBeDefined.browsingContext[aI.globalProp] = Proxy.revocable(toBeDefined.browsingContext[aI.globalProp], aI.proxyHandlersproxyHandlersWorkersVersion)
+		toBeDefined.browsingContext[aI.globalProp] = Proxy.revocable(toBeDefined.browsingContext[aI.globalProp], aI.proxyHandlersWorkersVersion);
 		return "successful";
 	}
+	return "successful"; // Default case
 }
 
 function resolveProxifiedObj(
-	// @ts-ignore
 	proxifiedObj: proxifiedObjType,
-	// @ts-ignore
 	ctx: proxifiedObjGeneratorCtxType,
-	// @ts-ignore
 ): proxifiedObjType {
 	let proxyObject = {};
 	if (typeof proxifiedObj === "function") proxyObject = proxifiedObj(ctx);

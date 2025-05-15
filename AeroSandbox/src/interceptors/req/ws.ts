@@ -1,9 +1,7 @@
 import { proxyLocation } from "$shared/proxyLocation";
 
-import {
-	AltProtocolEnum,
-	type APIInterceptor
-} from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { AltProtocolEnum } from "$types/enums/apiInterceptors";
 
 import { emuWSState } from "$types/interceptors/emuWS";
 
@@ -32,10 +30,10 @@ export default [
 					url: args[0],
 					binaryType: "blob",
 					bareWS,
-					onclose: null,
-					onerror: null,
-					onmessage: null,
-					onopen: null,
+					onclose: undefined,
+					onerror: undefined,
+					onmessage: undefined,
+					onopen: undefined,
 				};
 
 				function emuEventSend(emuEvent: Event) {
@@ -126,7 +124,7 @@ export default [
 		},
 		proxifySetter: ctx => {
 			const ws = socketMap.get(ctx.this);
-			ws.onclose = ctx.newVal;
+			ws.onclose = ctx.newVal as any;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
 		globalProp: "WebSocket.prototype.onclose"
@@ -138,7 +136,7 @@ export default [
 		},
 		proxifySetter: ctx => {
 			const ws = socketMap.get(ctx.this);
-			ws.onerror = ctx.newVal;
+			ws.onerror = ctx.newVal as any;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
 		globalProp: "WebSocket.prototype.onerror"
@@ -150,7 +148,7 @@ export default [
 		},
 		proxifySetter: ctx => {
 			const ws = socketMap.get(ctx.this);
-			ws.onmessage = ctx.newVal;
+			ws.onmessage = ctx.newVal as any;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
 		globalProp: "WebSocket.prototype.onmessage"
@@ -162,7 +160,7 @@ export default [
 		},
 		proxifySetter: ctx => {
 			const ws = socketMap.get(ctx.this);
-			ws.onclose = ctx.newVal;
+			ws.onclose = ctx.newVal as any;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
 		globalProp: "WebSocket.prototype.onopen"
@@ -186,7 +184,7 @@ export default [
 	{
 		proxifyGetter: ctx => {
 			const ws = socketMap.get(ctx.this);
-			return ws.barews.readyState;
+			return ws.bareWS.readyState;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
 		globalProp: "WebSocket.prototype.readyState"
@@ -195,7 +193,7 @@ export default [
 		proxyHandler: {
 			apply(_target, that, args) {
 				const ws = socketMap.get(that);
-				return ws.barews.send(args[0]);
+				return ws.bareWS.send(args[0]);
 			},
 		},
 		forAltProtocol: AltProtocolEnum.ws,
@@ -207,7 +205,7 @@ export default [
 				const ws = socketMap.get(that);
 				if (args[0] === undefined) args[0] = 1000;
 				if (args[1] === undefined) args[1] = "";
-				return ws.barews.close(args[0], args[1]);
+				return ws.bareWS.close(args[0], args[1]);
 			},
 		},
 		forAltProtocol: AltProtocolEnum.ws,

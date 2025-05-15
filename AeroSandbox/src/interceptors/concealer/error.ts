@@ -1,6 +1,7 @@
-import { type APIInterceptor, SupportEnum } from "$types/apiInterceptors.d.ts";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { SupportEnum, ExposedContextsEnum } from "$types/enums/apiInterceptors";
 
-import { afterPrefix } from "$util/getProxyURL";
+import { afterPrefix } from "$interceptorUtil/getProxyURL";
 
 /*
 Error emulation
@@ -10,7 +11,7 @@ These interceptors will probably change a lot over time
 export default {
 	proxyHandler: {
 		construct(target, args) {
-			const res = Reflect.construct(target, args);
+			const res: any = Reflect.construct(target, args);
 
 			// Firefox exclusives
 			// Error location
@@ -62,6 +63,8 @@ export default {
 		}
 	},
 	globalProp: "Error",
+	exposedContexts: ExposedContextsEnum.window,
+	for: "ORIGIN_ISOLATION",
 	conceals: [{
 		what: "Error.stack",
 		revealerType: {
@@ -75,5 +78,5 @@ export default {
 			reveals: "escapedUrl"
 		}
 	}],
-	supports: SupportEnum.nonStandard
+	supports: SupportEnum.nonstandard
 } as APIInterceptor;

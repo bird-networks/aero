@@ -19,3 +19,30 @@ export default interface ToBeDefined {
  * Value: the error when trying to load the API interceptor
  */
 export type toBeDefinedErrsType = { [key: keyof APIBitwiseEnum]: Error };
+
+declare global {
+	// Options for escape traps
+	interface EscapeWithKeywordOptions {
+		keyword: string
+		maxDepth?: number
+		maxDepthChars?: number
+	}
+	// Global escape method and keyword constants
+	const ESCAPE_METHOD: "RegExp" | "JS"
+	const ESCAPE_KEYWORD: "RegExp" | "JS"
+	// Global keyword for escaping class members
+	const AERO_CLASS_MEMBER_ESCAPE_KEYWORD: string
+	// Global build-time log after colon string
+	const ERR_LOG_AFTER_COLON: string
+	// Global proxy namespace and config key
+	const PROXY_NAMESPACE: string
+	const OUR_NAMESPACE: string
+	const CONFIG_KEY: string
+
+	// Build-time debug flag
+	const DEBUG: boolean;
+
+	// The conflicting $aero declaration that was here has been removed,
+	// as a more complete global declaration for $aero exists elsewhere (likely referencing AeroGlobalType from types/$aero.d.ts)
+}
+export { }

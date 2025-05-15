@@ -1,14 +1,17 @@
 import type { overwriteRecordsType } from "$types/generic";
+import type { InterceptionFeaturesEnum, URL_IS_ESCAPE, SupportEnum, ExposedContextsEnum, AltProtocolEnum } from "./apiInterceptors";
+export type { InterceptionFeaturesEnum, URL_IS_ESCAPE, SupportEnum, ExposedContextsEnum, AltProtocolEnum } from "./apiInterceptors";
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export type RevokableProxyRet = { proxy: any; revoke: () => void };
+/** The execution context passed into interceptors */
 type CtxTypeShared = {
 	cookieStoreId: string;
-	// TODO: Remove this
 	proxyNamespace: string;
-	// TODO: Remove this
 	sandboxNamespace: string;
 	specialInterceptionFeatures: InterceptionFeaturesEnum;
+	/** Runtime feature configuration */
+	featuresConfig: any;
 	this: any;
 }
 type GeneratorCtxTypeProxyHandler = CtxTypeShared;
@@ -30,14 +33,6 @@ export type objectPropertyModifier = (
 	ctx: CreateProxifiedObjCtx
 ) => void;
 
-
-export enum URL_IS_ESCAPE {
-	ORIGIN,
-	HOSTNAME,
-	DOMAIN,
-	PROTOCOL,
-	FULL_URL
-}
 type TypeShared<MORE_ESCAPE_TYPES> = Array<{
 	what: "URL_STRING"
 	is: URL_IS_ESCAPE
@@ -84,6 +79,7 @@ type ConcealsProxyHandler = GenericProxyHandler<ConcealEscapeTypes>;
 
 /** This is a generic type interface used for intersection in other interfaces below */
 type APIInterceptorGeneric = {
+	[key: string]: any;
 	/** This object path that excludes global objects and overwrites the property. *AeroSandbox* will also check if it exists in the global context. This is necessary if `proxifiedObjWorkerVersion` is set.
 	 * This is done so that if the api is only exposed to the window it will overwrite it on the window object specifically or else it would use self since that is also covered by the global context of windows and workers. THe reason why this is done is because I want an error to be thrown if a window API is mistakingly used in a worker's global scope.
 	 * TODO: Throw an error in AeroSandboxBuilder error if globalProp contains "<global context>.<props>"
@@ -101,15 +97,17 @@ type APIInterceptorGeneric = {
 	/** This number determines how late the API injectors will be injected. It is similar to the index property in CSS. If not set, the default is zero. */
 	insertLevel?: number;
 	forCors?: boolean;
-	for: "CORS" | "STORAGE_ISOLATION" | "ORIGIN_ISOLATION" | "AERO_INTERNAL_ESCAPING";
+	for: "CORS" | "STORAGE_ISOLATION" | "ORIGIN_ISOLATION" | "AERO_INTERNAL_ESCAPING" | "OS_EXTRA";
 };
 /** You use this when you haven't yet finished your implementation for your API and you want to skip it. If the Feature Flag DELETE_UNSUPPORTED_APIS is enabled, then it would delete the API instead of doing nothing. */
 export type APIInterceptorSkip = APIInterceptorGeneric & {
 	/** Please add a comment above setting this property explaining why you have decided to skip it */
 	skip: true,
 }
+/** API initializer interceptor */
 export type APIInterceptorInitForAPI = {
-	init: () => void;
+	/** Called to initialize the API with context */
+	init: (ctx: CtxTypeShared) => void;
 	/** The prop to the object of the API itself */
 	globalProp: string;
 }
@@ -118,7 +116,7 @@ export type APIInterceptorForProxyObjects = APIInterceptorGeneric & ({
 } | {
 	createProxyHandler: (ctx: CtxTypeShared) => ProxyHandler<any>;
 }) & ({
-	escapeFixes: GenericProxyHandler;
+	escapeFixes: GenericProxyHandler<unknown>;
 } | {
 	conceals: ConcealsProxifiedValue[];
 } | {
@@ -130,7 +128,7 @@ export type APIInterceptorForProxifiyingGettersAndSetters = APIInterceptorGeneri
 	proxifiedGetter?: ProxifiedGetter;
 	proxifySetter?: ProxifySetter;
 } & ({
-	escapeFixes: GenericProxifiedValue[];
+	escapeFixes: GenericProxifiedValue<unknown>[];
 } | {
 	conceals: ConcealsProxifiedValue[];
 } | {
@@ -145,30 +143,7 @@ export type APIInterceptor =
 	| APIInterceptorForProxifiyingGettersAndSetters
 
 // TODO: Make something like SupportEnum, but instead you provide a browser string and it only includes API interceptors for the features supported by those browsers
-// Support Enums
-// These enums are inspired by the WebIDL spec
-// biome-ignore lint/style/useEnumInitializers: <explanation>
-export enum SupportEnum {
-	deprecated,
-	nonstandard,
-	draft,
-	shippingChromium,
-	originTrialExclusive,
-	/** In Firefox, Chromium, and WebKit */
-	widelyAvailable // TODO: Start defining this enum in my API Interceptors accordingly
-}
-// biome-ignore lint/style/useEnumInitializers: <explanation>
-export enum ExposedContextsEnum {
-	dedicatedWorker,
-	sharedWorker,
-	audioWorklet,
-	animationWorklet,
-	layoutWorklet,
-	sharedStorageWorklet,
-	paintWorklet,
-	serviceWorker,
-	window
-}
+
 export type AnyWorkerExceptServiceWorkerEnumMember =
 	| ExposedContextsEnum.animationWorklet
 	| ExposedContextsEnum.audioWorklet
@@ -180,32 +155,6 @@ export type AnyWorkerExceptServiceWorkerEnumMember =
 export type AnyWorkerEnumMember =
 	| AnyWorkerExceptServiceWorkerEnumMember
 	| ExposedContextsEnum.serviceWorker;
-// biome-ignore lint/style/useEnumInitializers: <explanation>
-export enum AltProtocolEnum {
-	wrtc,
-	ws,
-	wt
-}
-// biome-ignore lint/style/useEnumInitializers: <explanation>
-export enum InterceptionFeaturesEnum {
-	/** This member requires the correct context to be passed down in the proxy's global context */
-	corsEmulation,
-	/** This member requires the correct context to be passed down in the proxy's global context */
-	cacheEmulation,
-	/** This feature is nowhere near being finished; **do not enable** */
-	privacySandbox,
-	/** Using this member adds code to the navigator.serviceWorker API interceptor to support nestedWorkers. If you enable it and don't have the supplementing SW code for it, it gives up on waiting for a message response back and throws an error. **/
-	nestedSWs,
-	/** This feature is nowhere near being finished; **do not enable** */
-	swLess,
-	aerogel,
-	/** Only use this if you aren't using Custom Element "is" interception */
-	elementConcealment,
-	errorConcealment,
-	messageIsolation,
-	/** Only use this member if you aren't using it for a regular SW proxy */
-	requestUrlProxifier
-}
 
 // Event stuff
 export type eventListener = (event) => any;

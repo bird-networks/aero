@@ -1,5 +1,9 @@
 {
   "devDependencies": {
-    "typescript": "^5.7.2"
+    "@types/glob": "^8.1.0",
+    "@types/node": "^22.15.17",
+    "glob": "^11.0.2",
+    "typescript": "^5.7.2",
+    "typia": "^9.2.0"
   }
 }

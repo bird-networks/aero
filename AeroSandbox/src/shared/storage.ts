@@ -1,4 +1,4 @@
-import { escapeWithOrigin } from "$util/escape";
+import { escapeWithOrigin } from "./escaping/escape";
 
 function storageKey(key: string) {
 	const getUnproxifiedStorageKey = key.split(escapeWithOrigin(""));

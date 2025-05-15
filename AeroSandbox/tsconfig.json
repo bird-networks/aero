@@ -18,9 +18,12 @@
 			"$corsIsolation": ["../aeroSW/src/fetchHandlers/isolation/*"],
 			"$util/*": ["src/util/*"],
 			"$shared/*": ["src/shared/*"],
-			"$types/*": ["types/*"]
+			"$types/*": ["types/*"],
+			"$interceptorUtil/*": ["src/interceptors/util/*"],
+			"$types/apiInterceptors": ["types/apiInterceptors.d.ts"]
 		},
-		"types": ["@types/websql"]
+		"types": ["@types/websql", "@types/node", "@types/glob"],
+		"allowImportingTsExtensions": true
 	},
 	"include": [
 		"rspack.config.ts",
@@ -30,5 +33,6 @@
 		"../aeroSW/src/this/util/getClientURLAeroWrapper.ts",
 		"../aeroSW/src/this/util/getClientURL.ts",
 		"../aeroSW/types/globals.d.ts",
-=	]
+		"build/**/*.ts"
+	]
 }

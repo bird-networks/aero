@@ -2,7 +2,8 @@
  * TODO: Import the necessary @types
  */
 
-import { APIInterceptor, SupportEnum } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { SupportEnum } from "$types/enums/apiInterceptors";
 
 import { escapeWithOrigin, unescapeWithOrigin } from "$src/shared/escaping/escape";
 

@@ -6,6 +6,8 @@ import type { AeroSandboxLogger } from "$shared/Loggers";
 export type Config = {
 	bundle: string;
 	prefix: string;
+	/** Settings specific to HTML sandbox behavior */
+	sandbox: { classMemberEscapeKeyword: string };
 	webrtcTurnServers: string[];
 	/** This property is for Custom Elements "is" rewriting */
 	htmlSandboxElementName: string;

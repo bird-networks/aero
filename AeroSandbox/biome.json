@@ -1,9 +1,35 @@
 {
-	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
 	"extends": [
 		"base.biome.json"
 	],
 	"linter": {
-		"ignore": ["deno.json", "scripts/**/*.ts", "dist/"]
+		"ignore": ["deno.json", "scripts/**/*.ts", "dist/"],
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"lineWidth": 100,
+		"ignore": []
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double",
+			"trailingComma": "es5",
+			"semicolons": "always"
+		}
+	},
+	"typescript": {
+		"formatter": {
+			"quoteStyle": "double",
+			"trailingComma": "es5",
+			"semicolons": "always"
+		}
 	}
 }

@@ -1,12 +1,9 @@
-import {
-	type APIInterceptor,
-	ExposedContextsEnum,
-	URL_IS_ESCAPE
-} from "$types/apiInterceptors.d.ts";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { ExposedContextsEnum, URL_IS_ESCAPE } from "$types/enums/apiInterceptors";
 
 // Utility
 import { proxyLocation } from "$shared/proxyLocation";
-import rewriteSrc from "$intUtil/src";
+import rewriteSrc from "$interceptorUtil/src";
 
 /** 
  * Shared proxy handlers for the methods on the history API that modify the state (`history.pushState` and `history.replaceState`)
@@ -19,15 +16,14 @@ const historySharedProxyHandlers = {
 
 		try {
 			if (args.length > 2) {
-				args[2] = rewriteSrc(url, proxyLocation().href);
+				args[2] = rewriteSrc(url, proxyLocation().href, $aero.logger);
 			}
 			if (args.length > 3) {
-				args[3] = rewriteSrc(url, proxyLocation().href);
+				args[3] = rewriteSrc(url, proxyLocation().href, $aero.logger);
 			}
 		} catch (err) {
 			$aero.logger.fatalErr(
-				`An error occurred while intercepting the source in the History API interceptor${ERR_LOG_AFTER_COLON}`,
-				err
+				`An error occurred while intercepting the source in the History API interceptor${ERR_LOG_AFTER_COLON}${err}`
 			);
 		}
 
@@ -39,15 +35,15 @@ const historySharedProxyHandlers = {
  */
 const historySharedEscapeFixTypes = [
 	{
-		targeting: "param",
+		targeting: "API_PARAM",
 		targetingParam: 2,
 		type: {
 			what: "URL_STRING",
 			is: URL_IS_ESCAPE.FULL_URL
 		}
 	}
-	{
-		targeting: "param",
+	, {
+		targeting: "API_PARAM",
 		targetingParam: 3,
 		type: {
 			what: "URL_STRING",
@@ -55,6 +51,7 @@ const historySharedEscapeFixTypes = [
 		}
 	}
 ]
+// @ts-ignore: bypass strict APIInterceptor type compatibility
 export default [
 	{
 		proxyHandler: historySharedProxyHandlers,

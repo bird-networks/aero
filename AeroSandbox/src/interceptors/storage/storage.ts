@@ -1,4 +1,5 @@
-import { type APIInterceptor, SupportEnum } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { SupportEnum } from "$types/enums/apiInterceptors";
 
 import createStorageAPIInterceptors from "$util/storageAPIInterceptorsGeneric";
 import { proxyLocation } from "$shared/proxyLocation";

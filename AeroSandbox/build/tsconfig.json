@@ -1,0 +1,20 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"types": ["node", "@types/websql", "@types/glob"],
+		"moduleResolution": "NodeNext",
+		"module": "NodeNext",
+		"baseUrl": ".",
+		"paths": {
+			"../types/*": ["../types/*"],
+			"../src/*": ["../src/*"],
+			"$types/*": ["../types/*"]
+		}
+	},
+	"include": [
+		"runtime/**/*.ts",
+		"../types/**/*.d.ts",
+		"../types/**/*.ts",
+		"../src/**/*.ts"
+	]
+} 

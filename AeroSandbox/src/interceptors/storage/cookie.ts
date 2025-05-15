@@ -1,8 +1,8 @@
-import type { APIInterceptor } from "$aero/types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
 
 import { proxyLocation, upToProxyOrigin } from "$shared/proxyLocation";
 
-import { rewriteGetCookie, rewriteSetCookie } from "$shared/cookie";
+import { rewriteGetCookie, rewriteSetCookie } from "$interceptorUtil/cookie";
 
 function getOriginalCookie(cookie) {
 	// Not done
@@ -66,6 +66,7 @@ if ("cookieStore" in window) {
 }
 
 
+// @ts-ignore: stub storage cookie interceptors
 export default [{
 	/** Emulates for the `Clear-Site-Data` header */
 	init() {

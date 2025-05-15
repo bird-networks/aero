@@ -1,8 +1,5 @@
-import {
-	type APIInterceptor,
-	ExposedContextsEnum,
-	URL_IS_ESCAPE
-} from "$types/apiInterceptors.d.ts";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { ExposedContextsEnum, URL_IS_ESCAPE } from "$types/enums/apiInterceptors";
 
 import rewriteSrc from "$util/src";
 import { proxyLocation } from "$shared/proxyLocation";

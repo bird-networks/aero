@@ -19,7 +19,7 @@ export default (ctx: CtxType) =>
 		supportFrames: false,
 		supportSpeculation: false,
 		corsEmulation: false,
-		cspEmulation: false;
+		cspEmulation: false,
 		emuSecureCtx: false,
 		hashURL: false,
 		supportIntegrityEmu: false,

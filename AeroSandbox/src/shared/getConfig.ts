@@ -1,13 +1,12 @@
-import {
-	getPropOnProxyNamespace,
-	getPropOnAeroSandboxNamespace
-} from "./getPropFromTree";
+import getPropFromTree from "./getPropFromTree";
+import type { Config } from "$types/config";
 
-export function getProxyConfig() {
-	return getPropOnProxyNamespace(CONFIG_KEY);
+/** Returns the proxy namespace config at build time */
+export function getProxyConfig(): Config {
+	return getPropFromTree<Config>(`${PROXY_NAMESPACE}.${CONFIG_KEY}`)!;
 }
 
-/** Get the config for AeroSandbox */
-export default function getConfig() {
-	return getPropOnAeroSandboxNamespace(CONFIG_KEY);
+/** Get the runtime Config for AeroSandbox */
+export default function getConfig(): Config {
+	return getPropFromTree<Config>(`${PROXY_NAMESPACE}.${OUR_NAMESPACE}.${CONFIG_KEY}`)!;
 }

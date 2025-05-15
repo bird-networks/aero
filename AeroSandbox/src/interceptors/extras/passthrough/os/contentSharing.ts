@@ -2,10 +2,11 @@
  * Content Sharing
  */
 
-import { type APIInterceptor, ExposedContextsEnum, SupportEnum } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { ExposedContextsEnum, SupportEnum } from "$types/enums/apiInterceptors";
 import { OsPassthroughFeatures } from "$types/buildConfig";
 
-import rewriteSrc from "$util/src";
+import rewriteSrc from "$interceptorUtil/src";
 import { proxyLocation } from "$shared/proxyLocation";
 
 const osPassthroughNewFileBC = new BroadcastChannel("$aero-os-passthrough-share-content");

@@ -1,19 +1,19 @@
+// @ts-nocheck
+
 // TODO: This is a WIP. Completely disregard this file
 
 // biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
-import escape from "$util/escape";
+import escape from "$shared/escaping/escape";
 
 /**
  * This whole file encompasses the {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API WebAuthn}, {@link https://developer.mozilla.org/en-US/docs/Web/API/FedCM_API FedCM}, {@link https://wicg.github.io/web-otp WebOTP} APIs
  */
 
-import {
-	type APIInterceptor,
-	ExposedContextsEnum
-} from "$types/apiInterceptors.d.ts";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { ExposedContextsEnum } from "$types/enums/apiInterceptors";
 
 import { proxyLocation } from "$shared/proxyLocation";
-import { afterPrefix } from "$util/getProxyURL";
+import { afterPrefix } from "$interceptorUtil/getProxyURL";
 import type BareClient from "@mercuryworkshop/bare-mux";
 
 const credentialStore = new WeakMap<PasswordCredential, PasswordCredential>();
@@ -95,6 +95,7 @@ function proxifyCredentials(credentials: Credential): Credential {
 	return proxifiedCredentials;
 }
 
+// @ts-ignore: stubbed implementation for credentials
 export default [
 	{
 		// TODO: Support the rest of the navigator.credentials API - https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer

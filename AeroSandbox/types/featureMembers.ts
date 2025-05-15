@@ -1,4 +1,6 @@
-import { InterceptionFeaturesEnum } from "./apiInterceptors.js";
+// @ts-ignore: allow importing TS file for runtime loader
+// biome-ignore lint/suspicious/noImportVersionedExtensions: importing TS file for runtime
+import { InterceptionFeaturesEnum } from "./apiInterceptors.ts";
 
 // TODO: Put all of these terms in the API Interception Glossary
 

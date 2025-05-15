@@ -1,4 +1,5 @@
-import { type APIInterceptor, SupportEnum } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { SupportEnum, ExposedContextsEnum } from "$types/enums/apiInterceptors";
 
 /**
  * The API Interceptor for escaping the messages done internally by aero through the BroadcastChannel API (escape)
@@ -11,6 +12,8 @@ export default {
 			return Reflect.construct(target, [proxifiedChanName, ...args.slice(1)]);
 		}
 	},
-	globalName: "BroadcastChannel",
+	globalProp: "BroadcastChannel",
+	exposedContexts: ExposedContextsEnum.window,
+	for: "ORIGIN_ISOLATION",
 	supports: SupportEnum.widelyAvailable
 } as APIInterceptor;

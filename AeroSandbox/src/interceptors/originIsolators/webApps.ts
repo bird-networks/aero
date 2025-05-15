@@ -1,7 +1,8 @@
-import rewriteSrc from "$util/src";
+import rewriteSrc from "$interceptorUtil/src";
 import { proxyLocation } from "$shared/proxyLocation";
 
-import { APIInterceptor } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { URL_IS_ESCAPE } from "$types/enums/apiInterceptors";
 
 export default {
 	createProxyHandler: ctx => ({
@@ -10,7 +11,7 @@ export default {
 			// @ts-ignore
 			for (const relatedApp of relatedApps) {
 				if (relatedApp.platform === "webapp")
-					relatedApp.url = rewriteSrc(relatedApp.url, proxyLocation().href);
+					relatedApp.url = rewriteSrc(relatedApp.url, proxyLocation().href, $aero.logger);
 			}
 		}
 		// TODO: Import the @types for this
@@ -26,7 +27,7 @@ export default {
 				}
 			]
 		}
-	}
+	},
 	originIsolator: true,
 	globalProp: "navigator.prototype.getInstalledRelatedApps"
 } as APIInterceptor;

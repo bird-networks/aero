@@ -1,4 +1,5 @@
-import { type APIInterceptor, type eventListener, ExposedContextsEnum, URL_IS_ESCAPE } from "$types/apiInterceptors.d.ts";
+import type { APIInterceptor, eventListener } from "$types/apiInterceptors";
+import { ExposedContextsEnum, URL_IS_ESCAPE } from "$types/enums/apiInterceptors";
 
 import { proxyLocation, upToProxyOrigin } from "$shared/proxyLocation";
 
@@ -12,7 +13,7 @@ Reflect.setPrototypeOf(inheritedObject, Object.getPrototypeOf(location));
 
 const wrap = (url: string) => $aero.config.prefix + url;
 
-// TODO: PUT THIS BACK I ACCIDENTLY DELETED IT
+// TODO: PUT THIS BACK I ACCIDENTELY DELETED IT
 const locationProxy = Proxy.revocable(inheritedObject, {
 	get(target, prop) {
 		function internal() {

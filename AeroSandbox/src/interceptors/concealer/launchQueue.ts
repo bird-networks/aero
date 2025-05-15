@@ -1,4 +1,5 @@
-import { type APIInterceptor, SupportEnum } from "$types/apiInterceptors.d.ts";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { SupportEnum } from "$types/enums/apiInterceptors";
 
 import { afterPrefix } from "$util/getProxyURL";
 

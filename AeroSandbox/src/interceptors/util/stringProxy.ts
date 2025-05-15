@@ -1,4 +1,5 @@
-import sharedConfig from "./sharedConfig";
+// @ts-nocheck
+import getConfig from "$shared/getConfig";
 
 import { afterPrefix } from "./getProxyURL";
 
@@ -57,7 +58,7 @@ function proxyConstructString(
 		// I forgot what this is for
 		for (const argNum of argNums)
 			map.set(argNum, () => {
-				return sharedConfig("prefix") + arguments[argNum];
+				return getConfig().prefix + arguments[argNum];
 			});
 
 		return proxy(apiName, map);

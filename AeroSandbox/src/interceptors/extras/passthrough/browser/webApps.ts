@@ -1,6 +1,7 @@
 import typia from "typia";
 
-import { type APIInterceptor, ExposedContextsEnum } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { ExposedContextsEnum } from "$types/enums/apiInterceptors";
 import { BrowserEmulationFeatures } from "$types/buildConfig";
 
 import { proxyLocation } from "$shared/proxyLocation";

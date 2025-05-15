@@ -1,13 +1,14 @@
 // This is already defined in the global scope of Node, but not for Deno
-import process from "node:process";
+const process = require("node:process");
 
-import { access, copyFile, mkdir, rm } from "node:fs/promises";
-import path from "node:path";
+const { access, copyFile, mkdir, rm } = require("node:fs/promises");
+const path = require("node:path");
 
 // Neverthrow
 import type { Result } from "neverthrow";
-import { ok as nOk, err as err, fromPromise } from 'neverthrow';
+const { ok: nOk, err: nErr, fromPromise } = require("neverthrow");
 
+// CJS global __dirname is available, no manual assignment needed
 
 /**
  * This interface defines the directories that will be used by the `InitDist` class
@@ -52,7 +53,7 @@ export default class InitDist {
 		if (this.logStatus) console.info("Initializing the dist folder");
 
 		// @ts-ignore We know this is an error type
-		const accessResult = await fromPromise(access(this.distDir));
+		const accessResult = await fromPromise(access(this.distDir), (err: Error) => err);
 		if (accessResult.isErr())
 			// We expect this to error and it is fine if it does. We are merely doing this to check if the folder exists.
 			return this.createDistDir();
@@ -63,9 +64,9 @@ export default class InitDist {
 		if (this.logStatus) console.info("Creating the dist folder");
 
 		// @ts-ignore We know this is an error type
-		const mkdirRes = await fromPromise(mkdir(this.distDir), (err: Error) => new Error(`Failed to create dist directory: ${err.message}`));
+		const mkdirRes = await fromPromise(mkdir(this.distDir, { recursive: true }), (err: Error) => new Error(`Failed to create dist directory: ${err.message}`));
 		if (mkdirRes.isErr())
-			return err(mkdirRes.error);
+			return nErr(mkdirRes.error);
 		return this.initProperDir();
 	}
 
@@ -74,7 +75,7 @@ export default class InitDist {
 			console.info("Initializing the proper folder (...dist/<debug/prod>)");
 
 		// @ts-ignore We know this is an error type
-		const accessResult = await fromPromise(access(this.properDir));
+		const accessResult = await fromPromise(access(this.properDir), (err: Error) => err);
 		if (accessResult.isErr())
 			// We expect this to error and it is fine if it does. We are merely doing this to check if the folder exists.
 			return this.createProperDir();
@@ -83,7 +84,7 @@ export default class InitDist {
 		const rmRes = await fromPromise(rm(this.properDir, { recursive: true }), (err: Error) => new Error(`Failed to remove proper folder: ${err.message}`));
 		if (rmRes.isErr())
 			// Travel the error up the chain to eventually be handled by whomever called `init`
-			return err(rmRes.error);
+			return nErr(rmRes.error);
 
 		return this.createProperDir();
 	}
@@ -92,10 +93,10 @@ export default class InitDist {
 		if (this.logStatus) console.info("Creating the proper folder");
 
 		// @ts-ignore We know this is an error type
-		const mkdirRes = await fromPromise(mkdir(this.properDir), (err: Error) => new Error(`Failed to create proper folder: ${err.message}`));
+		const mkdirRes = await fromPromise(mkdir(this.properDir, { recursive: true }), (err: Error) => new Error(`Failed to create proper folder: ${err.message}`));
 		if (mkdirRes.isErr())
 			// Travel the error up the chain to eventually be handled by whomever called `init`
-			return err(mkdirRes.error);
+			return nErr(mkdirRes.error);
 		return this.createDistBuild();
 	}
 
@@ -104,40 +105,32 @@ export default class InitDist {
 			console.info("Copying over the default config to the dist folder");
 
 		// @ts-ignore We know this is an error type
-		const copyRes = await fromPromise(copyFile(path.resolve(__dirname, "src/defaultConfig.js"), path.resolve(__dirname, `dist/${this.properDirType}/defaultConfig.js`)), (err: Error) => new Error(`Failed to copy the default config: ${err.message}`));
+		const source = path.resolve(__dirname, "../src/defaultConfig.js")
+		const dest = path.resolve(this.properDir, "defaultConfig.js")
+		const copyRes = await fromPromise(copyFile(source, dest), (err: Error) => new Error(`Failed to copy the default config: ${err.message}`));
 		if (copyRes.isErr())
 			// Travel the error up the chain to eventually be handled by whomever called `init`
-			return err(copyRes.error);
+			return nErr(copyRes.error);
 
 		console.info("Default config copied successfully");
 		return nOk(undefined);
 	}
 }
 
-// If the file is being run as a CLI script
-/**
- * Detect if the script is being ran as a CLI script and not as a module
- */
-const isCLI =
-	// For Deno
-	// @ts-ignore: This is a Deno-only feature
-	"Deno" in globalThis ? import.meta.main :
-		// For Node (this does the same thing functionally as the above)
-		import.meta.url === `file://${process.argv[1]}`;
+// CLI detection
+const isCLI = require.main === module
 if (isCLI) {
-	const properDirType = "DEBUG" in process.env ? "debug" : "prod";
-
-	const initDist = new InitDist(
-		{
+	(async () => {
+		const properDirType = "DEBUG" in process.env ? "debug" : "prod"
+		const dirs = {
 			dist: path.resolve(__dirname, "..", "dist"),
 			proper: path.resolve(__dirname, "dist", properDirType),
-		},
-		properDirType,
-		true
-	);
-
-	(await initDist.init()).match(
-		() => console.info("Successfully the globals for TS"),
-		(err) => console.error(`Unable to initialize the globals for TS: ${err.message}`)
-	);
+		}
+		const initDist = new InitDist(dirs, properDirType, true)
+		const result = await initDist.init()
+		result.match(
+			() => console.info("Successfully the globals for TS"),
+			(err) => console.error(`Unable to initialize the globals for TS: ${err.message}`)
+		)
+	})()
 }

@@ -7,14 +7,16 @@ Using `entry.name` to expose the url:
  *   - If you make a request to two different proxy origins on the site that are both cached and one has the `Clear-Site-Data`, clearing both proxy origins, so *the proxy can be detected*
  */
 
-import { type APIInterceptor, SupportEnum, URL_IS_ESCAPE } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { SupportEnum, URL_IS_ESCAPE } from "$types/enums/apiInterceptors";
 
-import getMsgFromSW from "$util/getMsgFromSW";
-import { fmtMissingPropExpectedOfSW } from "../util/bcCommunication/expectParamsInMsgResp";
-import getValFromSW from "$util/getValFromSW";
-import { afterPrefix } from "$shared/afterPrefix";
-import upToProxyLocation from "$shared/upToProxyLocation";
+import getMsgFromSW from "$interceptorUtil/bcCommunication/getMsgFromSW";
+import { fmtMissingPropExpectedOfSW } from "$interceptorUtil/bcCommunication/expectParamsInMsgResp";
+import getValFromSW from "$interceptorUtil/bcCommunication/getValFromSW";
+import { afterPrefix } from "$interceptorUtil/getProxyURL";
+import { upToProxyOrigin } from "$shared/proxyLocation";
 
+// @ts-ignore: bypass strict APIInterceptor compatibility
 export default [{
 	init() {
 		// Get the timing data whenever a new request comes in
@@ -73,7 +75,7 @@ export default [{
 			const proxyUrl = afterPrefix(realUrl);
 			const resCached = isCached(proxyUrl);
 			const resCrossOrigin = !proxyUrl.startsWith(
-				upToProxyLocation()
+				upToProxyOrigin()
 			);
 			const isZero =
 				resCached ||
@@ -124,7 +126,7 @@ export default [{
 	},
 	globalProp: "PerformanceResourceTiming.prototype",
 	supports: SupportEnum.widelyAvailable
-}] as APIInterceptor;
+}] as APIInterceptor[];
 
 /**
  * Check if a recent request (from the proxy URL) on this page was cached

@@ -1,9 +1,9 @@
 import typia from "typia";
 
-import { type APIInterceptor, SupportEnum } from "$types/apiInterceptors";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { SupportEnum, ExposedContextsEnum } from "$types/enums/apiInterceptors";
 import { OsPassthroughFeatures } from "$types/buildConfig";
 
-import rewriteSrc from "$util/src";
 import { proxyLocation } from "$shared/proxyLocation";
 
 /** proxy origin, callback */
@@ -26,22 +26,25 @@ export default [
 				bcPwaLaunched.onmessage = event => {
 					const resp = event.data as PwaLaunchedResp;
 					validatePwaLaunchedResp(resp);
-					const callback = launchQueuePendingCallbacks.get(proxyOrigin);
+					const callback = launchQueuePendingCallbacks.get(resp.proxyOrigin);
 					if (callback) {
 						callback(resp.launchParams);
-						launchQueuePendingCallbacks.delete(origin);
+						launchQueuePendingCallbacks.delete(resp.proxyOrigin);
+					}
+				};
+			}
+		},
+		createProxyHandler(ctx) {
+			return {
+				apply(target, that, args) {
+					if (OsPassthroughFeatures.pwas in ctx.featuresConfig.osExtras) {
+						const [callback] = args;
+						launchQueuePendingCallbacks.set(proxyLocation().origin, callback);
+					} else {
+						return Reflect.apply(target, that, args);
 					}
 				}
-			}
-		}
-		createProxyHandler(ctx) {
-			apply(target, that, args) {
-				if (OsPassthroughFeatures.pwas in ctx.featuresConfig.osExtras) {
-					const [callback] = args;
-					launchQueuePendingCallbacks.set(proxyLocation().origin, callback);
-				} else
-					return Reflect.apply(target, that, args);
-			}
+			};
 		},
 		for: "OS_EXTRA",
 		globalProp: "LaunchQueue.prototype.setConsumer",

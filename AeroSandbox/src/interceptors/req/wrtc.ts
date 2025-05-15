@@ -1,8 +1,5 @@
-import {
-	AltProtocolEnum,
-	type APIInterceptor,
-	ExposedContextsEnum
-} from "$types/apiInterceptors.d.ts";
+import type { APIInterceptor } from "$types/apiInterceptors";
+import { AltProtocolEnum, ExposedContextsEnum } from "$types/enums/apiInterceptors";
 
 import escape from "$shared/escaping/escape";
 
