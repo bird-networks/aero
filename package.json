@@ -5,5 +5,8 @@
     "glob": "^11.0.2",
     "typescript": "^5.7.2",
     "typia": "^9.2.0"
+  },
+  "dependencies": {
+    "neverthrow": "^8.2.0"
   }
 }

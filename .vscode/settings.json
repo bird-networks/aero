@@ -54,5 +54,8 @@
 	"explorer.excludeGitIgnore": false,
 	"[json]": {
 		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "vscode.typescript-language-features"
 	}
 }

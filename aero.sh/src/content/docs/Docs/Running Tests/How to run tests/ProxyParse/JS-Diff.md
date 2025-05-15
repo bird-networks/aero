@@ -1,3 +1,8 @@
+---
+title: "How to run JS-Diff tests"
+description: "These docs explain how to run JS-Diff tests in AeroSandbox and within your own proxy"
+---
+
 # How to run *JS-Diff* tests
 
 ## How to run it in the context of AeroSandbox

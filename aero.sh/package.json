@@ -23,6 +23,7 @@
 		"highlight.js": "^11.10.0",
 		"javascript-playgrounds": "^1.2.7",
 		"monaco-react": "^1.1.0",
+		"neverthrow": "^8.2.0",
 		"octokit": "^4.0.2",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",

@@ -5,11 +5,16 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 // Utility
 //import { Octokit } from "octokit"
 //import getGitHubURLSplit from "../../../scripts/shared/getGitHubURLSplit";
-import getPackageVersions from "../../../aeroSW/tests/shared/getNPMVersions";
+import getPackageVersions from "../../../aeroSW/tests/util/getNPMVersions";
+import packageJSON from "../../../aeroSW/package.json";
 
-const packageVersionsRes = getPackageVersions();
-if (packageVersionsRes.isErr())
-  throw new Error(`Failed to get the NPM package versions for aero:\n\t${packageVersionsRes.error.stack.split("\n").join("\n\t")}!`);
+const packageVersionsRes = await getPackageVersions();
+if (packageVersionsRes.isErr()) {
+  const errStackLines = packageVersionsRes.error.stack
+    ? packageVersionsRes.error.stack.split("\n").join("\n\t")
+    : packageVersionsRes.error.toString()
+  throw new Error(`Failed to get the NPM package versions for aero:\n\t${errStackLines}!`)
+}
 const packageVersions = packageVersionsRes.value;
 
 /*
