@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+When I ask you to run/debug the code I want you to run `DEBUG=true npm run build`, but if it is for *AeroSandbox* and not *aeroSW*, if you aren't in the `/AeroSandbox/` dir, run `cd AeroSandbox && DEBUG=true npm run build`. If the user is asking to build *aeroSW* and you are in the `/AeroSandbox/` dir, run `cd .. && DEBUG=true npm run build`.

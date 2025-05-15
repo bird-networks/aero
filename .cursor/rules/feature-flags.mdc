@@ -1,0 +1,24 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Some things to keep in mind when you are considering modifying the feature flags
+globs: ["**/*.ts"]
+---
+
+# Don't break feature flags
+
+Whenever there are variables with all caps that seem to be used in the same way as the Feature Flags (as in our Rspack Plugin), and they are defined as such in `featureFlags.ts` and `createFeatureFlags.ts`, they are probably feature flags
+
+## Examples
+
+Whenever you see something like
+
+```ts
+// biome-ignore lint/style/useSingleVarDeclarator: <explanation>
+let DEBUG: boolean
+```
+
+Assume it is a Feature Flag and don't change it to something like using `process.env.NODE_ENV` instead

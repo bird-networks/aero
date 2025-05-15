@@ -1,0 +1,16 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Instructions for when to not use the terminal
+globs: ["**/*.ts", "**/*.d.ts", "**/*.js"]
+---
+
+Good:
+- Building the code and ensuring the `dist/` output is correct
+- Examining logs to find out what went wrong
+
+Bad:
+- Using replacements with terminal utilities like `sed` rather than manually editing the files. You can't use bulk find-and-replace. Instead make those changes manually.

@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: My general style preferences for writing code
+globs: ["**/*.ts", "**/*.d.ts", "**/*.js"]
+---
+
+
+# My general style preferences for writing code
+
+- I prefer to not use braces when there is a single-line if statement

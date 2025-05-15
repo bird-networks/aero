@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+descriptions: Guidelines for the Agent when assisting with fixing bugs
+globs: ["**/*.ts", "**/*.d.ts", "**/*.js"]
+---
+
+Try building with debug mode to see if the issues have been resolved after trying to fix a build issue

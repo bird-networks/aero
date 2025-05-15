@@ -1,0 +1,72 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: When writing API Interceptors, don't try to validate anything like the arguments and data that get trapped. It is not our job to ensure correct use of the API, we aren't trying to break compatibility, but rather get as close to the site not being in a proxy as possible.
+---
+
+Good (example based off of `share.ts`):
+```ts
+export default [
+	{
+		proxifiedObj: Proxy.revocable(navigator.share, {
+			apply(target, that, args) {
+				const [data] = args as [ShareData];
+
+                // Note: No unnecessary validation here!
+
+				// Intercept
+                if (data.url) data.url = rewriteSrc(data.url);
+				return Reflect.apply(target, that, args);
+			}
+		}),
+		globalProp: "navigator.share",
+		exposedContexts: ExposedContextsEnum.window
+	}
+] as const satisfies readonly [APIInterceptor];
+```
+
+
+Bad:
+```ts
+export default [
+	{
+		proxifiedObj: Proxy.revocable(navigator.share, {
+			apply(target, that, args) {
+				const [data] = args as [ShareData];
+
+				// Unnecessary validation
+				if (!data || typeof data !== "object") {
+					throw new TypeError("Share data must be an object");
+				}
+				if (!data.title && !data.text && !data.url && !data.files) {
+					throw new TypeError(
+						"Share data must have at least one of: title, text, url, or files"
+					);
+				}
+				if (data.files) {
+					if (!Array.isArray(data.files)) {
+						throw new TypeError("Files must be an array");
+					}
+					for (const file of data.files) {
+						if (!(file instanceof File)) {
+							throw new TypeError(
+								"All items in files array must be File objects"
+							);
+						}
+					}
+				}
+
+				// Actually intercept
+                if (data.url) data.url = rewriteSrc(data.url);
+
+				return Reflect.apply(target, that, args);
+			}
+		}),
+		globalProp: "navigator.share",
+		exposedContexts: ExposedContextsEnum.window
+	}
+] as const satisfies readonly [APIInterceptor];
+```
