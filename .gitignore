@@ -31,3 +31,6 @@ site/
 /**/checkouts/
 
 # Unreleased features (Not finished) 👀
+
+# MacOS
+/**/*.DS_Store

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, type ChangeEvent } from "react";
 import { Editor, DiffEditor, type Monaco} from "@monaco-editor/react";
 import { latte, frappe, macchiato, mocha } from "@catppuccin/vscode";
 
@@ -73,7 +73,7 @@ export default function AeroSandboxRewriteDemo() {
       <select
         id="langDropdown"
         className="select w-full max-w-xs"
-        onChange={(e) => setLang(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLSelectElement>) => setLang(e.target.value)}
       >
         <option disabled selected>Select a rewriter to try</option>
         <option value="html">HTML</option>

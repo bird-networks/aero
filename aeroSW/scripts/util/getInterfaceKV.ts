@@ -1,12 +1,12 @@
 // For type safety
 /// Neverthrow
-import type { ResultAsync } from "neverthrow";
-import { okAsync as nOkAsync, errAsync as nErrAsync } from "neverthrow";
-import { fmtNeverthrowErr } from "../tests/util/fmtErrTest.js";
+import type { ResultAsync, Result } from "neverthrow";
+import { okAsync as nOkAsync, errAsync as nErrAsync, ok as nOk, err as nErr } from "neverthrow";
+import { fmtNeverthrowErr } from "../../tests/util/fmtErrTest.ts";
 
 // Utility
-import type { SourceFile } from "typescript";
-import { ScriptTarget, createSourceFile, isInterfaceDeclaration, isIdentifier, forEachChild } from "typescript";
+import type { SourceFile, Node } from "typescript";
+import { ScriptTarget, createSourceFile, isInterfaceDeclaration, isIdentifier, forEachChild, isPropertySignature } from "typescript";
 import { readFile } from "fs/promises";
 
 /**
@@ -17,7 +17,7 @@ import { readFile } from "fs/promises";
  */
 export default async function getInterfaceKeys(
 	filePath: string,
-	interfaceName: string): Promise<ResultAsync<string[], Error>> {
+	interfaceName: string): Promise<ResultAsync<{ [key: string]: string }, Error>> {
 	let data: string;
 	try {
 		data = await readFile(filePath, "utf-8");
@@ -45,20 +45,23 @@ export default async function getInterfaceKeys(
  * @param interfaceName The interface name to search for in the sourceFile
  * @returns The keys of the interface
  */
-export function getInterfaceKeysFromSourceFile(sourceFile: SourceFile, interfaceName: string): Result<string[]> {
+export function getInterfaceKeysFromSourceFile(sourceFile: SourceFile, interfaceName: string): Result<{ [key: string]: string }, Error> {
 	let foundInterface = false;
 	let kvs: { [key: string]: string } = {};
 	const extractKeysAndTypesFromInterface = (node: Node) => {
 		if (isInterfaceDeclaration(node) && node.name.text === interfaceName) {
+			foundInterface = true;
 			node.members.forEach(member => {
-				if (isPropertySignature(member) && member.name && isIdentifier(member.name) && member.type && isIdentifier(member.type))
-					kvs[member.name.text] = member.type;
+				if (isPropertySignature(member) && member.name && isIdentifier(member.name) && member.type && isIdentifier(member.type)) {
+					kvs[member.name.text] = member.type.text;
+				}
 			});
 		}
 		forEachChild(node, extractKeysAndTypesFromInterface);
 	};
 	extractKeysAndTypesFromInterface(sourceFile);
-	if (!foundInterface)
-		return nErrAsync(new Error(`Failed to find the interface ${interfaceName} in the source file`));
-	return keys;
+	if (!foundInterface) {
+		return nErr(new Error(`Failed to find the interface ${interfaceName} in the source file`));
+	}
+	return nOk(kvs);
 }

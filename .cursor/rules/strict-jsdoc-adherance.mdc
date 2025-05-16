@@ -1,0 +1,38 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Instructions for when to use JSDoc
+globs: ["**/*.ts", "**/*.d.ts", "**/*.js"]
+---
+
+Always use JSDoc when you can
+Annotate everything possible
+Annotate the top of the file (with @module if it is one and the description), interface, function
+The only variables I want you to annotate though are the top-level constants (const)
+The only thing I don't want you to with JSDoc is to include the types in the annotation (that is what the TS is for)
+
+Bad:
+
+```ts
+// Configuration interface for each target
+export interface CopyTarget {
+	src: string;          // Absolute path to the source directory
+	serveAt?: string;     // Optional: URL prefix for dev server (e.g., "/aero/sandbox")
+}
+```
+
+Good
+```ts
+/** Configuration interface for each target */
+export interface CopyTarget {
+  /** Absolute path to the source directory */
+	src: string;
+  /** URL prefix for dev server (e.g., `/aero/sandbox`) */
+	serveAt?: string;
+}
+```
+
+> Also notice: you don't need to put `Optional:` as the types imply that and you use backticks when quoting something in JSDoc/MD

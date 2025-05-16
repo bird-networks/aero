@@ -52,7 +52,7 @@
 		"live-build:cfWorkers": "pm2 start ecosystem.config.cjs --only \"aero-build-cf-workers,aero-sandbox-build-watch\", \"",
 		"live-build:aeroSandbox": "pm2 start ecosystem.config.cjs --only \"aero-sandbox-build-watch\"",
 		"syncPackageJson": "node --no-warnings --experimental-strip-types -- ./scripts/syncPackageJson.ts",
-		"init-globals:ts": "tsx ./scripts/initGlobalsTs.ts",
+		"init-globals:ts": "cd scripts && tsx initGlobalsTs.ts",
 		"prepare": "ts-patch install && typia patch"
 	},
 	"repository": {

@@ -1,1 +1,0 @@
-// Copies the topics from the aeroSH package.json file to this repo

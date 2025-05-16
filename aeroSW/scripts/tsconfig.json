@@ -1,0 +1,12 @@
+/**
+ * TS config for scripts in aeroSW to enable ECMAScript modules and allow .ts imports
+ */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
+  "include": ["*.ts", "util/**/*.ts"]
+} 

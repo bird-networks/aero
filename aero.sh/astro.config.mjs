@@ -1,47 +1,76 @@
-import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 
 // @ts-check
 import { defineConfig } from "astro/config";
 
 import react from "@astrojs/react";
-
 import tailwind from "@astrojs/tailwind";
-
 import starlight from "@astrojs/starlight";
-import starlightTypeDoc, { typeDocSidebarGroup } from "starlight-typedoc";
-import catppuccin from "starlight-theme-catppuccin";
+import catppuccin from "@catppuccin/starlight";
 
-//import { viteStaticCopy } from "vite-plugin-static-copy";
+import node from "@astrojs/node";
+
+import { customCopyPlugin } from "./plugins/customCopyPlugin.ts";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Unified configuration for copying and serving files
+const copyTargets = [
+  {
+    src: resolve(__dirname, "../AeroSandbox/dist/debug/"),
+    serveAt: "/aero/sandbox",
+  },
+  {
+    src: resolve(__dirname, "../aeroSW/extras/"),
+    serveAt: "/aero/extras",
+  },
+  {
+    src: resolve(__dirname, "../aeroSW/dist/prod/"),
+    serveAt: "/aero",
+  },
+  {
+    src: resolve(__dirname, "../node_modules/@mercuryworkshop/epoxy-transport/dist/"),
+    serveAt: "/epoxy",
+  },
+  {
+    src: resolve(__dirname, "../node_modules/@mercuryworkshop/bare-mux/dist/"),
+    serveAt: "/baremux",
+  }
+];
 
 // https://astro.build/config
 export default defineConfig({
-	site: "https://aero.sh",
-	// TODO: Make it read `tsconfig.json` instead
-	vite: {
-		resolve: {
-			alias: {
-				"@": resolve("./src")
-			}
-		}
-	},
-	integrations: [
-		react(),
-		tailwind({
-		  applyBaseStyles: false,
-		}),
-		starlight({
-			title: "",
-			logo: {
-				src: "../aero.webp" // TODO: Use an SVG instead
-			},
-			//favicon: "../aero.svg",
-			plugins: [
-				catppuccin({ dark: "mocha-mauve", light: "latte-mauve" }),
-				//starlightTypeDoc({
-					//entryFiles: ["../src/**/*.ts"],
-					//tsconfig: "../tsconfig.json",
-				//})
-			],
+  site: "https://aero.sh",
+  vite: {
+    resolve: {
+      alias: {
+        "@": resolve(__dirname, "./src")
+      }
+    },
+    plugins: [
+      customCopyPlugin(copyTargets)
+    ]
+  },
+  integrations: [
+    react(),
+    tailwind({
+      applyBaseStyles: false,
+    }),
+    starlight({
+      title: "aero demo",
+      logo: {
+        src: "./public/full_logo.png"
+      },
+      favicon: "/logo.png", // Use public/logo.png as favicon
+      plugins: [
+        catppuccin({ dark: "mocha-mauve", light: "latte-mauve" }),
+        //starlightTypeDoc({
+        //entryFiles: ["../src/**/*.ts"],
+        //tsconfig: "../tsconfig.json",
+        //})
+      ],
       sidebar: [
         {
           label: "Nav",
@@ -56,15 +85,22 @@ export default defineConfig({
           autogenerate: { directory: "Docs" }
         }
       ],
-      social: {
-        github: "https://github.com/vortexdl/aero"
-      }
-		})
-	],
-	server: {
-		port: 2525
-	},
-	devToolbar: {
-		enabled: false
-	}
+      social: [
+        {
+          icon: "github",
+          label: "GitHub",
+          href: "https://github.com/vortexdl/aero"
+        }
+      ]
+    })
+  ],
+  server: {
+    port: 2525
+  },
+  devToolbar: {
+    enabled: false
+  },
+  adapter: node({
+    mode: "hybrid",
+  }),
 });

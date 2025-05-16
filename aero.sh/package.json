@@ -1,8 +1,10 @@
 {
+	"description": "Aero documentation website",
 	"name": "aero.sh",
 	"type": "module",
 	"version": "0.0.1",
 	"scripts": {
+		"prebuild___": "cd ../aeroSW && npm run buildSW && cd ../AeroSandbox && npm run build",
 		"dev": "astro dev",
 		"start": "astro dev",
 		"build": "astro check && astro build",
@@ -12,14 +14,18 @@
 	},
 	"dependencies": {
 		"@astrojs/check": "^0.9.4",
-		"@astrojs/react": "^3.6.2",
-		"@astrojs/starlight": "^0.29.0",
+		"@astrojs/node": "^9.2.1",
+		"@astrojs/react": "^4.2.7",
+		"@astrojs/starlight": "^0.34.3",
 		"@astrojs/tailwind": "^5.1.2",
+		"@catppuccin/starlight": "^1.0.1",
 		"@catppuccin/vscode": "^3.16.0",
+		"@mercuryworkshop/bare-mux": "^2.1.7",
+		"@mercuryworkshop/epoxy-transport": "^2.1.27",
 		"@monaco-editor/react": "4.6.0",
 		"@types/react": "^18.3.12",
 		"@types/react-dom": "^18.3.1",
-		"astro": "^4.16.7",
+		"astro": "^5.0.0",
 		"highlight.js": "^11.10.0",
 		"javascript-playgrounds": "^1.2.7",
 		"monaco-react": "^1.1.0",
@@ -27,8 +33,7 @@
 		"octokit": "^4.0.2",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
-		"starlight-theme-catppuccin": "^1.0.3",
-		"starlight-typedoc": "^0.17.0",
+		"starlight-typedoc": "^0.21.3",
 		"tailwindcss": "^3.4.14",
 		"typedoc-plugin-markdown": "^4.2.10",
 		"typescript": "^5.6.3",
@@ -36,6 +41,16 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
-		"daisyui": "^4.12.14"
+		"@types/estree": "^1.0.5",
+		"@types/fs-extra": "^11.0.4",
+		"daisyui": "^4.12.14",
+		"sirv": "^3.0.1",
+		"starlight-typedoc": "^0.21.3",
+		"typedoc": "^0.26.5",
+		"typedoc-plugin-custom": "^0.0.7",
+		"typedoc-plugin-extras": "^0.4.1",
+		"typedoc-plugin-markdown": "^4.2.3",
+		"typescript": "^5.5.4",
+		"vite": "^5.4.1"
 	}
 }

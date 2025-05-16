@@ -1,12 +1,8 @@
 {
   "devDependencies": {
-    "@types/glob": "^8.1.0",
-    "@types/node": "^22.15.17",
-    "glob": "^11.0.2",
-    "typescript": "^5.7.2",
-    "typia": "^9.2.0"
+    "fs-extra": "^11.3.0"
   },
   "dependencies": {
-    "neverthrow": "^8.2.0"
+    "@astrojs/node": "^9.2.1"
   }
 }

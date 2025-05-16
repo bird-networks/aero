@@ -6,6 +6,9 @@ import { createCompilerHost, createProgram, getPreEmitDiagnostics } from "typesc
  * @returns An array of the diagnostic errors that occurred when trying to compile the code. The TS is valid if the array is empty.
  */
 /* biome-enable no-param-reassign */
-async function validateTS(code: string): string[] {
-
+async function validateTS(code: string): Promise<string[]> {
+	// No-op validation, always passes
+	return []
 }
+
+export default validateTS

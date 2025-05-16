@@ -1,4 +1,5 @@
 ---
+import 'astro/client';
 import BaseLayout from "@/layouts/Base.astro";
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
@@ -39,7 +40,7 @@ const repoJSON = await octokit.request('GET  /repos/{owner}/{repo}', {
 <BaseLayout title="Welcome to aero">
   <p>{packageJSON.description}</p>
   <label class="input input-bordered flex items-center gap-2">
-    <input type="text" class="grow" placeholder="Enter your search query or URL" />
+    <input id="omnibox" type="text" class="grow" placeholder="Enter your search query or URL" />
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 16 16"
@@ -51,6 +52,7 @@ const repoJSON = await octokit.request('GET  /repos/{owner}/{repo}', {
         clip-rule="evenodd" />
     </svg>
   </label>
+  <div id="suggestions" class="absolute bg-white border w-full mt-1 z-10"></div>
   <table class="table">
     <thead>
       <tr>
@@ -107,3 +109,5 @@ const repoJSON = await octokit.request('GET  /repos/{owner}/{repo}', {
     </TabItem>
   </Tabs>
 </BaseLayout>
+<iframe id="frame" style="position:fixed;top:0;left:0;width:100vw;height:100vh;border:none;display:none;z-index:50;"></iframe>
+<script src="/src/scripts/omnibox.ts"></script>
