@@ -100,7 +100,7 @@ export default defineConfig({
     })
   ],
   server: {
-    port: 2525
+    port: 2526
   },
   devToolbar: {
     enabled: false
