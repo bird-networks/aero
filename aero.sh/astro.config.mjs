@@ -5,9 +5,9 @@ import { dirname, resolve } from "node:path";
 import { defineConfig } from "astro/config";
 
 import react from "@astrojs/react";
-import tailwind from "@astrojs/tailwind";
 import starlight from "@astrojs/starlight";
 import catppuccin from "@catppuccin/starlight";
+import tailwindcss from "@tailwindcss/vite";
 
 import node from "@astrojs/node";
 
@@ -50,20 +50,20 @@ export default defineConfig({
       }
     },
     plugins: [
-      customCopyPlugin(copyTargets)
+      customCopyPlugin(copyTargets),
+      tailwindcss({
+        config: "./tailwind.config.js"
+      }),
     ]
   },
   integrations: [
     react(),
-    tailwind({
-      applyBaseStyles: false,
-    }),
     starlight({
       title: "aero demo",
       logo: {
         src: "./public/full_logo.png"
       },
-      favicon: "/logo.png", // Use public/logo.png as favicon
+      favicon: "/logo.png",
       plugins: [
         catppuccin({ dark: "mocha-mauve", light: "latte-mauve" }),
         //starlightTypeDoc({
@@ -90,6 +90,11 @@ export default defineConfig({
           icon: "github",
           label: "GitHub",
           href: "https://github.com/vortexdl/aero"
+        },
+        {
+          icon: "discord",
+          label: "Discord",
+          href: "https://discord.gg/browserports"
         }
       ]
     })

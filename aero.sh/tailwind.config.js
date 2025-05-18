@@ -1,7 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./src/**/*.{astro,html,svelte,vue,js,ts,jsx,tsx}"],
-  plugins: [require("daisyui")],
+  plugins: [
+    require("@astrojs/starlight-tailwind"),
+    require("daisyui")
+  ],
   daisyui: {
     /** From @see https://github.com/midiidev/catppuccin-daisyui/blob/master/tailwind.config.js */
     themes: [
