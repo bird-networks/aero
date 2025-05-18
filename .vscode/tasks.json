@@ -20,6 +20,32 @@
 			"group": "build",
 			"label": "aero: debug build",
 			"script": "debugBuildSW"
+		},
+		{
+			"label": "Start aero.sh Dev Server",
+			"type": "npm",
+			"script": "dev",
+			"isBackground": true,
+			"options": {
+				"cwd": "${workspaceFolder}/aero.sh"
+			},
+			"problemMatcher": [
+				{
+					"owner": "astro",
+					"pattern": [
+						{
+							"regexp": "(Local|Network):\\s+http://localhost:\\d+(/)?",
+							"file": 1,
+							"location": 1,
+							"message": 1
+						}
+					],
+					"background": {
+						"activeOnStart": true,
+						"endsPattern": "(Local|Network):\\s+http://localhost:\\d+(/)?"
+					}
+				}
+			]
 		}
 	]
 }

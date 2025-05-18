@@ -19,23 +19,23 @@ const __dirname = dirname(__filename);
 // Unified configuration for copying and serving files
 const copyTargets = [
   {
-    src: resolve(__dirname, "../AeroSandbox/dist/debug/"),
+    src: resolve(__dirname, "AeroSandbox/dist/debug/"),
     serveAt: "/aero/sandbox",
   },
   {
-    src: resolve(__dirname, "../aeroSW/extras/"),
+    src: resolve(__dirname, "aeroSW/extras/"),
     serveAt: "/aero/extras",
   },
   {
-    src: resolve(__dirname, "../aeroSW/dist/prod/"),
+    src: resolve(__dirname, "aeroSW/dist/prod/"),
     serveAt: "/aero",
   },
   {
-    src: resolve(__dirname, "../node_modules/@mercuryworkshop/epoxy-transport/dist/"),
+    src: resolve(__dirname, "node_modules/@mercuryworkshop/epoxy-transport/dist/"),
     serveAt: "/epoxy",
   },
   {
-    src: resolve(__dirname, "../node_modules/@mercuryworkshop/bare-mux/dist/"),
+    src: resolve(__dirname, "node_modules/@mercuryworkshop/bare-mux/dist/"),
     serveAt: "/baremux",
   }
 ];

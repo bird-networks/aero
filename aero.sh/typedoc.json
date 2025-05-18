@@ -1,0 +1,13 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPointStrategy": "packages",
+  "entryPoints": [
+    "../AeroSandbox",
+    "../aeroSW"
+  ],
+  "plugin": [
+    "typedoc-plugin-markdown"
+  ],
+  "out": "dist/typedoc-temp-packages",
+  "readme": "none"
+} 
