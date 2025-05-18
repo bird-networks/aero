@@ -1,8 +1,4 @@
 {
-  "devDependencies": {
-    "fs-extra": "^11.3.0"
-  },
-  "dependencies": {
-    "@astrojs/node": "^9.2.1"
-  }
+  "name": "aero-monorepo",
+  "description": "DO NOT PUBLISH"
 }
