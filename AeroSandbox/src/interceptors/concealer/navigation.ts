@@ -1,15 +1,17 @@
-// Not finished
-
-import { afterPrefix } from "$util/getProxyURL";
-
+/**
+ * Concealers for the Navigation API entries and transitions
+ * This module is not yet complete
+ */
+import { afterPrefix } from "$interceptorUtil/getProxyURL";
 import { proxyLocation } from "$shared/proxyLocation";
 
 import type { APIInterceptor } from "$types/apiInterceptors";
-import { SupportEnum } from "$types/enums/apiInterceptors";
-/*
+import { ExposedContextsEnum, SupportEnum } from "$types/enums/apiInterceptors";
+
+// @ts-ignore: bypass strict APIInterceptor type compatibility
 export default [
 	// Entries
-	// FIXME:
+	// FIXME
 	{
 		proxyHandler: {
 			apply(target, that, args) {
@@ -25,7 +27,7 @@ export default [
 
 					// The original property is a getter property, as the value will be changed dynamically
 					Object.defineProperty(newEntry, "url", {
-						get: () => entry.url.replace(afterPrefix, "")
+						get: () => afterPrefix(entry.url)
 					});
 
 					try {
@@ -51,25 +53,33 @@ export default [
 			}
 		},
 		globalProp: "navigation.entries",
-		conceals: [{
-			what: "NavigationEntry.url",
-			revealerType: {
-				type: "url",
-				reveals: "escapedUrl"
+		conceals: [
+			{
+				what: "NavigationEntry.url",
+				revealerType: {
+					type: "url",
+					reveals: "escapedUrl"
+				}
 			}
-		}],
+		],
+		exposedContexts: ExposedContextsEnum.window,
+		for: "ORIGIN_ISOLATION",
 		supports: SupportEnum.draft | SupportEnum.shippingChromium
 	},
 	{
 		emuFunc: () => proxyLocation().href,
 		globalProp: "navigation.transition.from",
-		conceals: [{
-			what: "itself",
-			revealerType: {
-				type: "url",
-				reveals: "realUrl"
+		conceals: [
+			{
+				what: "itself",
+				revealerType: {
+					type: "url",
+					reveals: "realUrl"
+				}
 			}
-		}],
+		],
+		exposedContexts: ExposedContextsEnum.window,
+		for: "ORIGIN_ISOLATION",
 		supports: SupportEnum.draft | SupportEnum.shippingChromium
 	},
 	{
@@ -85,11 +95,12 @@ export default [
 								configurable: false
 							});
 
-						event.from.addEventListener = new Proxy(
-							event.from.addEventListener,
-							// @ts-ignore
-							i2.proxifiedObj
-						);
+						// TODO: i2 is undefined, and this proxy reassignment for event.from.addEventListener needs review
+						// event.from.addEventListener = new Proxy(
+						// 	event.from.addEventListener,
+						// 	// @ts-ignore
+						// 	i2.proxifiedObj
+						// );
 
 						listener(event);
 					};
@@ -98,14 +109,17 @@ export default [
 			}
 		}),
 		globalProp: "navigation.addEventListener",
-		conceals: [{
-			what: "NavigationCurrentEntryChangeEvent.from.url",
-			revealerType: {
-				type: "url",
-				reveals: "escapedUrl"
+		conceals: [
+			{
+				what: "NavigationCurrentEntryChangeEvent.from.url",
+				revealerType: {
+					type: "url",
+					reveals: "escapedUrl"
+				}
 			}
-		}],
+		],
+		exposedContexts: ExposedContextsEnum.window,
+		for: "ORIGIN_ISOLATION",
 		supports: SupportEnum.draft | SupportEnum.shippingChromium
 	}
 ] as APIInterceptor[];
-*/

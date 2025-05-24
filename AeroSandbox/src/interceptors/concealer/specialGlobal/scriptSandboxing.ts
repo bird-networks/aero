@@ -233,7 +233,7 @@ const ProxyProxyInterceptor: APIInterceptor = {
 	/**
 	 * Fixes `that` in the Proxy handlers being used to reveal the window if the target in the Proxy object is a property on the windowon
 	 * You could solve this issue with EST parsing, but that would make JS parsing way slower than it is now, so I opted to use the same window proxy object that AeroGel already uses
-	 * EST parsing is flawed compared to AeroGel because it is exponentially  `n` times more expensive to keep track of what will happen in the future, which would be a part of the solution for many UV's JS rewriting escapes. That is why the Discord bundle takes so long to rewrite using full-parse methods.
+	 * EST parsing is flawed compared to AeroGel because it is exponentially `n` times more expensive to keep track of what will happen in the future, which would be a part of the solution for many UV's JS rewriting escapes. That is why the Discord bundle takes so long to rewrite using full-parse methods.
 	 */
 	proxifiedObj: (ctx: proxifiedObjGeneratorContext) => {
 		if (

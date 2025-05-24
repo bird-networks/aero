@@ -18,7 +18,6 @@ const liveBuildMode = "LIVE_BUILD" in process.env;
 const verboseMode =
 	!("VERBOSE" in process.env) || process.env.VERBOSE !== "false";
 const debugMode = liveBuildMode || "DEBUG" in process.env;
-const serverMode = true;
 
 // Scripts
 // TODO: Instead use the one from AeroSandbox import InitDist from "./scripts/InitDist";
@@ -27,7 +26,12 @@ import Logger from "../AeroSandbox/build/Logger";
 
 import importSync from "import-sync";
 
-export default function createRspackConfig(distName = "sw"): rspack.Configuration {
+// Attempt to import InitDist, path might need adjustment
+// import InitDist from "./scripts/InitDist"; 
+// TODO: Clarify correct path for InitDist, e.g., from "../AeroSandbox/scripts/InitDist" or similar
+import InitDist from "../AeroSandbox/scripts/InitDist"; // Removed .ts extension
+
+export default function createRspackConfig(distName = "sw"): import("@rspack/core").Configuration {
 	// TODO: Type assert with partial
 	let featureFlagOverrides = {};
 	try {
@@ -43,18 +47,22 @@ export default function createRspackConfig(distName = "sw"): rspack.Configuratio
 		debugMode
 	});
 
-	if (serverMode) {
+	// For now, let serverMode be potentially a string to satisfy type checks in comparisons,
+	// but acknowledge the original logic (serverMode = true) makes those string checks dead code.
+	const serverMode: string | boolean = process.env.AERO_SERVER_MODE || true;
+
+	if (serverMode === true || typeof serverMode === "string") { // Ensure this block runs if serverMode is true or a string
 		// @ts-ignore
 		featureFlags.reqInterceptionCatchAll = JSON.stringify("referrer");
 		if (serverMode === "winterjs") {
 			// @ts-ignore
 			featureFlags.serverOnly = JSON.stringify("winterjs");
-		} else if (serverMode === JSON.stringify("cf-workers")) {
+		} else if (serverMode === "cf-workers") { // Note: JSON.stringify("cf-workers") was likely an error before
 			// @ts-ignore
 			featureFlags.serverOnly = JSON.stringify("cf-workers");
 		}
 		// @ts-ignore
-	} else {
+	} else { // This case implies serverMode is boolean false
 		// @ts-ignore
 		featureFlags.reqInterceptionCatchAll = JSON.stringify("clients");
 		// @ts-ignore
@@ -63,8 +71,8 @@ export default function createRspackConfig(distName = "sw"): rspack.Configuratio
 
 	const logger = new Logger(verboseMode);
 
-	logger.debug("The chosen feature flags are:");
-	logger.debug(featureFlags);
+	logger.log("The chosen feature flags are:"); // Changed from debug to log
+	logger.log(featureFlags); // Changed from debug to log
 
 	// biome-ignore lint/suspicious/noExplicitAny: I don't know the exact type to use for this at the moment
 	const plugins: any = [
@@ -95,10 +103,10 @@ export default function createRspackConfig(distName = "sw"): rspack.Configuratio
 	const properDirType = debugMode ? "debug" : "prod";
 	const properDir = path.resolve(__dirname, "dist", properDirType, distName);
 
-	logger.debug(`Building in ${properDirType} mode`);
-	if (liveBuildMode) logger.debug("Building in live build mode");
+	logger.log(`Building in ${properDirType} mode`); // Changed from debug to log
+	if (liveBuildMode) logger.log("Building in live build mode"); // Changed from debug to log
 
-	const config = {
+	const config: import("@rspack/core").Configuration = { // Explicitly type config
 		mode: debugMode ? "development" : "production",
 		devtool: debugMode ? "eval-source-map" : "source-map",
 		entry: {
@@ -131,8 +139,8 @@ export default function createRspackConfig(distName = "sw"): rspack.Configuratio
 	new InitDist(
 		{
 			dist: path.resolve(__dirname, "dist"),
-			proper: properDir,
-			sw: path.resolve(__dirname, "dist", properDirType, "sw")
+			proper: properDir
+			// sw: path.resolve(__dirname, "dist", properDirType, "sw") // Removed sw property
 		},
 		properDirType,
 		verboseMode

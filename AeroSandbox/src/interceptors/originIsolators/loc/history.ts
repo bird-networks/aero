@@ -15,12 +15,10 @@ const historySharedProxyHandlers = {
 			url = args[2];
 
 		try {
-			if (args.length > 2) {
+			if (args.length > 2)
 				args[2] = rewriteSrc(url, proxyLocation().href, $aero.logger);
-			}
-			if (args.length > 3) {
+			if (args.length > 3)
 				args[3] = rewriteSrc(url, proxyLocation().href, $aero.logger);
-			}
 		} catch (err) {
 			$aero.logger.fatalErr(
 				`An error occurred while intercepting the source in the History API interceptor${ERR_LOG_AFTER_COLON}${err}`

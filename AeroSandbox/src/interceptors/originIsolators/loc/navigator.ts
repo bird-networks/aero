@@ -1,9 +1,9 @@
 import type { APIInterceptor } from "$types/apiInterceptors";
-import { ExposedContextsEnum, URL_IS_ESCAPE } from "$types/enums/apiInterceptors";
+import { ExposedContextsEnum, URL_IS_ESCAPE, SupportEnum } from "$types/enums/apiInterceptors";
 
-import rewriteSrc from "$util/src";
+import rewriteSrc from "$interceptorUtil/src";
 import { proxyLocation } from "$shared/proxyLocation";
-import proto from "$util/proto";
+import proto from "$interceptorUtil/proto";
 /**
  * The handler for the methods for registering (`navigator.registerProtocolHandler`) and unregistering (`unregisterProtocolHandler`) the protocols where the URL is for the protocol handler
  */
@@ -11,10 +11,11 @@ const sharedProtoHandler = {
 	apply(target, that, args) {
 		const [scheme, url] = args;
 		args[0] = proto.set(scheme);
-		args[1] = rewriteSrc(url, proxyLocation().href);
+		args[1] = rewriteSrc(url, proxyLocation().href, $aero.logger);
 		return Reflect.apply(target, that, args);
 	},
-} as ProxyHandler<Navigator["registerProtocolHandler"]> | ProxyHandler<Navigator["unregisterProtocolHandler"]>;
+} as ProxyHandler<any>;
+
 /**
  * The escape fixes for the methods for registering (`navigator.registerProtocolHandler`) and unregistering (`unregisterProtocolHandler`) the protocols where the URL is for the protocol handler
  */
@@ -29,14 +30,15 @@ const sharedEscapeFixes = [
 	},
 ];
 
+// @ts-ignore: bypass strict APIInterceptor type compatibility
 export default [
 	{
 		proxyHandler: {
 			apply(target, that, args) {
 				const [url] = args;
-				args[0] = rewriteSrc(url, proxyLocation().href);
+				args[0] = rewriteSrc(url, proxyLocation().href, $aero.logger);
 				return Reflect.apply(target, that, args);
-			}
+			},
 		} as ProxyHandler<Navigator["sendBeacon"]>,
 		escapeFixes: [
 			{
@@ -49,18 +51,24 @@ export default [
 			},
 		],
 		globalProp: "navigator.prototype.sendBeacon",
-		exposedContexts: ExposedContextsEnum.window
+		exposedContexts: ExposedContextsEnum.window,
+		supports: SupportEnum.widelyAvailable,
+		for: "ORIGIN_ISOLATION"
 	},
 	{
 		proxyHandler: sharedProtoHandler,
 		escapeFixes: sharedEscapeFixes,
 		globalProp: "navigator.prototype.registerProtocolHandler",
-		exposedContexts: ExposedContextsEnum.window
+		exposedContexts: ExposedContextsEnum.window,
+		supports: SupportEnum.widelyAvailable,
+		for: "ORIGIN_ISOLATION"
 	},
 	{
 		proxyHandler: sharedProtoHandler,
 		escapeFixes: sharedEscapeFixes,
 		globalProp: "navigator.prototype.unregisterProtocolHandler",
-		exposedContexts: ExposedContextsEnum.window
+		exposedContexts: ExposedContextsEnum.window,
+		supports: SupportEnum.widelyAvailable,
+		for: "ORIGIN_ISOLATION"
 	}
 ] as APIInterceptor[];

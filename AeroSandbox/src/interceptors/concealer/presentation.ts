@@ -1,8 +1,9 @@
 import type { APIInterceptor } from "$types/apiInterceptors";
 import { SupportEnum } from "$types/enums/apiInterceptors";
 
-import { proxyGetString } from "$util/stringProxy";
-import rewriteSrc from "$util/src";
+import { proxyGetString } from "$interceptorUtil/stringProxy";
+import rewriteSrc from "$interceptorUtil/src";
+import { proxyLocation } from "$shared/proxyLocation";
 
 export default [
 	{
@@ -13,8 +14,8 @@ export default [
 					/** Could either be a string or an array */
 					let [urls] = args;
 					if (Array.isArray(urls))
-						urls = urls.map(url => rewriteSrc(url));
-					else urls = rewriteSrc(urls);
+						urls = urls.map(url => rewriteSrc(url, proxyLocation().href, $aero.logger));
+					else urls = rewriteSrc(urls, proxyLocation().href, $aero.logger);
 					args[0] = urls;
 					return Reflect.construct(that, args);
 				}

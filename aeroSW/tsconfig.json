@@ -27,13 +27,15 @@
 		},
 		"types": [
 			"./types/index.d.ts",
-			"./AeroSandbox/types/index.d.ts",
 			"@types/serviceworker",
 			"@types/web-app-manifest"
 		],
 		"plugins": [
 			{
-				"transform": ["ts-runtime-checks", "typia/lib/transform"]
+				"transform": "ts-runtime-checks"
+			},
+			{
+				"transform": "typia/lib/transform"
 			}
 		],
 		"strictNullChecks": true,
