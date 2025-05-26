@@ -18,12 +18,16 @@ If you want to run a live demo build on your own PC run `cd aero.sh && npm i && 
 
 ## How to build
 
+First, ensure you have at least NodeJS v21
+
 ## aero's SW
 
-Run `cd aeroSW && npm i && npm run buildSW`
+1. If you are on NodeJS v21+, run `npm i neverthrow --legacy-peer-deps`
+2. Run `cd aeroSW && npm i && npm run buildSW`
 
 ## AeroSandbox
 
+1. If you are on NodeJS v21+, run `npm i neverthrow --legacy-peer-deps`
 Run `cd AeroSandbox && npm i && npm run build`
 
 ## What is a web proxy?
