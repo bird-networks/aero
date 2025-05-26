@@ -12,10 +12,7 @@ import type {
 	proxifiedObjType,
 } from "../../types/apiInterceptors";
 
-import type {
-	default as ToBeDefined,
-	toBeDefinedErrsType,
-} from "../../types/global";
+import type { default as ToBeDefined, toBeDefinedErrsType } from "../../types/global";
 
 import createApiInterceptorIteratorClient from "./createApiInterceptorIterator";
 
@@ -34,7 +31,7 @@ export default (
 		featureConfig: any;
 	},
 	logger?,
-	includeRegExp = /\.ts$/,
+	includeRegExp = /\.ts$/
 ): {
 	toBeDefinedErrs: toBeDefinedErrsType[];
 	toBeDefined: ToBeDefined;
@@ -56,7 +53,7 @@ export default (
 	const toBeDefined: ToBeDefined = {
 		self: {},
 		proxifiedObjWorkerVersion: {},
-		browsingContext: {}
+		browsingContext: {},
 	};
 
 	for (const aI of createApiInterceptorIteratorClient(includeRegExp)) {
@@ -65,17 +62,13 @@ export default (
 			if (isAPIIncluded(apiInterceptorName, featureConfig)) continue; // Should skip?
 			if (DEBUG) {
 				logger.debug(
-					`Processing API interceptors from the file ${__filename} (${apiInterceptorName})`,
+					`Processing API interceptors from the file ${__filename} (${apiInterceptorName})`
 				);
 			}
 			if ("insertLevel" in aI && aI.insertLevel !== undefined && aI.insertLevel !== 0) {
 				insertLater.set(aI.insertLevel, aI);
 			} else {
-				const toBeDefinedErr = handleAI(
-					aI,
-					toBeDefined,
-					proxifiedObjGenCtx,
-				);
+				const toBeDefinedErr = handleAI(aI, toBeDefined, proxifiedObjGenCtx);
 				if (toBeDefinedErr !== "successful") {
 					toBeDefinedErrs.push(toBeDefinedErr);
 				}
@@ -86,7 +79,7 @@ export default (
 	}
 
 	const sortedInsertObj = Object.entries(
-		Array.from(insertLater.keys()).sort((a, b) => b[1] - a[1]),
+		Array.from(insertLater.keys()).sort((a, b) => b[1] - a[1])
 	) as {
 		[key: string]: APIInterceptor;
 	};
@@ -107,7 +100,7 @@ export default (
 function handleAI(
 	aI: APIInterceptor,
 	toBeDefined: ToBeDefined,
-	proxifiedObjGenCtx: proxifiedObjGeneratorCtxType,
+	proxifiedObjGenCtx: proxifiedObjGeneratorCtxType
 ): toBeDefinedError | "successful" {
 	if (aI.proxifyGetter) {
 		const newGetter = aI.proxifyGetter({
@@ -123,7 +116,7 @@ function handleAI(
 			set(newVal) {
 				const newSetter = aI.proxifySetter({
 					this: toBeDefined.browsingContext[aI.globalProp],
-					newVal
+					newVal,
 				});
 				newSetter();
 			},
@@ -131,11 +124,17 @@ function handleAI(
 		return "successful";
 	}
 	if (aI.proxyHandlers) {
-		toBeDefined.browsingContext[aI.globalProp] = Proxy.revocable(toBeDefined.browsingContext[aI.globalProp], aI.proxyHandlers);
+		toBeDefined.browsingContext[aI.globalProp] = Proxy.revocable(
+			toBeDefined.browsingContext[aI.globalProp],
+			aI.proxyHandlers
+		);
 		return "successful";
 	}
 	if (aI.proxyHandlersWorkersVersion) {
-		toBeDefined.browsingContext[aI.globalProp] = Proxy.revocable(toBeDefined.browsingContext[aI.globalProp], aI.proxyHandlersWorkersVersion);
+		toBeDefined.browsingContext[aI.globalProp] = Proxy.revocable(
+			toBeDefined.browsingContext[aI.globalProp],
+			aI.proxyHandlersWorkersVersion
+		);
 		return "successful";
 	}
 	return "successful"; // Default case
@@ -143,7 +142,7 @@ function handleAI(
 
 function resolveProxifiedObj(
 	proxifiedObj: proxifiedObjType,
-	ctx: proxifiedObjGeneratorCtxType,
+	ctx: proxifiedObjGeneratorCtxType
 ): proxifiedObjType {
 	let proxyObject = {};
 	if (typeof proxifiedObj === "function") proxyObject = proxifiedObj(ctx);

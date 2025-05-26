@@ -24,11 +24,11 @@ const uv = new UVServiceWorker();
 
 addEventListener("install", skipWaiting);
 
-addEventListener("fetch", event => {
-	if (event.request.url.startsWith(location.origin + __uv$config.prefix)) {
-		return event.respondWith(uv.fetch(event));
-	}
-	if (routeAero(event)) {
-		return event.respondWith(aeroHandlerWithExtras(event));
-	}
+addEventListener("fetch", (event) => {
+  if (event.request.url.startsWith(location.origin + __uv$config.prefix)) {
+    return event.respondWith(uv.fetch(event));
+  }
+  if (routeAero(event)) {
+    return event.respondWith(aeroHandlerWithExtras(event));
+  }
 });

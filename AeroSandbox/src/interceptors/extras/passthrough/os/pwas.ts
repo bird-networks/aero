@@ -1,7 +1,7 @@
 import typia from "typia";
 
 import type { APIInterceptor } from "$types/apiInterceptors";
-import { SupportEnum, ExposedContextsEnum } from "$types/enums/apiInterceptors";
+import { ExposedContextsEnum, SupportEnum } from "$types/enums/apiInterceptors";
 import { OsPassthroughFeatures } from "$types/buildConfig";
 
 import { proxyLocation } from "$shared/proxyLocation";
@@ -43,12 +43,12 @@ export default [
 					} else {
 						return Reflect.apply(target, that, args);
 					}
-				}
+				},
 			};
 		},
 		for: "OS_EXTRA",
 		globalProp: "LaunchQueue.prototype.setConsumer",
 		exposedContexts: ExposedContextsEnum.window,
-		supports: SupportEnum.nonstandard | SupportEnum.shippingChromium
-	}
+		supports: SupportEnum.nonstandard | SupportEnum.shippingChromium,
+	},
 ] as APIInterceptor[];

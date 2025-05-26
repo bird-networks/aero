@@ -52,14 +52,14 @@ export default function fmtHTMLInjBundle({ DEBUG }: FeatureFlagsPassthrough) {
 		import aeroSandboxConfig from "{{BUNDLES_SANDBOX_CONFIG}}";
 		if (!(AeroSandbox in self))
 			$aero.logger.fatalErr("Missing the AeroSandbox declaration after importing the AeroSandbox bundle")
-		const aeroSandbox new AeroSandbox({
+		const aeroSandbox = new AeroSandbox({
 			config: aeroSandboxConfig
 		});
 		// Takes in the storage key prefix you want
 		aeroSandbox.registerStorageIsolators($aero.proxyNamespace)
 		aeroSandbox.fakeOrigin();
 		{{IMAGE_LOG}}
-		$aero.logger.debug("Welcome to aero! Our GitHub repo is at {{BUNDLES_SANDBOX_END}}.")
+		$aero.logger.debug("Welcome to aero! Our GitHub repo is at {{GITHUB_REPO}}.")
 		$aero.logger.debug("\\nAeroSandbox has been loaded and initialized: aero is ready to go!");
 	</script>
     <script src="{{BUNDLES_SANDBOX_END}}"></script>
@@ -68,9 +68,8 @@ export default function fmtHTMLInjBundle({ DEBUG }: FeatureFlagsPassthrough) {
 	return {
 		cacheable: false,
 		code: `module.exports = \`${minifyHtml.minify(Buffer.from(base), {
-			keep_spaces_between_attributes: true,
-			// TODO: Make this a real feature flag
+			allow_removing_spaces_between_attributes: false,
 			keep_comments: DEBUG
-		}\`})`
+		})}\``
 	}
 }

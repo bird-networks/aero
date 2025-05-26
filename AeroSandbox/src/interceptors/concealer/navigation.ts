@@ -27,30 +27,28 @@ export default [
 
 					// The original property is a getter property, as the value will be changed dynamically
 					Object.defineProperty(newEntry, "url", {
-						get: () => afterPrefix(entry.url)
+						get: () => afterPrefix(entry.url),
 					});
 
 					try {
-						if (
-							new URL(newEntry.url).origin !==
-							proxyLocation().origin
-						)
+						if (new URL(newEntry.url).origin !== proxyLocation().origin) {
 							// The site is not supposed to see this entry
 							continue;
+						}
 					} catch {
 						continue;
 					}
 
 					// Offset the index to delete the entry change without the site noticing
 					Object.defineProperty(newEntry, "index", {
-						value: i++
+						value: i++,
 					});
 
 					newEntries.push(newEntry);
 				}
 
 				return newEntries;
-			}
+			},
 		},
 		globalProp: "navigation.entries",
 		conceals: [
@@ -58,13 +56,13 @@ export default [
 				what: "NavigationEntry.url",
 				revealerType: {
 					type: "url",
-					reveals: "escapedUrl"
-				}
-			}
+					reveals: "escapedUrl",
+				},
+			},
 		],
 		exposedContexts: ExposedContextsEnum.window,
 		for: "ORIGIN_ISOLATION",
-		supports: SupportEnum.draft | SupportEnum.shippingChromium
+		supports: SupportEnum.draft | SupportEnum.shippingChromium,
 	},
 	{
 		emuFunc: () => proxyLocation().href,
@@ -74,26 +72,27 @@ export default [
 				what: "itself",
 				revealerType: {
 					type: "url",
-					reveals: "realUrl"
-				}
-			}
+					reveals: "realUrl",
+				},
+			},
 		],
 		exposedContexts: ExposedContextsEnum.window,
 		for: "ORIGIN_ISOLATION",
-		supports: SupportEnum.draft | SupportEnum.shippingChromium
+		supports: SupportEnum.draft | SupportEnum.shippingChromium,
 	},
 	{
 		proxifiedObj: Proxy.revocable(navigation.addEventListener, {
 			apply(target, that, args) {
 				const [messageType, listener] = args;
 
-				if (messageType === "currententrychange")
+				if (messageType === "currententrychange") {
 					args[1] = (event: NavigationCurrentEntryChangeEvent) => {
-						if ("url" in event.from)
+						if ("url" in event.from) {
 							Object.defineProperty(event.from, "url", {
 								get: () => afterPrefix(event.from.url),
-								configurable: false
+								configurable: false,
 							});
+						}
 
 						// TODO: i2 is undefined, and this proxy reassignment for event.from.addEventListener needs review
 						// event.from.addEventListener = new Proxy(
@@ -104,9 +103,10 @@ export default [
 
 						listener(event);
 					};
+				}
 
 				return Reflect.apply(target, that, args);
-			}
+			},
 		}),
 		globalProp: "navigation.addEventListener",
 		conceals: [
@@ -114,12 +114,12 @@ export default [
 				what: "NavigationCurrentEntryChangeEvent.from.url",
 				revealerType: {
 					type: "url",
-					reveals: "escapedUrl"
-				}
-			}
+					reveals: "escapedUrl",
+				},
+			},
 		],
 		exposedContexts: ExposedContextsEnum.window,
 		for: "ORIGIN_ISOLATION",
-		supports: SupportEnum.draft | SupportEnum.shippingChromium
-	}
+		supports: SupportEnum.draft | SupportEnum.shippingChromium,
+	},
 ] as APIInterceptor[];

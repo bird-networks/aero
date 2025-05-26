@@ -1,12 +1,11 @@
 /**
  * @module
  * This module is a part of escaping through the search params
-*/
+ */
 
 // TODO: Perhaps I should move this types into AeroSandbox instead
-import type { SearchParamOptions } from "$aeroSW/types/catch-all";
-
-import type { rewrittenParamsOriginalsType } from "$types/commonPassthrough"
+import type { SearchParamOptions } from "../../../../aeroSW/types/catch-all";
+import type { rewrittenParamsOriginalsType } from "../../../../aeroSW/types/commonPassthrough";
 
 /**
  * There comes a problem when you want to rewrite a request something in the client, but you also want to ask the SW of a special request for what to do when it comes to handling that request. That is where this function comes in. This method is versatile and is used in many areas of aero.
@@ -15,7 +14,7 @@ import type { rewrittenParamsOriginalsType } from "$types/commonPassthrough"
  * @param searchParamOptions The options for configuring how the search param is escaped
  * @param str The string to append to the search params
  * @param headers Response headers (if this is being ran in aero's SW handler) so that if any of the params specified in the `No-Vary-Search` header are escaped in the final versions of the params it wouldn't mess up the cache-excluding mechanism the header provides
-*/
+ */
 export default (
 	searchParams: URLSearchParams,
 	searchParamOptions: SearchParamOptions,
@@ -30,13 +29,15 @@ export default (
 	for (; ;) {
 		// Before we try one more level
 		const paramBehind = escapesStr + searchParamOptions.searchParam;
-		for (let i = 0; i < escapingCharCount; i++)
+		for (let i = 0; i < escapingCharCount; i++) {
 			escapesStr += searchParamOptions.escapeKeyword;
+		}
 		// Try the search param with yet another escapeChar
 		const paramToTry = escapesStr + searchParamOptions.searchParam;
 		if (!searchParams.has(paramToTry)) {
-			if (rewrittenParamsOriginals)
+			if (rewrittenParamsOriginals) {
 				rewrittenParamsOriginals[paramBehind] = paramToTry;
+			}
 			searchParams.set(paramToTry, str);
 			return {};
 		}

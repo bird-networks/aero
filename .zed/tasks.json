@@ -1,6 +1,6 @@
 [
-	{
-		"label": "Start aero dev server",
-		"command": "pm2 run ecosystem.config.js"
-	}
+  {
+    "label": "Start aero dev server",
+    "command": "pm2 run ecosystem.config.js"
+  }
 ]

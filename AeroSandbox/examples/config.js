@@ -6,7 +6,7 @@ import { defaultConfig } from "./defaultConfig.js";
  * @type {Config}
  */
 const config = {
-	...defaultConfig
+	...defaultConfig,
 	// Add your config code here
 };
 

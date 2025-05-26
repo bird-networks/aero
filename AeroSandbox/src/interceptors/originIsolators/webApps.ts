@@ -5,29 +5,35 @@ import type { APIInterceptor } from "$types/apiInterceptors";
 import { URL_IS_ESCAPE } from "$types/enums/apiInterceptors";
 
 export default {
-	createProxyHandler: ctx => ({
-		async apply(target, that, args) {
-			const relatedApps = await Reflect.apply(target, that, args);
+	createProxyHandler: ctx =>
+		({
+			async apply(target, that, args) {
+				const relatedApps = await Reflect.apply(target, that, args);
+				// @ts-ignore
+				for (const relatedApp of relatedApps) {
+					if (relatedApp.platform === "webapp") {
+						relatedApp.url = rewriteSrc(
+							relatedApp.url,
+							proxyLocation().href,
+							$aero.logger
+						);
+					}
+				}
+			},
+			// TODO: Import the @types for this
 			// @ts-ignore
-			for (const relatedApp of relatedApps) {
-				if (relatedApp.platform === "webapp")
-					relatedApp.url = rewriteSrc(relatedApp.url, proxyLocation().href, $aero.logger);
-			}
-		}
-		// TODO: Import the @types for this
-		// @ts-ignore
-	} as ProxyHandler<Navigator["getInstalledRelatedApps"]>),
+		}) as ProxyHandler<Navigator["getInstalledRelatedApps"]>,
 	escapeFixes: {
 		what: "VALUE_PROXIFIED_OBJ",
 		propsThatEscape: {
-			"url": [
+			url: [
 				{
 					what: "URL_STRING",
-					is: URL_IS_ESCAPE.FULL_URL
-				}
-			]
-		}
+					is: URL_IS_ESCAPE.FULL_URL,
+				},
+			],
+		},
 	},
 	originIsolator: true,
-	globalProp: "navigator.prototype.getInstalledRelatedApps"
+	globalProp: "navigator.prototype.getInstalledRelatedApps",
 } as APIInterceptor;

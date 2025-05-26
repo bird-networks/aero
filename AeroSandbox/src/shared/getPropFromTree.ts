@@ -5,8 +5,11 @@
  * @returns The property value or undefined if not found
  */
 export default function getPropFromTree<T = unknown>(propTree: string): T | undefined {
-	return propTree.split('.')
-		.reduce((obj: any, key) => (obj != null ? obj[key] : undefined), globalThis as any) as T | undefined
+	return propTree
+		.split(".")
+		.reduce((obj: any, key) => (obj != null ? obj[key] : undefined), globalThis as any) as
+		| T
+		| undefined;
 }
 
 /**

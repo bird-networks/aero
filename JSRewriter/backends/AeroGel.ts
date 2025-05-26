@@ -4,28 +4,29 @@
  * This module contains the class for the AeroGel implementation with aero's native parser which uses no external libraries
  */
 
-import type {
-	Result,
-} from "neverthrow";
-import {
-	ok as nOk,
-	err as nErr
-} from "neverthrow";
+import type { Result } from "neverthrow";
+import { err as nErr, ok as nOk } from "neverthrow";
 
 import type AeroConfig from "./types/config.js";
 
-import type { processKeywordHandlerCtx } from "../../../../../ProxyParse/src/index.js";
+import type { processKeywordHandlerCtx } from "$proxyparse/index";
 
-import AeroGelGeneric from "./shared/AeroGelGeneric.js";
+import AeroGelGeneric from "./shared/AeroGelGeneric";
 
-import keywordProcessorHandler from "../../../../../ProxyParse/src/keywordProcessorHandler.js";
+import keywordProcessorHandler from "$proxyparse/keywordProcessorHandler";
 // This one is slow
-import processKeyword from "../../../../../ProxyParse/src/keywordProcessorIterator.js";
-import { replaceVarAssignmentKeywordWithFakeVarNamespace, replaceAssignmentKeyword, replaceMethod } from "../../../../../ProxyParse/src/replaceKeywords.js";
-import { containsAmbiguousAccess } from "../../../../../ProxyParse/src/internal/checks.js";
+import processKeyword from "$proxyparse/keywordProcessorIterator";
+import {
+	replaceAssignmentKeyword,
+	replaceMethod,
+	replaceVarAssignmentKeywordWithFakeVarNamespace,
+} from "$proxyparse/replaceKeywords";
+import { containsAmbiguousAccess } from "$proxyparse/internal/checks";
 
-const propTreeAeroGelSpecific = 'window["<proxyNamespace>"]["<ourNamespace>"].rewriters.js.aeroGel.';
-const propTree = 'window["<proxyNamespace>"]["<ourNamespace>"].rewriters.js.shared.';
+const propTreeAeroGelSpecific =
+	'window["<proxyNamespace>"]["<ourNamespace>"].rewriters.js.aeroGel.';
+const propTree =
+	'window["<proxyNamespace>"]["<ourNamespace>"].rewriters.js.shared.';
 
 /**
  * The AeroGel class is the main class for the AeroGel implementation
@@ -83,7 +84,7 @@ export default class AeroGel extends AeroGelGeneric {
 	 * aeroGel.jailScript(yourScript, isMod);
 	 */
 	jailScript(script: string, isModule: boolean): Result<string, Error> {
-		return nOk(super.jailScript(script, isModule, {
+		return super.jailScript(script, isModule, {
 			globalsConfig: {
 				propTrees: {
 					fakeLet: propTreeAeroGelSpecific + "fakeLet",
@@ -91,9 +92,9 @@ export default class AeroGel extends AeroGelGeneric {
 				},
 				proxified: {
 					evalFunc: propTree + "proxifiedEval",
-					location: propTree + "proxifiedLocation"
+					location: propTree + "proxifiedLocation",
 				},
-				checkFunc: propTree + "checkFunc"
+				checkFunc: propTree + "checkFunc",
 			},
 			keywordGenConfig: {
 				supportStrings: true,
@@ -103,11 +104,11 @@ export default class AeroGel extends AeroGelGeneric {
 			trackers: {
 				blockDepth: true,
 				propertyChain: true,
-				proxyApply: true
-			}
-		}, rewriteScript))
+				proxyApply: true,
+			},
+		}, rewriteScript);
 	}
-};
+}
 
 /*
  * This is the rewriter for AeroGel, but it is recommended you use jailScript, where it is used internally, unless you want to jail it yourself with your own globals provided
@@ -121,95 +122,136 @@ export default class AeroGel extends AeroGelGeneric {
  *  return nErr(new Error(`Failed to rewrite the script while trying to jail it: ${rewrittenScriptRes.error}`));
  * return nOk( /* js *\/ `
  *  !(window = ${objPaths.proxy.window},
- *	 globalThis = ${config.objPaths.proxy.window}
- *	 location = ${objPaths.proxy.location}) => {
- *	  ${isModule ? script : script},
+ * 	 globalThis = ${config.objPaths.proxy.window}
+ * 	 location = ${objPaths.proxy.location}) => {
+ * 	  ${isModule ? script : script},
  *   }();
  * `);
  */
-export function rewriteScript(script: string, config: AeroConfig): Result<string, Error> {
+export function rewriteScript(
+	script: string,
+	config: AeroConfig,
+): Result<string, Error> {
 	let res = "";
 
 	let skipChars_ = 0;
+	// Store config references for use in callback
+	const aeroGelConfig = config.globalsConfig.aeroGel;
+	const letNamespace = aeroGelConfig?.propTrees?.fakeLet || "";
+	const constNamespace = aeroGelConfig?.propTrees?.fakeConst || "";
+	const proxifiedEvalPropTree = aeroGelConfig?.proxified?.evalFunc || "";
+	const locationNamespace = aeroGelConfig?.proxified?.location || "";
+
 	try {
 		keywordProcessorHandler(script, {
 			keywordGenConfig: config.keywordGenConfig,
-			trackers: config.trackers
-		}, (i: number, char: string, ctx: processKeywordHandlerCtx): void => {
+			trackers: config.trackers,
+		}, (i: number, char: string, ctx: Partial<processKeywordHandlerCtx>): void => {
 			if (skipChars_ !== 0) {
 				skipChars_--;
 				return;
-			}
-			else if (skipChars_ < 0) {
-				console.warn("The var skipChars_ is less than 0. The rewriter may be broken.");
+			} else if (skipChars_ < 0) {
+				console.warn(
+					"The var skipChars_ is less than 0. The rewriter may be broken.",
+				);
 				skipChars_ = 0;
 				return;
 			}
 
-			if (ctx.enteredProxyTrackingHandler) {
+			if (ctx.inProxyTrackingHandler) {
 				// TODO: When you just enter it, inject what is needed and skip the number of times (make a var for the "skipQueue")
 			}
 
 			// Rewrite `let`, `const`, `eval`, and `location` only at the start of a new statement
-			if (ctx.blockDepth === 1 && ctx.enteredNewStatement) {
+			if (ctx.blockDepth && ctx.enteredNewStatement) {
 				// TODO: Make versions of these that don't require iterators
 				// TODO: Ensure these are inlined. Make a build plugin to inline these instead of doing this manually
 
 				// Rewrite `let` with the fake var namespace from the config provided in this class
 				{
-					const { newRes, shouldContinue, skipChars } = replaceVarAssignmentKeywordWithFakeVarNamespace(i, script, res, "let", this.config.letNamespace);
+					const { newRes, shouldContinue, skipChars } =
+						replaceVarAssignmentKeywordWithFakeVarNamespace(
+							i,
+							script,
+							res,
+							"let",
+							letNamespace,
+						);
 					res = newRes;
-					skipChars_ += skipChars;
-					if (shouldContinue)
+					skipChars_ += skipChars || 0;
+					if (shouldContinue) {
 						return;
+					}
 				}
 
 				// Rewrite `const` with the fake var namespace from the config provided in this class
 				{
-					const { newRes, shouldContinue, skipChars } = replaceVarAssignmentKeywordWithFakeVarNamespace(i, script, res, "const", this.config.letNamespace);
+					const { newRes, shouldContinue, skipChars } =
+						replaceVarAssignmentKeywordWithFakeVarNamespace(
+							i,
+							script,
+							res,
+							"const",
+							constNamespace,
+						);
 					res = newRes;
-					skipChars_ += skipChars;
-					if (shouldContinue)
+					skipChars_ += skipChars || 0;
+					if (shouldContinue) {
 						return;
+					}
 				}
 
 				// Rewrite `eval` with the proxified version of it if it is in a module script
-				if (this.config.isModule) {
-					const { newRes, shouldContinue, skipChars } = replaceMethod(i, script, res, "eval", this.config.proxifiedEvalPropTree);
+				if (config.isModule) {
+					const { newRes, shouldContinue, skipChars } = replaceMethod(
+						i,
+						script,
+						res,
+						"eval",
+						proxifiedEvalPropTree,
+					);
 					res = newRes;
-					skipChars_ += skipChars;
-					if (shouldContinue)
+					skipChars_ += skipChars || 0;
+					if (shouldContinue) {
 						return;
+					}
 				}
 
 				// Intercept the `location = ...` assignment and rewrite it to `<locationNamespace>.location = ...` to prevent a no-op
 				{
-					const { newRes, shouldContinue, skipChars } = replaceAssignmentKeyword(i, script, res, "location", this.config.locationNamespace);
+					const { newRes, shouldContinue, skipChars } =
+						replaceAssignmentKeyword(
+							i,
+							script,
+							res,
+							"location",
+							locationNamespace,
+						);
 					res = newRes;
-					skipChars_ += skipChars;
-					if (shouldContinue)
+					skipChars_ += skipChars || 0;
+					if (shouldContinue) {
 						return;
+					}
 				}
 			} else if (
-				ctx.currentChain !== null
+				ctx.currentChain !== null && ctx.currentChain !== undefined
 			) {
-				if (ctx.propertyChainEnded)
-					res += containsAmbiguousAccess(ctx.currentChain) ?
+				if (ctx.propertyChainEnded) {
+					res += containsAmbiguousAccess(ctx.currentChain)
 						// If the chain contains `window` or `location`, wrap with the check function provided
-						`${config.checkFuncPropTree}(${ctx.currentChain})` :
+						? `${config.globalsConfig.generic?.checkFunc || config.globalsConfig.checkFunc || ""}(${ctx.currentChain})`
 						// No wrapping needed; append the chain as-is
-						ctx.currentChain;
-				else
-					// We need to wait and see what happens next
+						: ctx.currentChain;
+				} // We need to wait and see what happens next
+				else {
 					return;
+				}
 			}
 			// Nothing to do, keep going
 			res += char;
-		})
+		});
 	} catch (err) {
 		return nErr(new Error(`Failed to rewrite the script: ${err}`));
 	}
-	return nOk(undefined);
-
 	return nOk(res);
 }

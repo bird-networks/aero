@@ -1,20 +1,21 @@
 <body>
-    <script src="../aero/loggers.js"></script>
-    <script src="../aero/jsRewriter.js"></script>
-    <script src="../aero/location.js"></script>
-    <script src="../aero/scriptSandbox.js"></script>
-    <script src="../aero/replaceProxyNamespace.js"></script>
-    <script id="init" src="./initScript.js"></script>
-    <!-- Detection Tests -->
-    <script id="JS_test" src="./JS.test.js">
-        // Final
-        // Ensure that the variables were defined in the proper top-level scope
-        if (typeof tests === "undefined")
-          failedTests.push(["Failed the top-level scope test"])
-    </script>
-    <script src="./JS_eval_version.test.js"></script>
-    <script src="./locationConcealers.test.js"></script>
-    <script src="./concealers.test.js"></script>
-    <script src="../testRunner.js"></script>
-    <!-- TODO: Display results in the DOM -->
+  <script src="../aero/loggers.js"></script>
+  <script src="../aero/jsRewriter.js"></script>
+  <script src="../aero/location.js"></script>
+  <script src="../aero/scriptSandbox.js"></script>
+  <script src="../aero/replaceProxyNamespace.js"></script>
+  <script id="init" src="./initScript.js"></script>
+  <!-- Detection Tests -->
+  <script id="JS_test" src="./JS.test.js">
+    // Final
+  // Ensure that the variables were defined in the proper top-level scope
+  if (typeof tests === "undefined") {
+    failedTests.push(["Failed the top-level scope test"]);
+  }
+  </script>
+  <script src="./JS_eval_version.test.js"></script>
+  <script src="./locationConcealers.test.js"></script>
+  <script src="./concealers.test.js"></script>
+  <script src="../testRunner.js"></script>
+  <!-- TODO: Display results in the DOM -->
 </body>

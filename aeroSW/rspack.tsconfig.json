@@ -1,13 +1,13 @@
 {
-	"compilerOptions": {
-		"target": "ESNext",
-		"moduleResolution": "NodeNext",
-		"module": "NodeNext",
-		"baseUrl": "./",
-		"lib": ["ESNext"],
-		"allowSyntheticDefaultImports": true,
-		"isolatedModules": true
-	},
-	"include": ["./rspack.config.ts"],
-	"exclude": ["node_modules"]
+  "compilerOptions": {
+    "target": "ESNext",
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "baseUrl": "./",
+    "lib": ["ESNext"],
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true
+  },
+  "include": ["./rspack.config.ts"],
+  "exclude": ["node_modules"]
 }

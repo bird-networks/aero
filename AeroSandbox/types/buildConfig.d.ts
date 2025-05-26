@@ -17,5 +17,5 @@ export enum OsPassthroughFeatures {
 	fileDownload,
 	filePicker,
 	pwas,
-	contentSharing
+	contentSharing,
 }

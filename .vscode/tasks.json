@@ -1,51 +1,51 @@
 {
-	// See https://go.microsoft.com/fwlink/?LinkId=733558
-	// for the documentation about the tasks.json format
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "npm",
-			"group": "build",
-			"label": "aero: start live build",
-			"script": "buildSW"
-		},
-		{
-			"type": "npm",
-			"group": "build",
-			"label": "aero: start build",
-			"script": "livebuild:sw"
-		},
-		{
-			"type": "npm",
-			"group": "build",
-			"label": "aero: debug build",
-			"script": "debugBuildSW"
-		},
-		{
-			"label": "Start aero.sh Dev Server",
-			"type": "npm",
-			"script": "dev",
-			"isBackground": true,
-			"options": {
-				"cwd": "${workspaceFolder}/aero.sh"
-			},
-			"problemMatcher": [
-				{
-					"owner": "astro",
-					"pattern": [
-						{
-							"regexp": "(Local|Network):\\s+http://localhost:\\d+(/)?",
-							"file": 1,
-							"location": 1,
-							"message": 1
-						}
-					],
-					"background": {
-						"activeOnStart": true,
-						"endsPattern": "(Local|Network):\\s+http://localhost:\\d+(/)?"
-					}
-				}
-			]
-		}
-	]
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "group": "build",
+      "label": "aero: start live build",
+      "script": "buildSW"
+    },
+    {
+      "type": "npm",
+      "group": "build",
+      "label": "aero: start build",
+      "script": "livebuild:sw"
+    },
+    {
+      "type": "npm",
+      "group": "build",
+      "label": "aero: debug build",
+      "script": "debugBuildSW"
+    },
+    {
+      "label": "Start aero.sh Dev Server",
+      "type": "npm",
+      "script": "dev",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}/aero.sh"
+      },
+      "problemMatcher": [
+        {
+          "owner": "astro",
+          "pattern": [
+            {
+              "regexp": "(Local|Network):\\s+http://localhost:\\d+(/)?",
+              "file": 1,
+              "location": 1,
+              "message": 1
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "endsPattern": "(Local|Network):\\s+http://localhost:\\d+(/)?"
+          }
+        }
+      ]
+    }
+  ]
 }

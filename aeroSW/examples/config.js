@@ -4,6 +4,6 @@
  * @type {Config}
  */
 self.aeroConfig = {
-	...self.defaultAeroConfig
-	// Add your config code here
+  ...self.defaultAeroConfig,
+  // Add your config code here
 };

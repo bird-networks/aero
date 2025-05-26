@@ -4,7 +4,9 @@ import { SupportEnum } from "$types/enums/apiInterceptors";
 import { createStorageNomenclatureHandlers } from "$util/storage";
 import { proxyLocation } from "$shared/proxyLocation";
 
-const storageNomenclatureHandlers = createStorageNomenclatureHandlers($aero.sandbox.config.idbStoreId);
+const storageNomenclatureHandlers = createStorageNomenclatureHandlers(
+	$aero.sandbox.config.idbStoreId
+);
 
 export default [
 	{
@@ -16,10 +18,7 @@ export default [
 				indexedDB.databases().then(databases => {
 					databases.forEach(db => {
 						const [, proxyOriginForKey] = db.name.split("_");
-						if (
-							db?.name &&
-							proxyOriginForKey === proxyLocation().origin
-						) {
+						if (db?.name && proxyOriginForKey === proxyLocation().origin) {
 							indexedDB.deleteDatabase(db.name);
 						}
 					});
@@ -29,21 +28,21 @@ export default [
 		forCors: true,
 		globalProp: "indexedDB",
 		exposedContexts: "ALL",
-		supports: SupportEnum.widelyAvailable
+		supports: SupportEnum.widelyAvailable,
 	},
 	{
 		proxyHandler: storageNomenclatureHandlers.prefix,
 		forStorage: true,
 		globalProp: "indexedDB.open",
 		exposedContexts: "ALL",
-		supports: SupportEnum.widelyAvailable
+		supports: SupportEnum.widelyAvailable,
 	},
 	{
 		proxyHandler: storageNomenclatureHandlers.prefix,
 		forStorage: true,
 		globalProp: "indexedDB.deleteDatabase",
 		exposedContexts: "ALL",
-		supports: SupportEnum.widelyAvailable
+		supports: SupportEnum.widelyAvailable,
 	},
 	{
 		proxifiedGetter(ctx) {
@@ -51,7 +50,6 @@ export default [
 		},
 		forStorage: true,
 		exposedContexts: "ALL",
-		globalProp: "IDBDatabase.name"
-	}
+		globalProp: "IDBDatabase.name",
+	},
 ] as APIInterceptor[];
-

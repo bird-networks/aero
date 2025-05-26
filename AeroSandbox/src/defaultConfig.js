@@ -14,18 +14,18 @@ const defaultConfig = {
 		nestedSWs: "./nestedSWs.js",
 		storageIsolator: "./storageIsolator.js",
 		// Extra APIs (do not include these if you are making a SW proxy)
-		controlViews: "./ControlViews.js"
+		controlViews: "./ControlViews.js",
 	},
 	webrtcTurnServers: ["stun:stun.l.google.com:19302"],
 	htmlSandboxElementName: "aero-html-sandbox",
 	rewriters: {
 		jsLib: self.JSRewriter,
 		html: {
-			lib: self.HTML
-		}
+			lib: self.HTML,
+		},
 	},
 	featureFlags: "all",
-	featureConfig: "all"
+	featureConfig: "all",
 };
 
 export default defaultConfig;

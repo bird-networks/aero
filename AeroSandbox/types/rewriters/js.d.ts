@@ -13,7 +13,7 @@ export interface RewriteOptions {
 		mustHaveIntegrity: string;
 		unsafeEval: boolean;
 		wasmUnsafeEval: boolean;
-	}
+	};
 	/** This should only be used for external scripts like from a SW */
 	integrityCheck: string;
 }
@@ -24,23 +24,23 @@ export interface AeroGelConfigFull {
 		supportStrings: boolean;
 		supportTemplateLiterals: boolean;
 		supportRegex: boolean;
-	},
+	};
 	trackers: {
 		blockDepth: boolean;
 		propertyChain: boolean;
 		proxyApply: boolean;
-	}
+	};
 }
 export interface AeroGelConfig extends GenericJSParserConfig {
 	propTrees: {
 		fakeLet: string;
 		fakeConst: string;
-	}
+	};
 	proxified: {
 		evalFunc: string;
 		window: string;
 		location: string;
-	}
+	};
 	checkFunc: string;
 }
 export interface AeroJetRewriterConfig extends GenericJSParserConfig {
@@ -48,7 +48,7 @@ export interface AeroJetRewriterConfig extends GenericJSParserConfig {
 }
 export interface GenericJSParserConfig {
 	proxyNamespace: string;
-	escapeProxyNamespace: boolean
+	escapeProxyNamespace: boolean;
 }
 export interface AeroJSParserConfig {
 	proxyNamespace: string;

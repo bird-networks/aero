@@ -1,14 +1,14 @@
 {
-	"extends": "astro/tsconfigs/strictest",
-	"compilerOptions": {
-		"resolveJsonModule": true,
-		"jsx": "react-jsx",
-		"jsxImportSource": "react",
-		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
-		"paths": {
-			"@/*": ["./src/*"]
-		},
-		"types": ["astro/client", "react", "react-dom"]
-	}
+  "extends": "astro/tsconfigs/strictest",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["astro/client", "react", "react-dom"]
+  }
 }

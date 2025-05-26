@@ -1,55 +1,70 @@
 {
-	"compilerOptions": {
-		"target": "ESNext",
-		"moduleResolution": "NodeNext",
-		"module": "NodeNext",
-		"baseUrl": "../",
-		"lib": ["ESNext", "WebWorker", "WebWorker.ImportScripts"],
-		"allowImportingTsExtensions": false,
-		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true,
-		"sourceMap": true,
-		"paths": {
-			"$aero/*": ["*"],
-			"$sandbox/*": ["AeroSandbox/src/*"],
-			"$util/*": ["AeroSandbox/src/util/*"],
-			"$shared/*": ["AeroSandbox/src/shared/*"],
-			"$fetchHandlers/*": ["aeroSW/src/fetcHandlers/*"],
-			"$isolation/*": ["AeroSandbox/src/isolation/*"],
-			"$src/*": ["aeroSW/src/*"],
-			"$sw/*": ["aeroSW/src/this/*"],
-			"$alt_backends/*": ["aeroSW/src/altBackends/*"],
-			"$rewriters/*": ["aeroSW/src/this/rewriters/*"],
-			"$nested_sws/*": ["aeroSW/src/this/nestedSWs/*"],
-			"$embeds/*": ["aeroSW/src/this/preprocessors/*"],
-			"$handlers/*": ["aeroSW/src/this/handlers/*"],
-			"$types/*": ["aeroSW/types/*"]
-		},
-		"types": [
-			"./types/index.d.ts",
-			"@types/serviceworker",
-			"@types/web-app-manifest"
-		],
-		"plugins": [
-			{
-				"transform": "ts-runtime-checks"
-			},
-			{
-				"transform": "typia/lib/transform"
-			}
-		],
-		"strictNullChecks": true,
-		"strict": true
-	},
-	"include": [
-		"../aeroCF/types/globals.d.ts",
-		"**/*.ts",
-		"../AeroSandbox/src/defaultConfig.js",
-		"../AeroSandbox/src/shared/**/*.ts",
-		"../AeroSandbox/types/aeroSandbox.d.ts",
-		"../AeroSandbox/tests/shared/importHooks.mjs",
-		"../AeroSandbox/tests/shared/customImportResolveHooks.mjs",
-		"../AeroSandbox/tests/shared/customImportResolveHooks.mjs"
-, "../AeroSandbox/src/apis/IPC/Proxy Middleware/Electron/types/electronPassthrough.d.ts"	],
-	"exclude": ["tests/**/*", "rspack.config.ts"]
+  "compilerOptions": {
+    "target": "ESNext",
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "baseUrl": ".",
+    "lib": ["ESNext", "WebWorker", "WebWorker.ImportScripts"],
+    "allowImportingTsExtensions": false,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "$aero/*": ["../*"],
+      "$jsrewriter/*": ["../JSRewriter/*"],
+      "$proxyparse/*": ["../ProxyParse/src/*"],
+      "$sandbox/*": ["../AeroSandbox/src/*"],
+      "$internal/*": ["../AeroSandbox/internal/*"],
+      "$util/*": ["../AeroSandbox/src/interceptors/util/*"],
+      "$interceptorUtil/*": ["../AeroSandbox/src/interceptors/util/*"],
+      "$swUtil/*": ["./src/fetchHandlers/util/*"],
+      "$shared/*": ["../AeroSandbox/src/shared/*"],
+      "$fetchHandlers/*": ["./src/fetchHandlers/*"],
+      "$fetchHandlers/subsystems/*": ["./src/fetchHandlers/subsystems/*"],
+      "$fetchHandlers/isolation/*": ["./src/fetchHandlers/isolation/*"],
+      "$isolation/*": ["../AeroSandbox/src/isolation/*"],
+      "$src/*": ["./src/*"],
+      "$sw/*": ["./src/*"],
+      "$alt_backends/*": ["./src/altBackends/*"],
+      "$rewriters/*": ["./src/fetchHandlers/rewriters/*"],
+      "$nested_sws/*": ["./src/nestedSWs/*"],
+      "$embeds/*": ["./src/preprocessors/*"],
+      "$handlers/*": ["./src/handlers/*"],
+      "$types/*": ["./types/*"],
+      "$preprocessors/*": ["./src/preprocessors/*"],
+      "$sandboxTypes/*": ["../AeroSandbox/types/*"],
+      "$aeroSWTypes/*": ["./types/*"]
+    },
+    "types": [
+      "./types/index.d.ts",
+      "@types/serviceworker",
+      "@types/web-app-manifest"
+    ],
+    "plugins": [
+      {
+        "transform": "ts-runtime-checks"
+      },
+      {
+        "transform": "typia/lib/transform"
+      }
+    ],
+    "strictNullChecks": true,
+    "strict": true
+  },
+  "include": [
+    "../aeroCF/types/globals.d.ts",
+    "**/*.ts",
+    "../AeroSandbox/src/defaultConfig.js",
+    "../AeroSandbox/src/shared/**/*.ts",
+    "../AeroSandbox/types/aeroSandbox.d.ts",
+    "../AeroSandbox/types/global.d.ts",
+    "../AeroSandbox/types/$aero.d.ts",
+    "../AeroSandbox/tests/shared/importHooks.mjs",
+    "../AeroSandbox/tests/shared/customImportResolveHooks.mjs",
+    "../AeroSandbox/tests/shared/customImportResolveHooks.mjs",
+    "../AeroSandbox/src/apis/IPC/Proxy Middleware/Electron/types/electronPassthrough.d.ts"
+  ],
+  "exclude": ["tests/**/*", "rspack.config.ts", "scripts/**/*"]
 }

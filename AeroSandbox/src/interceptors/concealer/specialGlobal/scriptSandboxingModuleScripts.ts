@@ -53,15 +53,11 @@ export default {
 
 			// Prevent the paths from going behind the proxy origin
 			let curr: string = ret;
-			while (
-				!new URL(curr, proxyLocation().href).href.startsWith(
-					proxyLocation().href
-				)
-			) {
+			while (!new URL(curr, proxyLocation().href).href.startsWith(proxyLocation().href)) {
 				curr = removeOneLevel(curr);
 			}
 			return curr;
-		}
+		},
 	},
 	// TODO: Define on $aero
 	globalProp: "<proxyNamespace>.moduleScripts.resolve",

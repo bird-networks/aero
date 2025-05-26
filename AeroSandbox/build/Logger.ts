@@ -1,5 +1,5 @@
 /**
- * @module 
+ * @module
  * A rudimentary log function that only logs if verbose mode is enabled
  * This is different from the other `Logger.ts` in that this is meant to be used in the build process only
  * @example

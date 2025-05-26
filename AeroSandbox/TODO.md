@@ -1,8 +1,12 @@
 # TODOs
 
-- [ ] Publish AeroSandbox to NPM. There will be specific builds for specific features for tree-shaking purposes. I'm trying to make AeroSandbox a seperate library for stability, portability, and a lower bundle size.
+- [ ] Publish AeroSandbox to NPM. There will be specific builds for specific
+      features for tree-shaking purposes. I'm trying to make AeroSandbox a
+      seperate library for stability, portability, and a lower bundle size.
 
-- [ ] In html.ts, instead of keeping an attribute to mark the element, store them in a WeakMap, so they can automatically be cleaned up by the garbage man
+- [ ] In html.ts, instead of keeping an attribute to mark the element, store
+      them in a WeakMap, so they can automatically be cleaned up by the garbage
+      man
 - [ ] Move all of the middleware code into a modified BareClient
 - [ ] Seperate the package.json for middleware. Then, cleanup the package.json.
 - [ ] Provide auto-builds
@@ -13,7 +17,8 @@
 - [ ] Finish aero message proxying
 - [ ] Migrate the HTML Rewrites to the the rewriting rules
 - [ ] URL Encoding / Hash support
-- [ ] Use storageIsolator internally in AeroSandbox Runtime and call that instead of the API intercpetors directly
+- [ ] Use storageIsolator internally in AeroSandbox Runtime and call that
+      instead of the API intercpetors directly
 
 ## Docs
 
@@ -23,7 +28,9 @@
 
 ## API Support
 
-- [ ] Support proxifying MutationEvents (deprecated), before they are removed from Chrome soon - <https://w3c.github.io/uievents/#interface-mutationevent>
+- [ ] Support proxifying MutationEvents (deprecated), before they are removed
+      from Chrome soon -
+      <https://w3c.github.io/uievents/#interface-mutationevent>
 - [ ] Support the FLoC APIs
 - [ ] The FetchLater API
 - [ ] TODO: Add more draft/experimental/origin trial APIs to the list

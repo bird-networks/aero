@@ -15,8 +15,8 @@ import featureFlagsBuilder from "../AeroSandbox/featureFlagsBuilder";
 
 const liveBuildMode = "LIVE_BUILD" in process.env;
 /** This var is enabled by default */
-const verboseMode =
-	!("VERBOSE" in process.env) || process.env.VERBOSE !== "false";
+const verboseMode = !("VERBOSE" in process.env) ||
+	process.env.VERBOSE !== "false";
 const debugMode = liveBuildMode || "DEBUG" in process.env;
 
 // Scripts
@@ -27,24 +27,26 @@ import Logger from "../AeroSandbox/build/Logger";
 import importSync from "import-sync";
 
 // Attempt to import InitDist, path might need adjustment
-// import InitDist from "./scripts/InitDist"; 
+// import InitDist from "./scripts/InitDist";
 // TODO: Clarify correct path for InitDist, e.g., from "../AeroSandbox/scripts/InitDist" or similar
 import InitDist from "../AeroSandbox/scripts/InitDist"; // Removed .ts extension
 
-export default function createRspackConfig(distName = "sw"): import("@rspack/core").Configuration {
+export default function createRspackConfig(
+	distName = "sw",
+): import("@rspack/core").Configuration {
 	// TODO: Type assert with partial
 	let featureFlagOverrides = {};
 	try {
 		featureFlagOverrides = importSync("./createFeatureFlags.ts").default;
 	} catch (_err) {
 		console.warn(
-			"⚠️ Unable to find any feature flag overrides. Is this intentional?"
+			"⚠️ Unable to find any feature flag overrides. Is this intentional?",
 		);
 	}
 
 	const featureFlags = createDefaultFeatureFlags({
 		...featureFlagOverrides,
-		debugMode
+		debugMode,
 	});
 
 	// For now, let serverMode be potentially a string to satisfy type checks in comparisons,
@@ -77,27 +79,30 @@ export default function createRspackConfig(distName = "sw"): import("@rspack/cor
 	// biome-ignore lint/suspicious/noExplicitAny: I don't know the exact type to use for this at the moment
 	const plugins: any = [
 		// @ts-ignore
-		new rspack.DefinePlugin(featureFlagsBuilder(featureFlags))
+		new rspack.DefinePlugin(featureFlagsBuilder(featureFlags)),
 	];
 
 	if (debugMode) {
+		const port = 3300;
 		plugins.push(
-			// There are currently a bug with Rsdoctor where the option `disableClientServer` doesn't work. You must launch the bundle analyzer through the cli instead.
+			// Rsdoctor plugin for bundle analysis and optimization insights
 			new RsdoctorRspackPlugin({
-				//port: 3300,
-				// Do not pop up every time (annoying)
+				port,
+				// Only disable client server in live build mode to avoid port conflicts
 				disableClientServer: liveBuildMode,
 				linter: {
 					rules: {
 						// Don't warn about using non ES5 features
-						"ecma-version-check": "off"
-					}
+						"ecma-version-check": "off",
+					},
 				},
 				supports: {
-					generateTileGraph: true
-				}
-			})
+					generateTileGraph: true,
+				},
+			}),
 		);
+
+		logger.log(`🔬 Rsdoctor will be available at http://localhost:${port} for bundle analysis`);
 	}
 
 	const properDirType = debugMode ? "debug" : "prod";
@@ -110,40 +115,85 @@ export default function createRspackConfig(distName = "sw"): import("@rspack/cor
 		mode: debugMode ? "development" : "production",
 		devtool: debugMode ? "eval-source-map" : "source-map",
 		entry: {
-			sw: path.resolve(__dirname, "./src/handle.ts")
+			sw: path.resolve(__dirname, "./src/handle.ts"),
 			// Building these bundles separately allows for the user to roll out their own config files without having to build aero as a whole
 		},
 		plugins,
+		externals: {
+			"ts-node": "globalThis",
+			"typescript": "globalThis",
+			"@minify-html/node": "globalThis",
+			"@minify-html/node-darwin-arm64": "globalThis",
+		},
 		resolve: {
-			extensions: [".ts"],
+			extensions: [".ts", ".js"],
+			alias: {
+				"$aero": path.resolve(__dirname, ".."),
+				"$jsrewriter": path.resolve(__dirname, "../JSRewriter"),
+				"$proxyparse": path.resolve(__dirname, "../ProxyParse/src"),
+				"$sandbox": path.resolve(__dirname, "../AeroSandbox/src"),
+				"$internal": path.resolve(__dirname, "../AeroSandbox/internal"),
+				"$util": path.resolve(__dirname, "../AeroSandbox/src/interceptors/util"),
+				"$interceptorUtil": path.resolve(__dirname, "../AeroSandbox/src/interceptors/util"),
+				"$swUtil": path.resolve(__dirname, "./src/fetchHandlers/util"),
+				"$shared": path.resolve(__dirname, "../AeroSandbox/src/shared"),
+				"$fetchHandlers": path.resolve(__dirname, "./src/fetchHandlers"),
+				"$fetchHandlers/subsystems": path.resolve(__dirname, "./src/fetchHandlers/subsystems"),
+				"$fetchHandlers/isolation": path.resolve(__dirname, "./src/fetchHandlers/isolation"),
+				"$isolation": path.resolve(__dirname, "../AeroSandbox/src/isolation"),
+				"$src": path.resolve(__dirname, "./src"),
+				"$sw": path.resolve(__dirname, "./src"),
+				"$alt_backends": path.resolve(__dirname, "./src/altBackends"),
+				"$rewriters": path.resolve(__dirname, "./src/fetchHandlers/rewriters"),
+				"$nested_sws": path.resolve(__dirname, "./src/nestedSWs"),
+				"$embeds": path.resolve(__dirname, "./src/preprocessors"),
+				"$handlers": path.resolve(__dirname, "./src/handlers"),
+				"$types": path.resolve(__dirname, "./types"),
+				"$preprocessors": path.resolve(__dirname, "./src/preprocessors"),
+			},
+			fallback: {
+				"fs": false,
+				"path": false,
+				"url": false,
+				"util": false,
+				"module": false,
+				"crypto": false,
+				"os": false,
+				"vm": false,
+				"assert": false,
+				"console": false,
+				"repl": false,
+				"esm": false,
+				"tsconfig-paths": false,
+			},
 		},
 		module: {
 			rules: [
 				{
 					test: /\.ts$/,
 					exclude: [/[\\/]node_modules[\\/]/],
-					loader: "builtin:swc-loader"
-				}
-			]
+					loader: "builtin:swc-loader",
+				},
+			],
 		},
 		output: {
 			filename: "[name].js",
 			path: properDir,
 			iife: true,
-			libraryTarget: "es2022"
+			libraryTarget: "es2022",
 		},
-		target: ["webworker", "es2022"]
-	}
+		target: ["webworker", "es2022"],
+	};
 	if (debugMode) config.watch = true;
 
 	new InitDist(
 		{
 			dist: path.resolve(__dirname, "dist"),
-			proper: properDir
+			proper: properDir,
 			// sw: path.resolve(__dirname, "dist", properDirType, "sw") // Removed sw property
 		},
 		properDirType,
-		verboseMode
+		verboseMode,
 	);
 
 	return config;

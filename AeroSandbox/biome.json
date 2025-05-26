@@ -1,8 +1,6 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-	"extends": [
-		"base.biome.json"
-	],
+	"extends": ["base.biome.json"],
 	"linter": {
 		"ignore": ["deno.json", "scripts/**/*.ts", "dist/"],
 		"enabled": true,
@@ -21,14 +19,7 @@
 	"javascript": {
 		"formatter": {
 			"quoteStyle": "double",
-			"trailingComma": "es5",
-			"semicolons": "always"
-		}
-	},
-	"typescript": {
-		"formatter": {
-			"quoteStyle": "double",
-			"trailingComma": "es5",
+			"trailingCommas": "es5",
 			"semicolons": "always"
 		}
 	}

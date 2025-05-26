@@ -36,14 +36,14 @@ export default (
 	return {
 		async *[Symbol.asyncIterator]() {
 			for (const tsFilePath of await glob(patterns, {
-				ignore: ignoreList
+				ignore: ignoreList,
 			})) {
 				logger.log(`Importing API Interceptor from ${tsFilePath}`);
 				const mod = await import(tsFilePath);
 				const aI = mod.default;
 				yield aI;
 			}
-		}
+		},
 	} as AsyncIterable<APIInterceptor>;
 };
 
@@ -69,12 +69,12 @@ export function createApiInterceptorIteratorNodeSync(
 	return {
 		*[Symbol.iterator]() {
 			for (const tsFilePath of globSync(patterns, {
-				ignore: ignoreList
+				ignore: ignoreList,
 			})) {
 				logger.log(`Importing API Interceptor from ${tsFilePath}`);
 				const mod = importSync(tsFilePath);
 				yield mod.default || mod;
 			}
-		}
+		},
 	} as Iterable<APIInterceptor>;
 }

@@ -22,6 +22,7 @@ const aeroHandlerWithExtras = patchAeroHandler(aeroHandle);
 
 addEventListener("install", skipWaiting);
 
-addEventListener("fetch", event =>
-	event.respondWith(aeroHandlerWithExtras(event))
+addEventListener(
+  "fetch",
+  (event) => event.respondWith(aeroHandlerWithExtras(event)),
 );

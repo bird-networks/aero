@@ -3,13 +3,13 @@ import { escapeWithOrigin } from "./escaping/escape";
 function storageKey(key: string) {
 	const getUnproxifiedStorageKey = key.split(escapeWithOrigin(""));
 
-	if (getUnproxifiedStorageKey[0] === escapeWithOrigin(""))
+	if (getUnproxifiedStorageKey[0] === escapeWithOrigin("")) {
 		return getUnproxifiedStorageKey.slice(1);
-	else return null;
+	} else return null;
 }
 
 function storageKeys(keys: string[]) {
-	const proxyKeys = [];
+	const proxyKeys: string[] = [];
 	/*escapeWithProxyOrigin
 	for (let key of keys) {
 		const prefixSplit = key.split(escapeWithOrigin());
@@ -18,7 +18,7 @@ function storageKeys(keys: string[]) {
 		if (prefixSplit[0] === escapeWithOrigin()) null; //proxyKeys.push(prefixSplit.slice(1).join(""));
 	}
 	*/
-	Object.freeze(proxyKeys)
+	Object.freeze(proxyKeys);
 
 	return proxyKeys;
 }

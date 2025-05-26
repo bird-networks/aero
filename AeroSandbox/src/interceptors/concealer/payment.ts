@@ -9,5 +9,5 @@ export default [
 	{
 		skip: true,
 		globalProp: "MerchantValidationEvent",
-	}
+	},
 ] as APIInterceptor[];

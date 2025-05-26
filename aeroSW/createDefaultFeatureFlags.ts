@@ -22,8 +22,8 @@ export default (ctx: CtxType) =>
 		// Branding
 		aeroBrandingInProd: true,
 		// Feel free to change this default if you are making a fork of aero
-		githubRepo: "https://github.com/vortexdeveloperlabs/aero",
+		githubRepo: "https://github.com/browser-ports/aero",
 		// Debug
 		errLogAfterColon: JSON.stringify("\\n\\t"),
-		debug: JSON.stringify(ctx.debugMode)
+		debug: JSON.stringify(ctx.debugMode),
 	}) as FeatureFlagsRspack;

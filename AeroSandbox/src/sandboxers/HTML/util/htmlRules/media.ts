@@ -3,7 +3,7 @@
  */
 
 /**
- * @param htmlRules 
+ * @param htmlRules
  */
 export default function setRulesForMediaEmulation(htmlRules) {
 	/*
@@ -12,32 +12,36 @@ export default function setRulesForMediaEmulation(htmlRules) {
 	htmlRules.set(HTMLMetaElement, {
 		onAttrHandlers: {
 			src(el: HTMLIFrameElement, newVal: string) {
-				if (newVal.endsWith(".m3u8") && (
+				if (
+					newVal.endsWith(".m3u8") &&
 					// @ts-ignore: The check `el.canPlayType("application/vnd.apple.mpegurl")` is for Safari only
-					el.canPlayType("application/vnd.apple.mpegurl") ||
-					// This check is for any browser
-					$aero.sandbox.extLib.Hls.isSupported())) {
+					(el.canPlayType("application/vnd.apple.mpegurl") ||
+						// This check is for any browser
+						$aero.sandbox.extLib.Hls.isSupported())
+				) {
 					const hls = new $aero.sandbox.extLib.Hls();
 					hls.loadSource(newVal);
 					hls.attachMedia(el);
 				}
-			}
-		}
-	})
+			},
+		},
+	});
 	/*
-	For **MPEG-DASH emulation**, the situation is similar to **HLS emulation** when it comes to rewriting the `.m3u8` manifest file in the SW. 
+	For **MPEG-DASH emulation**, the situation is similar to **HLS emulation** when it comes to rewriting the `.m3u8` manifest file in the SW.
 	*/
 	htmlRules.set(HTMLMetaElement, {
 		onAttrHandlers: {
 			src(el: HTMLIFrameElement, newVal: string) {
-				if (newVal.endsWith(".mpd") ||
+				if (
+					newVal.endsWith(".mpd") ||
 					// Check if the browser supports MPEG-DASH
-					window.MediaSource && MediaSource.isTypeSupported("application/dash+xml")) {
+					(window.MediaSource && MediaSource.isTypeSupported("application/dash+xml"))
+				) {
 					const dash = new $aero.sandbox.extLib.dashjs.MediaPlayer();
 					dash.initialize(el, newVal, true);
 				}
-			}
-		}
+			},
+		},
 	});
 	// Note: This doesn't need to be done for `.webm` chunks, you are supposed to `fetch` them yourself from the data you recieve from the `sourceopen` event from the `MediaSource` object
 }

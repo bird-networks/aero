@@ -6,7 +6,7 @@ export default {
 	proxyHandler: {
 		construct(target, args) {
 			const [callback] = args;
-			args[1] = async (reports) => {
+			args[1] = async reports => {
 				reports = await rewriteReports(reports);
 
 				callback(...arguments);
@@ -60,10 +60,7 @@ async function rewriteReports(reports) {
 			// Don't reveal the rewritten script
 			const resp = await fetch(report.sourceFile);
 			const respTxt = await resp.text();
-			report.sample = (respTxt).slice(
-				0,
-				respTxt.length
-			);
+			report.sample = respTxt.slice(0, respTxt.length);
 
 			// TODO: Finish rewriting more properties
 		}

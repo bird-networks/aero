@@ -1,29 +1,29 @@
 {
-	"name": "tests",
-	"version": "0.0.1",
-	"type": "module",
-	"description": "The unit tests and systems tests for aero (this will never be published)",
-	"homepage": "https://aero.sh/results",
-	"main": "index.js",
-	"scripts": {
-		"wpt-diff": "tsx WPT-Diff/index.ts"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/vortexdl/aero.git"
-	},
-	"author": "Ryan Wilson",
-	"license": "AGPL-3.0-or-later",
-	"dependencies": {
-		"envsafe": "^2.0.3",
-		"flags": "^0.2.2",
-		"option-t": "^51.0.0",
-		"tree-sitter": "^0.22.1",
-		"tree-sitter-python": "^0.23.5",
-		"yaml": "^2.6.1"
-	},
-	"devDependencies": {
-		"neverthrow": "^8.1.1",
-		"tsx": "^4.19.2"
-	}
+  "name": "tests",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "The unit tests and systems tests for aero (this will never be published)",
+  "homepage": "https://aero.sh/results",
+  "main": "index.js",
+  "scripts": {
+    "wpt-diff": "tsx WPT-Diff/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vortexdl/aero.git"
+  },
+  "author": "Ryan Wilson",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "envsafe": "^2.0.3",
+    "flags": "^0.2.2",
+    "option-t": "^51.0.0",
+    "tree-sitter": "^0.22.1",
+    "tree-sitter-python": "^0.23.5",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "neverthrow": "^8.1.1",
+    "tsx": "^4.19.2"
+  }
 }

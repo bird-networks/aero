@@ -1,7 +1,7 @@
 /**
  * A class representing a Cache.
  */
-export default class Cache {
+export default class BaseCache {
 	/**
 	 * Get the current time in seconds.
 	 * @returns The current time in seconds.

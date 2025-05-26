@@ -1,7 +1,7 @@
 const ecosystemTemplate = require("./ecosystemTemplate.js");
 
 const config = {
-	buildForUnitTests: true
+  buildForUnitTests: true,
 };
 
 module.exports = ecosystemTemplate("npm");

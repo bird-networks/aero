@@ -9,4 +9,4 @@
     "moduleResolution": "NodeNext"
   },
   "include": ["*.ts", "util/**/*.ts"]
-} 
+}

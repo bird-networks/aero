@@ -31,13 +31,16 @@ const copyTargets = [
     serveAt: "/aero",
   },
   {
-    src: resolve(__dirname, "node_modules/@mercuryworkshop/epoxy-transport/dist/"),
+    src: resolve(
+      __dirname,
+      "node_modules/@mercuryworkshop/epoxy-transport/dist/",
+    ),
     serveAt: "/epoxy",
   },
   {
     src: resolve(__dirname, "node_modules/@mercuryworkshop/bare-mux/dist/"),
     serveAt: "/baremux",
-  }
+  },
 ];
 
 // https://astro.build/config
@@ -46,22 +49,22 @@ export default defineConfig({
   vite: {
     resolve: {
       alias: {
-        "@": resolve(__dirname, "./src")
-      }
+        "@": resolve(__dirname, "./src"),
+      },
     },
     plugins: [
       customCopyPlugin(copyTargets),
       tailwindcss({
-        config: "./tailwind.config.js"
+        config: "./tailwind.config.js",
       }),
-    ]
+    ],
   },
   integrations: [
     react(),
     starlight({
       title: "aero demo",
       logo: {
-        src: "./public/full_logo.png"
+        src: "./public/full_logo.png",
       },
       favicon: "/logo.png",
       plugins: [
@@ -82,28 +85,28 @@ export default defineConfig({
         },
         {
           label: "Docs",
-          autogenerate: { directory: "Docs" }
-        }
+          autogenerate: { directory: "Docs" },
+        },
       ],
       social: [
         {
           icon: "github",
           label: "GitHub",
-          href: "https://github.com/vortexdl/aero"
+          href: "https://github.com/vortexdl/aero",
         },
         {
           icon: "discord",
           label: "Discord",
-          href: "https://discord.gg/browserports"
-        }
-      ]
-    })
+          href: "https://discord.gg/browserports",
+        },
+      ],
+    }),
   ],
   server: {
-    port: 2526
+    port: 2526,
   },
   devToolbar: {
-    enabled: false
+    enabled: false,
   },
   adapter: node({
     mode: "hybrid",

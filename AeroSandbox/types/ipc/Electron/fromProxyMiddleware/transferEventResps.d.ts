@@ -8,12 +8,14 @@
 export interface ExecLoadURLResp {
 	for: "exec-status-resp";
 	method: "loadURL";
-	data: {
-		successful: true
-	} | {
-		successful: false;
-		eventDidFailLoad: EventDidFailLoad;
-	}
+	data:
+		| {
+				successful: true;
+		  }
+		| {
+				successful: false;
+				eventDidFailLoad: EventDidFailLoad;
+		  };
 }
 
 /**
@@ -22,7 +24,7 @@ export interface ExecLoadURLResp {
 export interface SendDomEventDidFailLoadTrace {
 	for: "send";
 	clientId: string;
-	data: SendDomEventDidFailLoadTrace
+	data: SendDomEventDidFailLoadTrace;
 }
 export interface SendDomEventDidFailLoadTrace {
 	errorCode: number;

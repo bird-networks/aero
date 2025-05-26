@@ -1,82 +1,82 @@
-  name: WPT-Diff
-  author: Ryan Wilson
-  description: Runs WPT-diff on your proxy and gives the results back as a CSV
+name: WPT-Diff
+author: Ryan Wilson
+description: Runs WPT-diff on your proxy and gives the results back as a CSV
 
-  on:
-    workflow_dispatch:
-      inputs: 
-        wptDiffBaseCmd:
-          description: The base command to run the WPT-Diff CLI
-          required: false
-          default: npx wpt-diff --package=@aero-tests/wpt-diff
-        getRunInfoBaseCmd:
-          description: The base command to run the command for generating the the runs info
-          required: false
-          default: npx wpt-diff-runs-info --package=@aero-tests/wpt-diffs
-        proxyName:
-          description: The name of your web proxy
-          required: true
-        proxyURL:
-          description: The URL to your web proxy
-          required: true
-        wptRepo:
-          description: The URL to a git repo of WPT
-          required: false
-          default: "https://github.com/web-platform-tests/wpt.git"
-        browser:
-          description: The browser to run the WPT-Diff tests on
-          required: false
-          default: "chrome"
-        pathToBrowser:
-          description: The path to the browser to run the WPT-Diff tests on
-          required: false
-        rootDir:
-          description: The root directory of the project which contains the checkoutsDir
-          required: true
-        checkoutsDir:
-          description: The directory to checkout the WPT tests to
-          required: true
-        testResultsDir:
-          description: The directory to store the test results in
-          required: true
-        runsFileOut:
-          description: The name of the file to store the runs info in
-          required: false
-          default: "${{ github.event.inputs.rootDir }}/runs.json"
-        expectationsFileOut:
-          description: The name of the file to store the expectations (for which tests should pass in your proxy) in. The expectations are correspond to the same pass/fails in the wptreport JSON file, so that it knows what is a problem once it runs the tests through the proxy.
-          required: false
-          default: "${{ github.event.inputs.rootDir }}/expectations.json"
+on:
+  workflow_dispatch:
+    inputs:
+      wptDiffBaseCmd:
+        description: The base command to run the WPT-Diff CLI
+        required: false
+        default: npx wpt-diff --package=@aero-tests/wpt-diff
+      getRunInfoBaseCmd:
+        description: The base command to run the command for generating the the runs info
+        required: false
+        default: npx wpt-diff-runs-info --package=@aero-tests/wpt-diffs
+      proxyName:
+        description: The name of your web proxy
+        required: true
+      proxyURL:
+        description: The URL to your web proxy
+        required: true
+      wptRepo:
+        description: The URL to a git repo of WPT
+        required: false
+        default: "https://github.com/web-platform-tests/wpt.git"
+      browser:
+        description: The browser to run the WPT-Diff tests on
+        required: false
+        default: "chrome"
+      pathToBrowser:
+        description: The path to the browser to run the WPT-Diff tests on
+        required: false
+      rootDir:
+        description: The root directory of the project which contains the checkoutsDir
+        required: true
+      checkoutsDir:
+        description: The directory to checkout the WPT tests to
+        required: true
+      testResultsDir:
+        description: The directory to store the test results in
+        required: true
+      runsFileOut:
+        description: The name of the file to store the runs info in
+        required: false
+        default: "${{ github.event.inputs.rootDir }}/runs.json"
+      expectationsFileOut:
+        description: The name of the file to store the expectations (for which tests should pass in your proxy) in. The expectations are correspond to the same pass/fails in the wptreport JSON file, so that it knows what is a problem once it runs the tests through the proxy.
+        required: false
+        default: "${{ github.event.inputs.rootDir }}/expectations.json"
 
-  jobs:
-    js-diff:
-      runs-on: ubuntu-latest
+jobs:
+  js-diff:
+    runs-on: ubuntu-latest
 
-      steps:
-        - uses: actions/checkout@v2
+    steps:
+      - uses: actions/checkout@v2
 
-        - name: Setup Node.js
-          uses: actions/setup-node@v1
-          with:
-            node-version: 21
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 21
 
-        - name: Patch WPT for proxies
-          run: ${{ github.event.inputs.wptDiffBaseCmd --proxyURL ${{ github.event.inputs.proxyURL }} --browser ${{ github.event.inputs.browser }} --pathToBrowser ${{ github.event.inputs.pathToBrowser }} --wptRepo ${{ github.event.inputs.wptRepo }} --webkitDir ${{ github.event.inputs.webkitDir }} --rootDir ${{ github.event.inputs.rootDir }} --checkoutsDir ${{ github.event.inputs.checkoutsDir }} --testResultsDir ${{ github.event.inputs.testResultsDir }} --runsFileOut ${{ github.event.inputs.runsFileOut }} --expectationsFileOut ${{ github.event.inputs.expectationsFileOut }}
+      - name: Patch WPT for proxies
+        run: ${{ github.event.inputs.wptDiffBaseCmd --proxyURL ${{ github.event.inputs.proxyURL }} --browser ${{ github.event.inputs.browser }} --pathToBrowser ${{ github.event.inputs.pathToBrowser }} --wptRepo ${{ github.event.inputs.wptRepo }} --webkitDir ${{ github.event.inputs.webkitDir }} --rootDir ${{ github.event.inputs.rootDir }} --checkoutsDir ${{ github.event.inputs.checkoutsDir }} --testResultsDir ${{ github.event.inputs.testResultsDir }} --runsFileOut ${{ github.event.inputs.runsFileOut }} --expectationsFileOut ${{ github.event.inputs.expectationsFileOut }}
 
-        - name: Run WPT-Diff
-          run: python3 ${{ github.event.inputs.proxyName }}-${{ github.event.inputs.browser }} ${{ github.event.inputs.checkoutsDir }}/WPT/wpt --headless --log-wptreport={{ github.event.inputs.expectationsFileOut }}"
+      - name: Run WPT-Diff
+        run: python3 ${{ github.event.inputs.proxyName }}-${{ github.event.inputs.browser }} ${{ github.event.inputs.checkoutsDir }}/WPT/wpt --headless --log-wptreport={{ github.event.inputs.expectationsFileOut }}"
 
-        - name: Gen the runs info
-          run: ${{getRunInfoBaseCmd}} --browser ${{ github.event.inputs.browser }} --runsOutfilename ${{testResultsDir}}/${{ github.event.inputs.runsOutfilename }}
+      - name: Gen the runs info
+        run: ${{getRunInfoBaseCmd}} --browser ${{ github.event.inputs.browser }} --runsOutfilename ${{testResultsDir}}/${{ github.event.inputs.runsOutfilename }}
 
-        - name: Upload the results as an artifact
-          uses: actions/upload-artifact@4
-          with:
-            name: wpt-diff-results
-            path: ${github.event.inputs.rootDir }}/${{ github.event.inputs.resultsDir }}/results.json
+      - name: Upload the results as an artifact
+        uses: actions/upload-artifact@4
+        with:
+          name: wpt-diff-results
+          path: ${github.event.inputs.rootDir }}/${{ github.event.inputs.resultsDir }}/results.json
 
-        - name: Upload the run info as an artifact
-          uses: actions/upload-artifact@4
-          with:
-            name: wpt-diff-results-run-info
-            path:  ${github.event.inputs.rootDir }}/${{ github.event.inputs.resultsDir }}/runs-baseline.json
+      - name: Upload the run info as an artifact
+        uses: actions/upload-artifact@4
+        with:
+          name: wpt-diff-results-run-info
+          path: ${github.event.inputs.rootDir }}/${{ github.event.inputs.resultsDir }}/runs-baseline.json

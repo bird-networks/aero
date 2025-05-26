@@ -17,4 +17,6 @@ import createErrorFmters from "../../../AeroSandbox/src/shared/fmtErrGeneric.js"
 
 const errLogAfterColon = defaultFeatureFlags.errLogAfterColon;
 export default errLogAfterColon;
-export const { fmtErr, fmtNeverthrowErr } = createErrorFmters(defaultFeatureFlags.errLogAfterColon);
+export const { fmtErr, fmtNeverthrowErr } = createErrorFmters(
+  defaultFeatureFlags.errLogAfterColon,
+);

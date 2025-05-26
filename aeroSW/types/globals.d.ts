@@ -15,4 +15,22 @@ declare global {
 	var logger: AeroLogger;
 	var nestedSWs: Map<proxyOrigin, NestedSW[]>;
 	var storedValsForSandbox: { [key: string]: any };
+	var FEATURES_CACHE_EMULATION: boolean;
+	var FEATURES_CORS_EMULATION: boolean;
+	var CACHES_EMULATION: boolean;
+	var ENC_BODY_EMULATION: boolean;
+	var SUPPORT_SPECULATION: boolean;
+	var REQ_INTERCEPTION_CATCH_ALL: string;
+	var SERVER_ONLY: boolean;
+	var DEBUG: boolean;
+	var ERR_LOG_AFTER_COLON: string;
+	var getReqDest: (destination: string, params: URLSearchParams) => string;
+	var serverFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+	var electronWebViewControls: {
+		httpReferrer?: string;
+		useragent?: string;
+	};
+	var aeroHandle: (event: FetchEvent) => Promise<ResultAsync<Response, Error>>;
+	var routeAero: (event: FetchEvent) => Result<boolean, Error>;
+	var Assert: unknown;
 }

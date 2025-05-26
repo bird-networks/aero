@@ -17,30 +17,15 @@ import { afterPrefix } from "$interceptorUtil/getProxyURL";
 import type BareClient from "@mercuryworkshop/bare-mux";
 
 const credentialStore = new WeakMap<PasswordCredential, PasswordCredential>();
-const publicKeyCredentialStore = new WeakMap<
-	PublicKeyCredential,
-	PublicKeyCredential
->();
+const publicKeyCredentialStore = new WeakMap<PublicKeyCredential, PublicKeyCredential>();
 
 // Credential Classes
 // From WebAuthn
-const passwordCredential = new WeakMap<
-	PasswordCredential,
-	PasswordCredential
->();
-const federatedCredential = new WeakMap<
-	FederatedCredential,
-	FederatedCredential
->();
-const publicKeyCredential = new WeakMap<
-	PublicKeyCredential,
-	PublicKeyCredential
->();
+const passwordCredential = new WeakMap<PasswordCredential, PasswordCredential>();
+const federatedCredential = new WeakMap<FederatedCredential, FederatedCredential>();
+const publicKeyCredential = new WeakMap<PublicKeyCredential, PublicKeyCredential>();
 // FedCM (draft)
-const identityCredential = new WeakMap<
-	IdentityCredential,
-	IdentityCredential
->();
+const identityCredential = new WeakMap<IdentityCredential, IdentityCredential>();
 const otpCredential = new WeakMap<OTPCredential, OTPCredential>();
 
 /** @see {@link https://w3c.github.io/webauthn/#dictdef-collectedclientdata} */
@@ -105,9 +90,9 @@ export default [
 
 				const proxifiedCredentialObj = {
 					federated: {
-						id: escape(credentialsObj.id)
+						id: escape(credentialsObj.id),
 					},
-					...credentialsObj
+					...credentialsObj,
 				};
 
 				// @ts-ignore
@@ -117,21 +102,15 @@ export default [
 					args.shift().push(proxifiedCredentialObj)
 				) as PasswordCredential;
 				// @ts-ignore
-				const credentials = Reflect.construct(
-					target,
-					that,
-					args
-				) as PasswordCredential;
+				const credentials = Reflect.construct(target, that, args) as PasswordCredential;
 				// There is no point of backing it up if it doesn't have what we need. We know it will error anyways
-				if (
-					"federated" in credentialsObj &&
-					"id" in credentialsObj.federated
-				)
+				if ("federated" in credentialsObj && "id" in credentialsObj.federated) {
 					credentialStore.set(proxifiedCredentials, credentials);
-			}
+				}
+			},
 		},
 		globalProp: "navigator.credentials.store",
-		exposedContexts: ExposedContextsEnum.window
+		exposedContexts: ExposedContextsEnum.window,
 	},
 	{
 		proxyHandler: {
@@ -139,19 +118,20 @@ export default [
 				const credentialsObj: Credential = args[0];
 
 				args[0] = proxifyCredentials(credentialsObj);
-			}
+			},
 		},
 		globalProp: "navigator.credentials.store",
-		exposedContexts: ExposedContextsEnum.window
+		exposedContexts: ExposedContextsEnum.window,
 	},
 	{
 		proxyHandler: {
 			apply(target, that, args) {
 				const options: CredentialRequestOptions = args[0];
 
-				if (!options)
+				if (!options) {
 					// Return to normal operations and let the browser throw its proper exception
 					return Reflect.apply(target, that, args);
+				}
 
 				const newOptions = options;
 
@@ -159,9 +139,7 @@ export default [
 				newOptions.federated = {
 					/*It requires an origin; the path does not matter.The plan is to use passwords later on and do the escaping server- side on a[Bare Extended](https://github.com/tomphttp/specifications-v4/blob/master/optional-specs/BareExtended.md) endpoint to route to the correct identity provider. 😬
 						@see {@link https://w3c.github.io/webappsec-credential-management/#provider-identification:~:text=the%20origin%20the%20provider%20uses%20for%20sign%20in} */
-					providers: options.federated.providers.map(
-						_provider => location.origin
-					)
+					providers: options.federated.providers.map(_provider => location.origin),
 				};
 
 				const newArgs = args;
@@ -170,7 +148,7 @@ export default [
 				const keyCredential = Reflect.apply(target, that, newArgs);
 				if (keyCredential instanceof PublicKeyCredential) {
 					const proxifiedPublicKeyCredential: PublicKeyCredential = {
-						...keyCredential
+						...keyCredential,
 					};
 
 					/**
@@ -178,9 +156,7 @@ export default [
 					 * @see {@link https://w3c.github.io/webauthn/#dictdef-collectedclientdata}
 					 */
 					const clientData = JSON.parse(
-						new TextDecoder().decode(
-							keyCredential.response.clientDataJSON
-						)
+						new TextDecoder().decode(keyCredential.response.clientDataJSON)
 					) as CollectedClientData;
 
 					const proxifiedClientData = clientData;
@@ -189,58 +165,52 @@ export default [
 						type: {
 							// Make readonly
 							writable: false,
-							configurable: false
+							configurable: false,
 						},
 						origin: {
 							// @ts-ignore
 							value: proxyLocation().origin,
 							// Make readonly
 							writable: false,
-							configurable: false
+							configurable: false,
 						},
 						topOrigin: {
 							// @ts-ignore
 							value: proxyLocation({
 								// Make this an actual option lol
-								topLevel: true
+								topLevel: true,
 							}).origin,
 							// Make readonly
 							writable: false,
-							configurable: false
+							configurable: false,
 						},
 						crossOrigin: {
 							// @ts-ignore
 							value:
-								new URL(afterPrefix(clientData.origin))
-									.origin !== proxyLocation().origin,
+								new URL(afterPrefix(clientData.origin)).origin !==
+								proxyLocation().origin,
 							// Make readonly
 							writable: false,
-							configurable: false
-						}
+							configurable: false,
+						},
 					});
 
-					Object.defineProperty(
-						proxifiedPublicKeyCredential.response,
-						"clientDataJSON",
-						{
-							// @ts-ignore
-							value: new TextEncoder().encode(
-								JSON.stringify(proxifiedClientData)
-							),
-							// Make readonly
-							writable: false,
-							configurable: false
-						}
-					);
+					Object.defineProperty(proxifiedPublicKeyCredential.response, "clientDataJSON", {
+						// @ts-ignore
+						value: new TextEncoder().encode(JSON.stringify(proxifiedClientData)),
+						// Make readonly
+						writable: false,
+						configurable: false,
+					});
 
 					return proxifiedPublicKeyCredential;
 				} else {
 					return keyCredential;
 				}
-			}
+			},
 		},
 		globalProp: "navigator.credentials.get",
-		exposedContexts: ExposedContextsEnum.window
-	}
+		exposedContexts: ExposedContextsEnum.window,
+	},
 	// TODO: Support the rest of the Credential Management APIs - https://developer.mozilla.org/en-US/docs/Web/API/Credential_Management_API
 ] as APIInterceptor[];

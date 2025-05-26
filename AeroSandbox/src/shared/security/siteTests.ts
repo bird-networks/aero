@@ -21,9 +21,14 @@ type sameSiteDirectives = "cross-site" | "same-origin" | "same-site" | "none";
  * @param bc The bare-mux instance to use to fetch the public suffix list
  * @returns The site directive. It will never return `none`, since you should return `none` if it is the same on the original header
  */
-export default function getSiteDirective(proxyUrl: URL, clientURL: URL, bc: BareClient = $aero.bc): sameSiteDirectives {
+export default async function getSiteDirective(
+	proxyUrl: URL,
+	clientURL: URL,
+	bc: BareClient = $aero.bc
+): Promise<sameSiteDirectives> {
 	if (new URL(proxyUrl).origin === new URL(clientURL).origin) return "same-origin";
-	if (isSameSite(proxyUrl, clientURL, bc)) return "same-site";
+	const isSameSiteRes = await isSameSite(proxyUrl, clientURL, bc);
+	if (isSameSiteRes.isOk() && isSameSiteRes.value) return "same-site";
 	return "cross-site";
 }
 
@@ -35,38 +40,56 @@ export default function getSiteDirective(proxyUrl: URL, clientURL: URL, bc: Bare
  * @param bc The bare-mux instance to use to fetch the public suffix list
  * @return If the two URLs are the same site wrapped in a `ResultAsync` for better error handling from *Neverthrow*
  */
-export async function isSameSite(url1: URL, url2: URL, bc: BareClient = $aero.bc): Promise<ResultAsync<boolean, Error>> {
+export async function isSameSite(
+	url1: URL,
+	url2: URL,
+	bc: BareClient = $aero.bc
+): Promise<ResultAsync<boolean, Error>> {
 	if (url1.protocol === url2.protocol) return nOkAsync(false);
 
 	let publicSuffixes: readonly string[];
 	if (FETCH_PUBLIC_SUFFIX_PRIORITY === "compile-time") {
-		const { default: getPublicSuffixListCompileTime } = await import("./getPublicSuffixList.val");
-		publicSuffixes = getPublicSuffixListCompileTime({ errLogAfterColon: ERR_LOG_AFTER_COLON, publicSuffixApi: PUBLIC_SUFFIX_API, failedToFetchSuffixErrMsg: FAILED_TO_FETCH_SUFFIX_ERR_MSG });
-	}
-	else if (FETCH_PUBLIC_SUFFIX_PRIORITY === "run-time") {
+		const { default: getPublicSuffixListCompileTime } = await import(
+			"./getPublicSuffixList.val"
+		);
+		publicSuffixes = await getPublicSuffixListCompileTime({
+			errLogAfterColon: ERR_LOG_AFTER_COLON,
+			publicSuffixApi: PUBLIC_SUFFIX_API,
+			failedToFetchSuffixErrMsg: FAILED_TO_FETCH_SUFFIX_ERR_MSG
+		});
+	} else if (FETCH_PUBLIC_SUFFIX_PRIORITY === "run-time") {
 		const publicSuffixesRes = await getPublicSuffixList(bc);
 		if (publicSuffixesRes.isErr())
-			return fmtNeverthrowErr("Failed to get the public suffixes list", publicSuffixesRes.error);
+			return fmtNeverthrowErr(
+				"Failed to get the public suffixes list",
+				publicSuffixesRes.error
+			);
 		publicSuffixes = publicSuffixesRes.value;
 	} else {
-		return fmtNeverthrowErr(`Failed to get the feature flag "fetchPublicSuffixPriority"`, "The feature flag is not set to either `compile-time` or `run-time`");
+		return fmtNeverthrowErr(
+			`Failed to get the feature flag "fetchPublicSuffixPriority"`,
+			"The feature flag is not set to either `compile-time` or `run-time`"
+		);
 	}
 
 	for (const publicSuffix of publicSuffixes) {
 		/** If only the first level of the domain should be retrieved before the public suffixes */
 		const firstLevelBeforeMatters = !publicSuffix.startsWith("*");
 		/** If both urls end with the same public suffix */
-		const endsWithSuffix = url1.hostname.endsWith(publicSuffix) && url2.hostname.endsWith(publicSuffix);
+		const endsWithSuffix =
+			url1.hostname.endsWith(publicSuffix) && url2.hostname.endsWith(publicSuffix);
 		if (!endsWithSuffix)
 			// If the URL does not end with the public suffix, it doesn't matter
 			continue;
 		if (
 			// Check if the public suffix domain are both equal (the first level before the public suffix matters)
-			getSiteDomainFromPublicSuffix(url1, publicSuffix, firstLevelBeforeMatters) === getSiteDomainFromPublicSuffix(url2, publicSuffix, firstLevelBeforeMatters))
+			getSiteDomainFromPublicSuffix(url1, publicSuffix, firstLevelBeforeMatters) ===
+			getSiteDomainFromPublicSuffix(url2, publicSuffix, firstLevelBeforeMatters)
+		)
 			return nOkAsync(true);
 	}
 	// Finally, check if the second-level domains are equal
-	return nOkAsync((getSecondLevelDomain(url1) === getSecondLevelDomain(url2))
+	return nOkAsync(getSecondLevelDomain(url1) === getSecondLevelDomain(url2));
 }
 
 /**
@@ -77,10 +100,15 @@ export async function isSameSite(url1: URL, url2: URL, bc: BareClient = $aero.bc
  * @param getOnlyFirstLevelAfter Get only the first domain level before the public suffix
  * @returns The site domain from the public suffix
  */
-function getSiteDomainFromPublicSuffix(url: URL, publicSuffix: string, getOnlyFirstLevelAfter: boolean): string {
+function getSiteDomainFromPublicSuffix(
+	url: URL,
+	publicSuffix: string,
+	getOnlyFirstLevelAfter: boolean
+): string {
 	/** All of the levels before the public suffix */
 	const allLevelsAfter = url.hostname.split(publicSuffix).pop();
-	return getOnlyFirstLevelAfter ? allLevelsAfter.split(".").at(-1) : allLevelsAfter;
+	if (!allLevelsAfter) return "";
+	return getOnlyFirstLevelAfter ? allLevelsAfter.split(".").at(-1) || "" : allLevelsAfter;
 }
 
 /**
@@ -90,7 +118,7 @@ function getSiteDomainFromPublicSuffix(url: URL, publicSuffix: string, getOnlyFi
  * @returns the second level domain of the given URL
  */
 function getSecondLevelDomain(url: URL): string {
-	return url.hostname.split(".").at(-2);
+	return url.hostname.split(".").at(-2) || "";
 }
 
 /**
@@ -98,15 +126,21 @@ function getSecondLevelDomain(url: URL): string {
  * @param bc The bare-mux instance to use to fetch the public suffix list
  * @returns The public suffixes list (parsed) wrapped in a `ResultAsync` for better error handling from *Neverthrow*
  */
-export async function getPublicSuffixList(bc: BareClient = $aero.bc): Promise<ResultAsync<string[], Error>> {
+export async function getPublicSuffixList(
+	bc: BareClient = $aero.bc
+): Promise<ResultAsync<string[], Error>> {
 	// Try to get the public suffixes list
 	let publicSuffixesRes: Response;
 	try {
 		publicSuffixesRes = await bc.fetch(PUBLIC_SUFFIX_API);
 	} catch (err) {
-		return fmtNeverthrowErr(FAILED_TO_FETCH_SUFFIX_ERR_MSG, err);
+		return fmtNeverthrowErr(FAILED_TO_FETCH_SUFFIX_ERR_MSG, err instanceof Error ? err : new Error(String(err)));
 	}
 	/** The public suffixes list - @see https://publicsuffix.org/ */
 	const publicSuffixesText = await publicSuffixesRes.text();
-	return nOkAsync((publicSuffixesText.split("\n").filter(line => !(line.startsWith("//") || line.trim() === "")));
+	return nOkAsync(
+		publicSuffixesText
+			.split("\n")
+			.filter(line => !(line.startsWith("//") || line.trim() === ""))
+	);
 }

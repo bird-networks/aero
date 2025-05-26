@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, reopened]
     paths: ["AeroSandbox/**.ts", "aero/**.ts"]
-    
+
   push:
     branches:
       - main

@@ -6,33 +6,35 @@
 import AeroGel from "../../../AeroSandbox/src/sandboxers/JS/backends/AeroGel.js";
 
 // aero defaults
-export const propTreeAeroGelSpecific = 'window["<proxyNamespace>"]["<ourNamespace>"].rewriters.js.aeroGel.';
-export const propTree = 'window["<proxyNamespace>"]["<ourNamespace>"].rewriters.js.shared.';
+export const propTreeAeroGelSpecific =
+  'window["<proxyNamespace>"]["<ourNamespace>"].rewriters.js.aeroGel.';
+export const propTree =
+  'window["<proxyNamespace>"]["<ourNamespace>"].rewriters.js.shared.';
 /** [key: rewriterName]: rewriter handler */
 const tryRewriters = {
-	AeroGel: (new (AeroGel.default)({
-		aeroGelConfig: {
-			propTrees: {
-				fakeLet: propTreeAeroGelSpecific + "fakeLet",
-				fakeConst: propTreeAeroGelSpecific + "fakeConst",
-			},
-			proxified: {
-				evalFunc: propTree + "proxifiedEval",
-				location: propTree + "proxifiedLocation"
-			},
-			checkFunc: propTree + "checkFunc"
-		},
-		keywordGenConfig: {
-			supportStrings: true,
-			supportTemplateLiterals: true,
-			supportRegex: true,
-		},
-		trackers: {
-			blockDepth: true,
-			propertyChain: true,
-			proxyApply: true
-		}
-	})).jailScript
-	// TODO: Add AeroJet
-}
+  AeroGel: (new (AeroGel.default)({
+    aeroGelConfig: {
+      propTrees: {
+        fakeLet: propTreeAeroGelSpecific + "fakeLet",
+        fakeConst: propTreeAeroGelSpecific + "fakeConst",
+      },
+      proxified: {
+        evalFunc: propTree + "proxifiedEval",
+        location: propTree + "proxifiedLocation",
+      },
+      checkFunc: propTree + "checkFunc",
+    },
+    keywordGenConfig: {
+      supportStrings: true,
+      supportTemplateLiterals: true,
+      supportRegex: true,
+    },
+    trackers: {
+      blockDepth: true,
+      propertyChain: true,
+      proxyApply: true,
+    },
+  })).jailScript,
+  // TODO: Add AeroJet
+};
 export default tryRewriters;

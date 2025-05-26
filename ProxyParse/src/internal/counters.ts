@@ -1,4 +1,4 @@
-import type { BlockDepthRefPassthrough, blockDepthCounter } from "../index.js";
+import type { blockDepthCounter, BlockDepthRefPassthrough } from "../index.js";
 
 /// Depth counters
 /**
@@ -8,15 +8,19 @@ import type { BlockDepthRefPassthrough, blockDepthCounter } from "../index.js";
  * @param blockDepth The variable for the blockDepth to increment or decrement
  * @returns A function that increments or decrements the block depth accordingly by looking at character
  */
-export function createBlockDepthCounter(blockDepthRefPassthrough: Partial<BlockDepthRefPassthrough>): blockDepthCounter {
-    return (char: string): void => {
-        if (!("blockDepth" in blockDepthRefPassthrough)) {
-            throw new Error("Missing the property blockDepth on blockDepthRefPassthrough!")
-        } else {
-            // @ts-ignore
-            if (char === '{') blockDepthRefPassthrough.blockDepth++;
-            // @ts-ignore
-            if (char === '}') blockDepthRefPassthrough.blockDepth--;
-        }
+export function createBlockDepthCounter(
+  blockDepthRefPassthrough: Partial<BlockDepthRefPassthrough>,
+): blockDepthCounter {
+  return (char: string): void => {
+    if (!("blockDepth" in blockDepthRefPassthrough)) {
+      throw new Error(
+        "Missing the property blockDepth on blockDepthRefPassthrough!",
+      );
+    } else {
+      // @ts-ignore
+      if (char === "{") blockDepthRefPassthrough.blockDepth++;
+      // @ts-ignore
+      if (char === "}") blockDepthRefPassthrough.blockDepth--;
     }
+  };
 }

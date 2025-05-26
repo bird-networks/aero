@@ -1,5 +1,5 @@
 import type { APIInterceptor } from "$types/apiInterceptors";
-import { ExposedContextsEnum, URL_IS_ESCAPE, SupportEnum } from "$types/enums/apiInterceptors";
+import { ExposedContextsEnum, SupportEnum, URL_IS_ESCAPE } from "$types/enums/apiInterceptors";
 
 import rewriteSrc from "$interceptorUtil/src";
 import { proxyLocation } from "$shared/proxyLocation";
@@ -53,7 +53,7 @@ export default [
 		globalProp: "navigator.prototype.sendBeacon",
 		exposedContexts: ExposedContextsEnum.window,
 		supports: SupportEnum.widelyAvailable,
-		for: "ORIGIN_ISOLATION"
+		for: "ORIGIN_ISOLATION",
 	},
 	{
 		proxyHandler: sharedProtoHandler,
@@ -61,7 +61,7 @@ export default [
 		globalProp: "navigator.prototype.registerProtocolHandler",
 		exposedContexts: ExposedContextsEnum.window,
 		supports: SupportEnum.widelyAvailable,
-		for: "ORIGIN_ISOLATION"
+		for: "ORIGIN_ISOLATION",
 	},
 	{
 		proxyHandler: sharedProtoHandler,
@@ -69,6 +69,6 @@ export default [
 		globalProp: "navigator.prototype.unregisterProtocolHandler",
 		exposedContexts: ExposedContextsEnum.window,
 		supports: SupportEnum.widelyAvailable,
-		for: "ORIGIN_ISOLATION"
-	}
+		for: "ORIGIN_ISOLATION",
+	},
 ] as APIInterceptor[];

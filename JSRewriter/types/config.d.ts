@@ -1,23 +1,23 @@
 export default interface RewriterConfig {
-    globalsConfig: {
-        propTrees: {
-            fakeLet: string;
-            fakeConst: string;
-        };
-        proxified: {
-            evalFunc: string;
-            location: string
-        };
-        checkFunc: string
+  globalsConfig: {
+    propTrees: {
+      fakeLet: string;
+      fakeConst: string;
     };
-    keywordGenConfig: {
-        supportStrings: true;
-        supportTemplateLiterals: true;
-        supportRegex: true;
+    proxified: {
+      evalFunc: string;
+      location: string;
     };
-    trackers: {
-        blockDepth: true;
-        propertyChain: true;
-        proxyApply: true
-    }
+    checkFunc: string;
+  };
+  keywordGenConfig: {
+    supportStrings: true;
+    supportTemplateLiterals: true;
+    supportRegex: true;
+  };
+  trackers: {
+    blockDepth: true;
+    propertyChain: true;
+    proxyApply: true;
+  };
 }

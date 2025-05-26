@@ -33,9 +33,9 @@ export default {
 				return true;
 			}
 			return Reflect.set(target, prop, value);
-		}
+		},
 	},
 	globalProp: "RTCPeerConnection",
 	forAltProtocol: AltProtocolEnum.wrtc,
-	exposedContexts: ExposedContextsEnum.window
+	exposedContexts: ExposedContextsEnum.window,
 } as APIInterceptor;

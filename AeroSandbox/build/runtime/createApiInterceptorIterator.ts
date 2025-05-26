@@ -30,13 +30,16 @@ export default (includeRegExp: RegExp): Iterable<APIInterceptor> => {
 					continue;
 				}
 
-				const mod = modules(file) as { default: APIInterceptor | APIInterceptor[] };
+				const mod = modules(file) as {
+					default: APIInterceptor | APIInterceptor[];
+				};
 				const apiExport = mod.default;
-				if (Array.isArray(apiExport))
+				if (Array.isArray(apiExport)) {
 					for (const interceptor of apiExport) yield interceptor;
-				else
+				} else {
 					yield apiExport;
+				}
 			}
-		}
+		},
 	};
 };

@@ -27,10 +27,10 @@ if ("cookieStore" in window) {
 					args[0] = cookie;
 
 					return Reflect.apply(target, that, args);
-				}
+				},
 			});
 		},
-		globalProp: "cookieStore.set"
+		globalProp: "cookieStore.set",
 	});
 	//cookieStore.set =
 	/*
@@ -47,7 +47,7 @@ if ("cookieStore" in window) {
 		apply(target, that, args) {
 			const [type, listener] = args;
 
-			if (type === "change")
+			if (type === "change") {
 				args[1] = event => {
 					if (event instanceof CookieChangeEvent) {
 						/*
@@ -59,37 +59,39 @@ if ("cookieStore" in window) {
 
 					event.listener(event);
 				};
+			}
 
 			return Reflect.apply(target, that, args);
-		}
+		},
 	});
 }
 
-
 // @ts-ignore: stub storage cookie interceptors
-export default [{
-	/** Emulates for the `Clear-Site-Data` header */
-	init() {
-		const clear = $aero.sec.clear;
-		const all = clear.includes("'*'");
-		if (all || clear.includes("'cookies'")) {
-			clearCookies(upToProxyOrigin());
-		}
-		if (all || clear.includes("'executionContexts'")) {
-			// This is done here and not in other other storage interceptors because cookies would be the most supported
-			navigator.serviceWorker.addEventListener("message", event => {
-				if (event.data === "$aero_clearExecutionContext") location.reload();
-			});
-		}
+export default [
+	{
+		/** Emulates for the `Clear-Site-Data` header */
+		init() {
+			const clear = $aero.sec.clear;
+			const all = clear.includes("'*'");
+			if (all || clear.includes("'cookies'")) {
+				clearCookies(upToProxyOrigin());
+			}
+			if (all || clear.includes("'executionContexts'")) {
+				// This is done here and not in other other storage interceptors because cookies would be the most supported
+				navigator.serviceWorker.addEventListener("message", event => {
+					if (event.data === "$aero_clearExecutionContext") location.reload();
+				});
+			}
+		},
+		proxifiedGetter: ctx => {
+			return rewriteGetCookie(ctx.this, proxyLocation());
+		},
+		proxifiedSetter: ctx => {
+			return rewriteSetCookie(ctx.this, proxyLocation());
+		},
+		globalProp: "document.cookie",
 	},
-	proxifiedGetter: ctx => {
-		return rewriteGetCookie(ctx.this, proxyLocation())
-	},
-	proxifiedSetter: ctx => {
-		return rewriteSetCookie(ctx.this, proxyLocation())
-	},
-	globalProp: "document.cookie"
-}] as APIInterceptor[];
+] as APIInterceptor[];
 
 function clearCookies(path: string) {
 	const cookies = document.cookie.split(";");

@@ -4,7 +4,7 @@
  */
 
 import type { Result, ResultAsync } from "neverthrow";
-import { ok as nOk, err as nErr, okAsync, errAsync as nErrAsync } from "neverthrow";
+import { err as nErr, errAsync as nErrAsync, ok as nOk, okAsync } from "neverthrow";
 
 import Logger from "./Logger";
 
@@ -45,7 +45,7 @@ export async function initAll(
 	const initDist = new InitDist(
 		{
 			dist: distDir,
-			proper: properDir
+			proper: properDir,
 		},
 		properDirType,
 		verboseMode
@@ -76,14 +76,9 @@ export async function initAll(
 	return nOk(undefined);
 }
 
-export function importFeatureFlagOverrides(): Result<
-	Partial<FeatureFlags>,
-	Error
-> {
+export function importFeatureFlagOverrides(): Result<Partial<FeatureFlags>, Error> {
 	try {
-		const featureFlagOverrides = importSync(
-			"./createFeatureFlags.ts"
-		).default;
+		const featureFlagOverrides = importSync("./createFeatureFlags.ts").default;
 		return nOk(featureFlagOverrides);
 	} catch (err) {
 		return nErr(err as Error);
@@ -94,7 +89,7 @@ export function importFeatureFlagOverrides(): Result<
  * This class is a helper for handling Neverthrow errors
  * @example
  * import { ErrUnwrapper } from "...";
- * 
+ *
  * const debugMode = process.env.DEBUG;
  * ...
  * const errUnwrapper = new ErrUnwrapper(debugMode);
@@ -115,7 +110,7 @@ export class ErrUnwrapper {
 		res: Result<any | void, Error>,
 		msgDesc: string,
 		// Default debugMode for ErrUnwrapper can be the global DEBUG
-		debugMode = typeof DEBUG !== 'undefined' ? DEBUG : true,
+		debugMode = typeof DEBUG !== "undefined" ? DEBUG : true,
 		msgPreview = "⚠️ "
 	): void {
 		if (res.isErr()) {

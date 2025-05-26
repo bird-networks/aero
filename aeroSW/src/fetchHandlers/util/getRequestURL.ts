@@ -5,7 +5,7 @@
  */
 
 import type { Result } from "neverthrow";
-import { ok as nOk, err as nErr } from "neverthrow";
+import { err as nErr, ok as nOk } from "neverthrow";
 
 /**
  * Gets the url that will actually be fetched
@@ -26,7 +26,7 @@ import { ok as nOk, err as nErr } from "neverthrow";
  *
  * /** If the client is an iframe. This is used for determining the request url. *\/
  * const isiFrame = req.destination === "iframe"
- * 
+ *
  * const requestUrlGetter = new RequestUrlGetter(req.url.origin, location.origin);
  *
  * /** The URL to the site that will be proxied in a raw form. This will later be parsed. *\/
@@ -46,55 +46,56 @@ import { ok as nOk, err as nErr } from "neverthrow";
  * );
  */
 export default class RequestUrlGetter {
-	origin: string;
-	workerOrigin: string;
-	constructor(
-		origin: string,
-		workerOrigin: string,
-	) {
-		this.origin = origin;
-		this.workerOrigin = workerOrigin;
-	}
+  origin: string;
+  workerOrigin: string;
+  constructor(
+    origin: string,
+    workerOrigin: string,
+  ) {
+    this.origin = origin;
+    this.workerOrigin = workerOrigin;
+  }
 
-	get(
-		proxyUrl: URL,
-		path: string,
-		isHomepage: boolean,
-		isiFrame: boolean
-	): Result<string, Error> {
-		const noPrefix = path.split(self.config.prefix)[1];
+  get(
+    proxyUrl: URL,
+    path: string,
+    isHomepage: boolean,
+    isiFrame: boolean,
+  ): Result<string, Error> {
+    const noPrefix = path.split(self.config.prefix)[1];
 
-		// If it is the first request, there is no must do any relative url checking
-		if (typeof noPrefix === "string" && isHomepage) {
-			let urlAfterPrefix: URL;
-			try {
-				urlAfterPrefix = new URL(noPrefix);
-			} catch (err) {
-				return nErr(
-					new Error(
-						`${err instanceof TypeError
-							? "Failed to parse the URL after the prefix"
-							: "Unknown error when trying to parse the URL after the prefix"
-						}:${ERR_LOG_AFTER_COLON}${err}`
-					)
-				);
-			}
-			return nOk(urlAfterPrefix.href);
-		}
+    // If it is the first request, there is no must do any relative url checking
+    if (typeof noPrefix === "string" && isHomepage) {
+      let urlAfterPrefix: URL;
+      try {
+        urlAfterPrefix = new URL(noPrefix);
+      } catch (err) {
+        return nErr(
+          new Error(
+            `${
+              err instanceof TypeError
+                ? "Failed to parse the URL after the prefix"
+                : "Unknown error when trying to parse the URL after the prefix"
+            }:${ERR_LOG_AFTER_COLON}${err}`,
+          ),
+        );
+      }
+      return nOk(urlAfterPrefix.href);
+    }
 
-		// Don't hardcode origins
-		const absoluteUrl = origin !== this.workerOrigin;
+    // Don't hardcode origins
+    const absoluteUrl = origin !== this.workerOrigin;
 
-		if (absoluteUrl) return nOk(this.origin + path);
-		else {
-			const proxyOrigin = proxyUrl?.origin;
-			//const proxyPath = proxyUrl?.pathname;
+    if (absoluteUrl) return nOk(this.origin + path);
+    else {
+      const proxyOrigin = proxyUrl?.origin;
+      //const proxyPath = proxyUrl?.pathname;
 
-			if (noPrefix) {
-				const retUrl = noPrefix;
+      if (noPrefix) {
+        const retUrl = noPrefix;
 
-				// FIXME: Correct relative urls that don't end with a slash; this is an edge case
-				/*
+        // FIXME: Correct relative urls that don't end with a slash; this is an edge case
+        /*
 				const proxyEndingPath = proxyPathSlashes?.at(-1);
 				const proxyPathSlashes = proxyPath?.split("/");
 				if (
@@ -102,30 +103,32 @@ export default class RequestUrlGetter {
 					proxyEndingPath.length > 0
 				) {
 					let noPrefixSplit = noPrefix?.split("/");
-	
+
 					$aero.log(proxyEndingPath);
 					$aero.log(noPrefixSplit);
-	
+
 					noPrefixSplit.splice(
 						noPrefixSplit.length - 1,
 						0,
 						proxyEndingPath
 					);
 					retUrl = noPrefixSplit.join("/");
-	
+
 					$aero.log(noPrefixSplit);
 				}
 				*/
 
-				const protoSplit = noPrefix.split(/^(https?:\/\/)/g);
-				const noPrefixProto = protoSplit.slice(2).join();
+        const protoSplit = noPrefix.split(/^(https?:\/\/)/g);
+        const noPrefixProto = protoSplit.slice(2).join();
 
-				// TODO: Do this without searching for labels (There could be a directory with them or it could be an unqualified domain)
-				// Determine if it is a path or a domain
-				return nOk(noPrefixProto.split("/")[0].includes(".") || isiFrame
-					? retUrl
-					: `${proxyOrigin}/${noPrefixProto}`);
-			} else return nOk(proxyOrigin + path);
-		}
-	}
+        // TODO: Do this without searching for labels (There could be a directory with them or it could be an unqualified domain)
+        // Determine if it is a path or a domain
+        return nOk(
+          noPrefixProto.split("/")[0].includes(".") || isiFrame
+            ? retUrl
+            : `${proxyOrigin}/${noPrefixProto}`,
+        );
+      } else return nOk(proxyOrigin + path);
+    }
+  }
 }

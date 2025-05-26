@@ -34,14 +34,12 @@ export default (buildConfig: BuildConfig) =>
 		configObj: any;
 		mergedFeatureConfig: any;
 		// TODO: Remove AeroSandboxBuildConfig
-		// TODO: validate the config with 
+		// TODO: validate the config with
 		constructor(config: Config) {
 			typiaAssert<Config>(config);
 
 			/** This would be `$aero` */
-			this.proxyNamespaceObj = getPropFromTree(
-				buildConfig.proxyNamespaceObj
-			);
+			this.proxyNamespaceObj = getPropFromTree(buildConfig.proxyNamespaceObj);
 			this.proxyNamespaceObj[OUR_NAMESPACE] = { config };
 			/** This would be `$aero.sandbox` */
 			this.aeroSandboxNamespaceObj =
@@ -61,7 +59,7 @@ export default (buildConfig: BuildConfig) =>
 			}
 			this.mergedFeatureConfig = {
 				...buildConfig.featuresConfig,
-				...runtimeFC
+				...runtimeFC,
 			};
 		}
 		// @ts-ignore
@@ -71,22 +69,20 @@ export default (buildConfig: BuildConfig) =>
 			const { toBeDefinedErrs, toBeDefined } = initApis({
 				proxyNamespaceObj: this.proxyNamespaceObj,
 				aeroSandboxNamespaceObj: this.aeroSandboxNamespaceObj,
-				featureConfig: this.mergedFeatureConfig
+				featureConfig: this.mergedFeatureConfig,
 			});
 
 			logger.log(toBeDefined);
 
-			for (const [globalProp, proxyObject] of Object.entries(
-				toBeDefined.self
-			)) {
+			for (const [globalProp, proxyObject] of Object.entries(toBeDefined.self)) {
 				// Don't support API Interceptors if the browser doesn't support the API
-				if (isApiIncluded(globalProp, this.mergedFeatureConfig))
+				if (isApiIncluded(globalProp, this.mergedFeatureConfig)) {
 					self[globalProp] = proxyObject;
+				}
 			}
-			for (const [
-				globalProp,
-				proxifiedObjWorkerVersion
-			] of Object.entries(toBeDefined.proxifiedObjWorkerVersion)) {
+			for (const [globalProp, proxifiedObjWorkerVersion] of Object.entries(
+				toBeDefined.proxifiedObjWorkerVersion
+			)) {
 				if (isApiIncluded(globalProp, this.mergedFeatureConfig)) {
 					Object.defineProperty(
 						self,
@@ -96,10 +92,7 @@ export default (buildConfig: BuildConfig) =>
 				}
 			}
 
-			return ResultAsync.fromPromise(
-				Promise.resolve(),
-				() => toBeDefinedErrs
-			);
+			return ResultAsync.fromPromise(Promise.resolve(), () => toBeDefinedErrs);
 		}
 		fakeOrigin(
 			proxyOrigin?: string

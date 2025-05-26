@@ -1,83 +1,126 @@
 /**
  * @module
- * You must have the proper feature flags from aeroSW and aeroConfig declared in the global scope 
+ * You must have the proper feature flags from aeroSW and aeroConfig declared in the global scope
  */
 
 // Neverthrow
 import type { ResultAsync } from "neverthrow";
-import { okAsync, errAsync as nErrAsync } from "neverthrow";
+import { errAsync as nErrAsync, okAsync } from "neverthrow";
+import { fmtNeverthrowErr } from "$shared/fmtErr";
+
+// BareMux
+import BareMux from "@mercuryworkshop/bare-mux";
 
 // Passthrough types
-import type { Config } from "$aeroSWTypes/config";
-import type { Sec } from "$aeroSWTypes/cors";
-import type { CacheManager } from "$aero/aeroSW/src/fetchHandlers/isolation/CacheManager";
-import type { eitherLogger } from "$sandboxTypes/loggers";
+import type { Config } from "$types/config";
+import type { Sec } from "$types/index";
+import type CacheManager from "$fetchHandlers/isolation/CacheManager";
+import type { AeroLogger, AeroSandboxLogger } from "$shared/Loggers";
 
 // Abstracted req abstractions
-import getProxyURL from "$fetchHandlers/util/getProxyURL";
-import getCORSStatus from "$fetchHandlers/util/getCORSStatus";
-import formRequestOpts from "$fetchHandlers/util/formRequestOpts"
+import getProxyURL from "$fetchHandlers/subsystems/getProxyURL";
+import getCORSStatus from "$fetchHandlers/subsystems/getCorsStatus";
+import formRequestOpts from "$fetchHandlers/subsystems/formRequestOpts";
+import getClientURLAeroWrapper from "../fetchHelpers/getClientURLAeroWrapper";
 
-import type { rewrittenParamsOriginalsType } from "$types/commonPassthrough"
+import type { rewrittenParamsOriginalsType } from "$types/commonPassthrough";
+
+type eitherLogger = AeroLogger | AeroSandboxLogger;
 
 const securityPolicyMaps: {
 	readonly accessControl: Map<string, string>;
 } = {
 	accessControl: new Map<string, string>(),
-}
+};
 
-export default async function rewriteReq({ logger, req, reqUrl, clientId, clientUrl, aeroPathFilter, reqDestination, isNavigate, isiFrame, sec, cache, rewrittenParamsOriginals }: Readonly<{
-	logger: eitherLogger
-	req: Request;
-	reqUrl: URL;
-	clientId: string;
-	clientUrl: string;
-	bundlesPath: string;
-	reqDestination: string;
-	isNavigate: boolean;
-	isiFrame: boolean;
-	sec: Sec;
-	/** This is so that you can include a polyfill for when this is being ran in sync XHR (not in a SW context) */
-	cache: Cache;
-	/** This is mainly intended so that `appendSearchParam()`, whenever it is called, can help the response header rewriter with `No-Vary-Search` header rewriting later */
-	rewrittenParamsOriginals: rewrittenParamsOriginalsType;
-}>): Promise<ResultAsync<{
-	/** You should return the Response in the fetch handler if that is what is returned */
-	finalRespEarly?: Response;
-} | {
-	cacheMan: CacheManager;
-	rewrittenReqOpts: RequestInit;
-	proxyUrl: string;
-}, Error>> {
+export default async function rewriteReq(
+	{
+		logger: _logger,
+		req,
+		reqUrl,
+		clientId,
+		aeroPathFilter,
+		reqDestination,
+		isNavigate,
+		isiFrame,
+		sec,
+		cache,
+		rewrittenParamsOriginals,
+	}: Readonly<{
+		logger: AeroLogger;
+		req: Request;
+		reqUrl: URL;
+		clientId: string;
+		aeroPathFilter: (reqPath: string) => boolean;
+		bundlesPath: string;
+		reqDestination: string;
+		isNavigate: boolean;
+		isiFrame: boolean;
+		sec: Sec;
+		/** This is so that you can include a polyfill for when this is being ran in sync XHR (not in a SW context) */
+		cache: Cache;
+		/** This is mainly intended so that `appendSearchParam()`, whenever it is called, can help the response header rewriter with `No-Vary-Search` header rewriting later */
+		rewrittenParamsOriginals: rewrittenParamsOriginalsType;
+	}>,
+): Promise<
+	ResultAsync<
+		{
+			/** You should return the Response in the fetch handler if that is what is returned */
+			finalRespEarly?: Response;
+		} | {
+			cacheMan: CacheManager;
+			rewrittenReqOpts: RequestInit;
+			proxyUrl: string;
+		},
+		Error
+	>
+> {
 	// Don't rewrite the requests for aero's own bundles
 	if (aeroPathFilter(reqUrl.pathname)) {
 		const reqOpts: RequestInit = {};
 		if (!DEBUG) {
 			// Cached to lower the paint time
 			reqOpts.headers = {
-				"cache-control": "private"
+				"cache-control": "private",
 			};
 		}
-		logger.debug("aero bundle found! Not rewriting (will proceed normally)");
+		_logger.debug("aero bundle found! Not rewriting (will proceed normally)");
 		return okAsync({
-			finalRespEarly: await fetch(reqUrl.href)
+			finalRespEarly: await fetch(reqUrl.href),
 		});
 	}
 
 	// Get the clientUrl through catch-all interception
-	const catchAllClientsValid = REQ_INTERCEPTION_CATCH_ALL === "clients" && event.clientId !== "";
+	const catchAllClientsValid = REQ_INTERCEPTION_CATCH_ALL === "clients" &&
+		clientId !== "";
 	// Detect feature flag mismatches
-	if (catchAllClientsValid && SERVER_ONLY)
-		return nErrAsync(new Error('Feature Flags Mismatch: The Feature Flag "REQ_INTERCEPTION_CATCH_ALL" can\'t be set to "clients" when "SERVER_ONLY" is enabled!'));
+	if (catchAllClientsValid && SERVER_ONLY) {
+		return nErrAsync(
+			new Error(
+				'Feature Flags Mismatch: The Feature Flag "REQ_INTERCEPTION_CATCH_ALL" can\'t be set to "clients" when "SERVER_ONLY" is enabled!',
+			),
+		);
+	}
 
-	if (clientUrlRes.isErr())
+	// Get the client URL based on the interception method
+	const clientUrlRes = await getClientURLAeroWrapper({
+		reqUrl,
+		reqHeaders: req.headers,
+		clientId,
+		catchAllClientsValid,
+		isNavigate,
+		rewrittenParamsOriginals,
+	});
+
+	if (clientUrlRes.isErr()) {
 		return fmtNeverthrowErr("Failed to get the client URL", clientUrlRes.error);
+	}
 	/** This client URL is used when forming the proxy URL and in various uses for emulation */
 	const clientUrl = clientUrlRes.value;
 	if (clientUrl === "skip") {
-		logger.debug("Skipping the request");
+		_logger.debug("Skipping the request");
 		return okAsync({
-			finalRespEarly: await fetch(req.url)
+			finalRespEarly: await fetch(req.url),
 		});
 	}
 	// Get the proxy URL
@@ -85,17 +128,21 @@ export default async function rewriteReq({ logger, req, reqUrl, clientId, client
 		reqUrl,
 		clientUrl,
 		isNavigate,
-		isiFrame
+		isiFrame,
 	});
-	if (getProxyURLRes.isErr())
-		return fmtNeverthrowErr("Failed to get the proxy URL", getProxyURLRes.error);
+	if (getProxyURLRes.isErr()) {
+		return fmtNeverthrowErr(
+			"Failed to get the proxy URL",
+			getProxyURLRes.error,
+		);
+	}
 	/** The proxy URL used for fetching the site under the proxy */
 	const proxyUrl = getProxyURLRes.value;
 	// Log the request
-	logger.debug(
+	_logger.debug(
 		req.destination === ""
 			? `${req.method} ${proxyUrl.href}`
-			: `${req.method} ${proxyUrl.href} (${req.destination})`
+			: `${req.method} ${proxyUrl.href} (${req.destination})`,
 	);
 
 	// Emulate security policies
@@ -106,53 +153,75 @@ export default async function rewriteReq({ logger, req, reqUrl, clientId, client
 			for (const policy of policies) {
 				if (policy === "null") {
 					// TODO: Emulate the value `null` properly (this might require additional AeroSandbox code) https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin#null
-				} else if (new URL(proxyUrl).origin === location.origin)
+				} else if (new URL(proxyUrl).origin === location.origin) {
 					pass = true;
-				else if (policy === "*")
+				} else if (policy === "*") {
 					pass = true;
+				}
 			}
-			if (!pass)
-				throw new Error("The request was blocked by Access-Control-Allow-Origin!");
+			if (!pass) {
+				throw new Error(
+					"The request was blocked by Access-Control-Allow-Origin!",
+				);
+			}
 		}
 	}
 
 	// This will apply all of the necessary rewriting to the headers for cors emulation, so it will modify the request headers
 	// Performs CORS Emulation and it might return the cached response if one exists in Cache Emulation
-	const corsStatusRes = await getCORSStatus({
-		reqUrl,
-		reqHeaders: req.headers,
-		proxyUrl,
-		caches
-	},
+	const corsStatusRes = await getCORSStatus(
+		{
+			reqUrl,
+			reqHeaders: req.headers,
+			proxyUrl,
+		},
 		// @ts-ignore: The types are compatible
-		sec);
-	if (corsStatusRes.isErr())
-		return fmtNeverthrowErr("Failed to perform CORS emulation/testing", corsStatusRes.error);
+		sec,
+	);
+	if (corsStatusRes.isErr()) {
+		return fmtNeverthrowErr(
+			"Failed to perform CORS emulation/testing",
+			corsStatusRes.error,
+		);
+	}
 	const corsStatus = corsStatusRes.value;
 	if ("cachedResponse" in corsStatus) {
-		logger.debug("Returning cached response found through Cache Emulation");
+		_logger.debug("Returning cached response found through Cache Emulation");
 		return okAsync({
-			finalRespEarly: corsStatus.cachedResponse
+			finalRespEarly: corsStatus.cachedResponse,
 		});
 	}
 
 	/** The manager used for getting and setting emulated caches for Cache Emulation */
-	let cacheMan: CacheManager;
-	if (FEATURES_CACHE_EMULATION && "cacheMan" in corsStatus)
+	let cacheMan: CacheManager | undefined;
+	if (FEATURES_CACHE_EMULATION && "cacheMan" in corsStatus) {
 		cacheMan = corsStatus.cacheMan;
+	}
 
 	// Get the request options
 	const rewrittenReqOptsRes = await formRequestOpts({
 		req,
-		clientUrl
+		clientUrl,
+		proxyUrl,
+		bc: new BareMux(),
 	});
-	if (rewrittenReqOptsRes.isErr())
-		return fmtNeverthrowErr("Failed to create the the request options", rewrittenReqOptsRes.error);
+	if (rewrittenReqOptsRes.isErr()) {
+		return fmtNeverthrowErr(
+			"Failed to create the the request options",
+			rewrittenReqOptsRes.error,
+		);
+	}
 	/** The request options that will be used to fetch the site under the proxy*/
 	const rewrittenReqOpts = rewrittenReqOptsRes.value;
 
+	// Ensure cacheMan is assigned when needed
+	if (!cacheMan) {
+		return nErrAsync(new Error("CacheManager not available but required for this request"));
+	}
+
 	return okAsync({
 		cacheMan,
-		rewrittenReqOpts
-	})
+		rewrittenReqOpts,
+		proxyUrl: proxyUrl.href,
+	});
 }

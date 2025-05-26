@@ -2,7 +2,7 @@
 import type {
 	APIInterceptor,
 	// ExposedContextsEnum,
-	proxifiedObjGeneratorContext
+	proxifiedObjGeneratorContext,
 } from "../../../../types/apiInterceptors";
 // biome-ignore lint/style/useEnumInitializers: <explanation>
 enum ExposedContextsEnum {
@@ -14,7 +14,7 @@ enum ExposedContextsEnum {
 	sharedStorageWorklet,
 	paintWorklet,
 	serviceWorker,
-	window
+	window,
 }
 
 import type JSRewriter from "$src/sandboxers/JS/JSRewriter";
@@ -78,22 +78,23 @@ let fakeValueForProxyNamespace: any = null;
 const windowProxyInterceptor: APIInterceptor = {
 	proxifiedObj: (ctx: proxifiedObjGeneratorContext) => {
 		// TODO: Don't reveal $aero
-		if (
-			Object.values(ctx.specialInterceptionFeatures).includes("aeroGel")
-		) {
+		if (Object.values(ctx.specialInterceptionFeatures).includes("aeroGel")) {
 			// Prevent detection by checking if the fakeWindow was inherited from the real window.
 			const winProto = Object.getPrototypeOf(window);
 			return Proxy.revocable(window, {
 				get(target, prop) {
 					if (prop === "__proto__") return winProto;
-					if (prop === "location")
+					if (prop === "location") {
 						return window["<proxyNamespace>"].sandbox.proxifiedLocation;
-					if (typeof target[prop] === "function")
+					}
+					if (typeof target[prop] === "function") {
 						return target[prop].bind(window);
+					}
 					// Don't allow access to the proxy namespace so emulate the property
 					if (prop === "<proxyNamespace>") {
-						if (fakeValueForProxyNamespace !== null)
+						if (fakeValueForProxyNamespace !== null) {
 							return fakeValueForProxyNamespace;
+						}
 						return undefined;
 					}
 					return target[prop];
@@ -110,15 +111,13 @@ const windowProxyInterceptor: APIInterceptor = {
 				},
 				// Conceal the proxy namespace by preventing detection from the "in" operator
 				has(target, key) {
-					return (
-						key !== "<proxyNamespace>" && Reflect.has(target, key)
-					);
-				}
+					return key !== "<proxyNamespace>" && Reflect.has(target, key);
+				},
 			});
 		}
 	},
 	globalProp: `["<proxyNamespace>"].sandbox.js.proxifiedWindow`,
-	exposedContexts: ExposedContextsEnum.window
+	exposedContexts: ExposedContextsEnum.window,
 };
 
 // @ts-ignore
@@ -137,10 +136,7 @@ const evalInterceptors: APIInterceptor[] = [
 					func = wrapScript(func);
 				} else if (
 					typeof func === "function" &&
-					!(
-						func.toString() !==
-						`function ${func.name}() { [native code] }"`
-					)
+					!(func.toString() !== `function ${func.name}() { [native code] }"`)
 				) {
 					bak = func.toString();
 					func = wrapScript(func.toString());
@@ -157,9 +153,9 @@ const evalInterceptors: APIInterceptor[] = [
 				inst.toString = () => bak;
 
 				return inst;
-			}
+			},
 		}),
-		globalProp: "Function"
+		globalProp: "Function",
 	},
 	{
 		proxifiedObj: Proxy.revocable(eval, {
@@ -167,11 +163,11 @@ const evalInterceptors: APIInterceptor[] = [
 				args[0] = wrapScript(args[0]);
 
 				return Reflect.apply(target, that, args);
-			}
+			},
 		}),
 		// You can't rewrite eval in strict mode
-		globalProp: `["<proxyNamespace>"].sandbox.js.eval`
-	}
+		globalProp: `["<proxyNamespace>"].sandbox.js.eval`,
+	},
 ];
 
 const locationConcealers: APIInterceptor[] = [
@@ -180,53 +176,59 @@ const locationConcealers: APIInterceptor[] = [
 			apply(target, that, args) {
 				let [obj, prop] = args;
 
-				if (obj === location || (obj === window && prop === "location"))
+				if (obj === location || (obj === window && prop === "location")) {
 					obj = window["<proxyNamespace>"].sandbox.proxifiedLocation;
+				}
 
 				args[0] = obj;
 
 				return Reflect.apply(target, that, args);
-			}
+			},
 		}),
 		globalProp: "Object.getOwnPropertyDescriptor",
-		exposedContexts: ExposedContextsEnum.window
+		exposedContexts: ExposedContextsEnum.window,
 	},
 	{
 		proxifiedObj: Proxy.revocable(Reflect.set, {
 			apply(target, that, args) {
 				let [theTarget, prop, value] = args;
 
-				if (theTarget === window)
+				if (theTarget === window) {
 					// @ts-ignore
 					theTarget = ["<proxyNamespace>"].sandbox.js.proxifiedWindow;
+				}
 				if (theTarget instanceof Location) {
 					window["<proxyNamespace>"].sandbox.proxifiedLocation[prop] = value;
 					return;
 				}
 				return Reflect.apply(target, that, args);
-			}
+			},
 		}),
-		globalProp: "Reflect.set"
+		globalProp: "Reflect.set",
 	},
 	{
 		proxifiedObj: Proxy.revocable(Reflect.get, {
 			apply(target, that, args) {
 				let [theTarget, theProp] = args;
 
-				if (theTarget === Window)
+				if (theTarget === Window) {
 					// @ts-ignore
 					theTarget = ["<proxyNamespace>"].sandbox.js.proxifiedWindow;
-				if (theTarget instanceof Document)
-					if (theProp === "location")
+				}
+				if (theTarget instanceof Document) {
+					if (theProp === "location") {
 						return window["<proxyNamespace>"].sandbox.proxifiedLocation;
-				if (theTarget instanceof Location)
+					}
+				}
+				if (theTarget instanceof Location) {
 					return window["<proxyNamespace>"].sandbox.proxifiedLocation;
+				}
 				[theProp];
 				return Reflect.apply(target, that, args);
-			}
+			},
 		}),
-		globalProp: "Reflect.get"
-	}
+		globalProp: "Reflect.get",
+	},
 ];
 
 const ProxyProxyInterceptor: APIInterceptor = {
@@ -236,9 +238,7 @@ const ProxyProxyInterceptor: APIInterceptor = {
 	 * EST parsing is flawed compared to AeroGel because it is exponentially `n` times more expensive to keep track of what will happen in the future, which would be a part of the solution for many UV's JS rewriting escapes. That is why the Discord bundle takes so long to rewrite using full-parse methods.
 	 */
 	proxifiedObj: (ctx: proxifiedObjGeneratorContext) => {
-		if (
-			Object.values(ctx.specialInterceptionFeatures).includes("aeroGel")
-		) {
+		if (Object.values(ctx.specialInterceptionFeatures).includes("aeroGel")) {
 			return new Proxy(Proxy, {
 				construct(target, args) {
 					let [pTarget, handler] = args;
@@ -256,25 +256,24 @@ const ProxyProxyInterceptor: APIInterceptor = {
 							// Get the parents that contain the method
 							const targetName = pTarget.name;
 							const parentObjTree = [
-								...revealingStackError.matchAll(
-									/Error\\n\s\s\s\sat\s([a-zA-Z.]*)/
-								)
+								...revealingStackError.matchAll(/Error\\n\s\s\s\sat\s([a-zA-Z.]*)/),
 							][0].split(`.${targetName}`)[0];
 							let pThat = window[parentObjTree];
-							if (pThat === window)
+							if (pThat === window) {
 								// @ts-ignore
 								pThat = windowProxyInterceptor.proxifiedObj;
+							}
 							return originalApplyHandler(pTarget, pThat, pArgs);
 						};
 					}
 
 					return Reflect.construct(target, args);
-				}
+				},
 			});
 		}
 	},
 	globalProp: "Proxy",
-	insertLevel: 1
+	insertLevel: 1,
 };
 const EventTargetInterceptor: APIInterceptor = {
 	/**
@@ -287,11 +286,7 @@ const EventTargetInterceptor: APIInterceptor = {
 
 				// TODO: Use this same interceptor to implement catchall event interception to prevent using multiple proxies for API Interception
 
-				if (
-					Object.values(ctx.specialInterceptionFeatures).includes(
-						"aeroGel"
-					)
-				) {
+				if (Object.values(ctx.specialInterceptionFeatures).includes("aeroGel")) {
 					args[1] = event => {
 						// @ts-ignore
 						event.source = ProxyProxyInterceptor.proxifiedObj(ctx);
@@ -300,15 +295,15 @@ const EventTargetInterceptor: APIInterceptor = {
 				}
 
 				return Reflect.apply(target, that, args);
-			}
+			},
 		}),
-	globalProp: "EventTarget.prototype.addEventListener"
+	globalProp: "EventTarget.prototype.addEventListener",
 };
 
 export {
 	evalInterceptors,
+	EventTargetInterceptor,
 	locationConcealers,
-	windowProxyInterceptor,
 	ProxyProxyInterceptor,
-	EventTargetInterceptor
+	windowProxyInterceptor,
 };

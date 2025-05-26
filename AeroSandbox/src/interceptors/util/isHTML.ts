@@ -9,4 +9,4 @@
  * @returns A boolean indicating if the request is for an HTML file
  */
 export default (type: string): boolean =>
-    type.startsWith("text/html") || type.startsWith("application/xhtml+xml");
+	type.startsWith("text/html") || type.startsWith("application/xhtml+xml");

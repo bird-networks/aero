@@ -1,3 +1,4 @@
+// @ts-ignore: Deno-specific import
 import { resolve } from "@std/path";
 import { fileURLToPath } from "node:url";
 

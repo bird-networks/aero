@@ -5,15 +5,23 @@
 
 /**
  * This is for runtime sanity checking of the properties of a message response from a broadcast channel
- * @param what 
- * @param expectedProps 
+ * @param what
+ * @param expectedProps
  * @param eventToCheck
- * @throws {Error} If a property is missing 
+ * @throws {Error} If a property is missing
  */
-export function throwMissingPropExpectedOfBC(purpose: string, expectedProps: string[], eventToCheck: Event) {
-	for (const prop of expectedProps)
-		if (!(prop in eventToCheck))
-			throw new Error(`The broadcast channel response message for ${purpose} is missing the \`${prop}\` property on the event data!`);
+export function throwMissingPropExpectedOfBC(
+	purpose: string,
+	expectedProps: string[],
+	eventToCheck: Event
+) {
+	for (const prop of expectedProps) {
+		if (!(prop in eventToCheck)) {
+			throw new Error(
+				`The broadcast channel response message for ${purpose} is missing the \`${prop}\` property on the event data!`
+			);
+		}
+	}
 }
 
 /**

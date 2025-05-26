@@ -1,9 +1,9 @@
 import path from "node:path";
 import { access, mkdir } from "node:fs/promises";
-import { writeFileSync, existsSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 
 import type { Result } from "neverthrow";
-import { ok as nOk, err as nErr } from "neverthrow";
+import { err as nErr, ok as nOk } from "neverthrow";
 
 /**
  * For WebIDL -> TS conversion
@@ -70,24 +70,40 @@ export default function genWebIDL(
 	logStatus: boolean,
 	webIDL = webIDLUsedInAero,
 ): Result<void, Error> {
-	if (logStatus) console.log("\nGenerating the WebIDL -> TS conversions required in aero");
-	access(webIDLOutputDir).catch(() => mkdir(webIDLOutputDir, { recursive: true }));
+	if (logStatus) {
+		console.log(
+			"\nGenerating the WebIDL -> TS conversions required in aero",
+		);
+	}
+	access(webIDLOutputDir).catch(() =>
+		mkdir(webIDLOutputDir, { recursive: true })
+	);
 	for (const [apiName, apiDocURL] of Object.entries(webIDL)) {
 		const outFile = path.resolve(webIDLOutputDir, `${apiName}.d.ts`);
 		if (existsSync(outFile)) {
-			if (logStatus) console.log(`Skipping WebIDL generation for ${apiName}; file exists`);
+			if (logStatus) {
+				console.log(
+					`Skipping WebIDL generation for ${apiName}; file exists`,
+				);
+			}
 			continue;
 		}
-		if (logStatus) console.log(`Fetching the WebIDL for ${apiName} with URL ${apiDocURL}`);
-		fetchIDL(apiDocURL).then((rawIdl) => {
-			if (logStatus) console.log(`Fetched the WebIDL for ${apiName}`);
-			const ast = parseIDL(rawIdl);
-			const converted = convertIDL(ast);
-			const tsContent = printTs(converted);
-			writeFileSync(outFile, tsContent);
-		}).catch((err: unknown) => {
-			console.error(`Error generating WebIDL for ${apiName}:`, err);
-		});
+		if (logStatus) {
+			console.log(
+				`Fetching the WebIDL for ${apiName} with URL ${apiDocURL}`,
+			);
+		}
+		fetchIDL(apiDocURL)
+			.then((rawIdl) => {
+				if (logStatus) console.log(`Fetched the WebIDL for ${apiName}`);
+				const ast = parseIDL(rawIdl);
+				const converted = convertIDL(ast);
+				const tsContent = printTs(converted);
+				writeFileSync(outFile, tsContent);
+			})
+			.catch((err: unknown) => {
+				console.error(`Error generating WebIDL for ${apiName}:`, err);
+			});
 	}
 	return nOk(undefined);
 }

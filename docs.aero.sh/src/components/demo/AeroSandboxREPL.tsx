@@ -1,4 +1,4 @@
-import Playground from "javascript-playgrounds"
+import Playground from "javascript-playgrounds";
 
 export default function AeroSandboxREPL(props: any) {
   /** REPL demo using javascript-playgrounds */
@@ -10,5 +10,5 @@ export default function AeroSandboxREPL(props: any) {
       {/*TODO: Link in the AeroSandbox demo (with Revision support just like on index)*/}
       <Playground {...props} />
     </>
-  )
+  );
 }

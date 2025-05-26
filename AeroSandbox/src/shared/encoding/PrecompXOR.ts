@@ -19,7 +19,7 @@
  * 	encodeUrl: (url) => {
  * 	  const encodedUrlRes = precompXOR.encodeUrl(url, yourKey);
  * 	  if (encodedUrlRes.isErr()) {
- *		return nErr(new Error(`Failed to encode the URL, ${url}: ${encodedUrlRes.error}`));
+ * 		return nErr(new Error(`Failed to encode the URL, ${url}: ${encodedUrlRes.error}`));
  *    }
  *    return nOk(encodedUrlRes.value);
  * 	},
@@ -33,9 +33,9 @@
  * }
  */
 
-import type { GenericLogger } from "../Loggers";
+import GenericLogger from "../Loggers";
 import type { Err, Result } from "neverthrow";
-import { ok as nOk, err as nErr } from "neverthrow";
+import { err as nErr, ok as nOk } from "neverthrow";
 
 // The only reason why I am using this version of `fmtError` is because there are test cases that run on this file. That is also why I am resolving this file with `.ts` at the end.
 
@@ -43,16 +43,20 @@ import { ok as nOk, err as nErr } from "neverthrow";
 type Dictionary = Uint8Array;
 /** The lookup tables */
 /** key, the precomputed XOR lookup table **/
-type LookupTable = Map<string, {
-	urlLookupDictionary: Dictionary;
-	decodeUrlLookupDictionary: Dictionary;
-}>
+type LookupTable = Map<
+	string,
+	{
+		urlLookupDictionary: Dictionary;
+		decodeUrlLookupDictionary: Dictionary;
+	}
+>;
 
 /** Valid URL characters, including reserved ones */
 const validUrlChars = "-_.~!$&'()*+,;=:/?@[]^|`{}|";
 const charCodesInValidUrlChars: number[] = [];
-for (let i = 0; i < validUrlChars.length; i++)
+for (let i = 0; i < validUrlChars.length; i++) {
 	charCodesInValidUrlChars.push(validUrlChars.charCodeAt(i));
+}
 Object.freeze(charCodesInValidUrlChars);
 
 // # of digits chars (48-58; 10 characters) + # of uppercase letter chars (65-91; 26 characters) + # of lowercase letter chars (97-123; 26 characters) + # of symbols (validUrlChars.length - 1; 32 characters) = 92 = total # of characters
@@ -76,7 +80,9 @@ export default class PrecompXOR {
 		this.logger = logger;
 
 		// Precompute the keys for later
-		for (const precompKey of precompKeys) this.#compKeyToDictionaries(precompKey);
+		for (const precompKey of precompKeys) {
+			this.#compKeyToDictionaries(precompKey);
+		}
 	}
 
 	/**
@@ -153,12 +159,13 @@ export default class PrecompXOR {
 					);
 				*/
 				resultArr[i] = urlLookupDictionary[char];
-			} else
+			} else {
 				return nErr(
 					new Error(
 						`User error: the character you provided, ${char}, is not in the lookup table. Perhaps it is not a valid URL character.`
 					)
 				);
+			}
 		}
 
 		return nOk(new TextDecoder().decode(resultArr));
@@ -182,8 +189,9 @@ export default class PrecompXOR {
 			const char = textArr[i];
 			const validChar = this.checkValidChar(char);
 			if (!validChar) return this.fmtErrNotValidChar(char);
-			if (!(char in decodeURLLookupDictionary))
+			if (!(char in decodeURLLookupDictionary)) {
 				return this.fmtErrNotInLookupTable(char);
+			}
 			resultArr[i] = decodeURLLookupDictionary[char];
 		}
 
@@ -216,8 +224,12 @@ export default class PrecompXOR {
 	updateLookupTable(key: string): void {
 		// Only one needs to be checked since they are both updated at the same time
 		if (!this.lookupTable.has(key)) {
-			const { urlLookupDictionary, decodeUrlLookupDictionary } = this.#compKeyToDictionaries(key);
-			this.lookupTable.set(key, { urlLookupDictionary, decodeUrlLookupDictionary });
+			const { urlLookupDictionary, decodeUrlLookupDictionary } =
+				this.#compKeyToDictionaries(key);
+			this.lookupTable.set(key, {
+				urlLookupDictionary,
+				decodeUrlLookupDictionary,
+			});
 		}
 	}
 	/**

@@ -5,14 +5,15 @@
  * @example
  */
 
-import { ResultAsync, okAsync, errAsync as nErrAsync } from "neverthrow";
+import { errAsync as nErrAsync, okAsync, ResultAsync } from "neverthrow";
 import { fmtNeverthrowErr } from "$shared/fmtErr";
-import type { Nullable } from 'option-t/nullable';
+import type { Nullable } from "option-t/nullable";
 
 import Cache from "./Cache";
 
 // Error strings
-const unexpectedPromiseResRetErrorExplanation = " Something other than \"success\" or Error was returned.";
+const unexpectedPromiseResRetErrorExplanation =
+	' Something other than "success" or Error was returned.';
 const processHSTSAction = "process the HTTP header for HSTS";
 
 // TODO: Put the internal-use (recommended?) methods on the bottom
@@ -25,7 +26,7 @@ const processHSTSAction = "process the HTTP header for HSTS";
  * ...
  * const hstsCacheEmulator = new HSTSCacheEmulation(
  *  rewrittenReqHeaders.get("strict-transport-security"),
-	proxyUrl.origin
+  proxyUrl.origin
  * );
  */
 export default class HSTSCacheEmulation extends Cache {
@@ -46,8 +47,9 @@ export default class HSTSCacheEmulation extends Cache {
 		super();
 		this.proxyHostname = proxyHostname;
 
-		if (hsts)
+		if (hsts) {
 			this.processHSTS(hsts);
+		}
 	}
 
 	/**
@@ -63,44 +65,61 @@ export default class HSTSCacheEmulation extends Cache {
 		try {
 			directives = hsts.toLowerCase().split(";");
 		} catch (err) {
-			// @ts-ignore
-			return nErrAsync(new Error(`${failedToFormVar("directives", "string array")} ${processHSTSAction}${ERR_LOG_AFTER_COLON}${err.message} `));
+			return nErrAsync(
+				new Error(
+					`${failedToFormVar("directives", "string array")
+					} ${processHSTSAction}: ${err instanceof Error ? err.message : String(err)}`,
+				),
+			);
 		}
 
 		let includeSubdomains: boolean;
 		try {
 			const includeSubdomainsDirective = directives.find(
-				dir => dir === "includeSubdomain"
+				(dir) => dir === "includeSubdomain",
 			);
 			includeSubdomains = includeSubdomainsDirective !== undefined;
 		} catch (err) {
-			// @ts-ignore
-			return fmtNeverthrowErr(`${failedToFormVar("includeSubdomains", "boolean")} ${processHSTSAction}`, err);
+			return fmtNeverthrowErr(
+				`${failedToFormVar("includeSubdomains", "boolean")
+				} ${processHSTSAction}`,
+				err instanceof Error ? err : new Error(String(err)),
+			);
 		}
 
 		let maxAge: string;
 		try {
-			const maxAgeDirective = directives.find(dir =>
+			const maxAgeDirective = directives.find((dir) =>
 				dir.startsWith("max-age")
 			);
-			if (typeof maxAgeDirective === "undefined")
-				// There is no need to do anything if there is no max-age directive 
+			if (typeof maxAgeDirective === "undefined") {
+				// There is no need to do anything if there is no max-age directive
 				return okAsync(undefined);
+			}
 			maxAge = maxAgeDirective?.split("=")?.[1];
-		}
-		catch (err) {
-			// @ts-ignore
-			return fmtNeverthrowErr(`Failed to get the max-age directive when trying to ${processHSTSAction}`, err);
+		} catch (err) {
+			return fmtNeverthrowErr(
+				`Failed to get the max-age directive when trying to ${processHSTSAction}`,
+				err instanceof Error ? err : new Error(String(err)),
+			);
 		}
 
 		if (maxAge === "0") {
 			const deleteEntryRes = await this.deleteEntry();
-			if (deleteEntryRes.isErr())
-				return fmtNeverthrowErr(`Failed to delete the entry when trying to ${processHSTSAction}`, deleteEntryRes.error);
+			if (deleteEntryRes.isErr()) {
+				return fmtNeverthrowErr(
+					`Failed to delete the entry when trying to ${processHSTSAction}`,
+					deleteEntryRes.error,
+				);
+			}
 		} else if (maxAge) {
 			const storeEntryRes = await this.storeEntry(maxAge, includeSubdomains);
-			if (storeEntryRes.isErr())
-				return fmtNeverthrowErr(`Failed to store the entry when trying to ${processHSTSAction}`, storeEntryRes.error);
+			if (storeEntryRes.isErr()) {
+				return fmtNeverthrowErr(
+					`Failed to store the entry when trying to ${processHSTSAction}`,
+					storeEntryRes.error,
+				);
+			}
 		}
 
 		return okAsync(undefined);
@@ -126,21 +145,48 @@ export default class HSTSCacheEmulation extends Cache {
 			for (let i = domains.length - 1; i >= 1; i--) {
 				const domain = domains.slice(i).join(".");
 				const secRes = await this.getEntry(domain);
-				if (secRes.isErr())
-					return nErrAsync(new Error(`Failed to get the entry for the domain, ${domain}, while trying to determine if the redirect to HTTPS should be done${ERR_LOG_AFTER_COLON}${err.message} `))
+				if (secRes.isErr()) {
+					return nErrAsync(
+						new Error(
+							`Failed to get the entry for the domain, ${domain}, while trying to determine if the redirect to HTTPS should be done: ${secRes.error.message}`,
+						),
+					);
+				}
 				// TODO: Use Zod instead and have getEntry fail if it isn't validated properly instead of having to check externally like here for Runtime type checking for `secRes.value.result...` (validation)
-				if (typeof secRes.value?.result?.subdomains === "undefined")
-					return nErrAsync(new Error(`The entry for the domain, ${domain}, does not have the subdomains field defined`));
-				if (typeof secRes.value?.result?.age === "undefined")
-					return nErrAsync(new Error(`The entry for the domain, ${domain}, does not have the age field defined`));
-				if (typeof secRes.value.result.subdomains === "boolean" && secRes.value.result.subdomains === true)
-					return okAsync(secRes.value.result.subdomains && super.isFresh(secRes.value.result?.age));
+				if (typeof secRes.value?.subdomains === "undefined") {
+					return nErrAsync(
+						new Error(
+							`The entry for the domain, ${domain}, does not have the subdomains field defined`,
+						),
+					);
+				}
+				if (typeof secRes.value?.age === "undefined") {
+					return nErrAsync(
+						new Error(
+							`The entry for the domain, ${domain}, does not have the age field defined`,
+						),
+					);
+				}
+				if (
+					typeof secRes.value.subdomains === "boolean" &&
+					secRes.value.subdomains === true
+				) {
+					return okAsync(
+						secRes.value.subdomains &&
+						super.isFresh(secRes.value.age),
+					);
+				}
 			}
 			const sec = await this.getEntry(this.proxyHostname);
-			return okAsync(super.isFresh(sec?.result?.age));
+			if (sec.isErr()) {
+				return nErrAsync(sec.error);
+			}
+			return okAsync(sec.value?.age ? super.isFresh(sec.value.age) : false);
 		} catch (err) {
 			// @ts-ignore
-			return fmtNeverthrowErr(`Failed to determine if the redirect to HTTPS should be done${ERR_LOG_AFTER_COLON}${err}`);
+			return fmtNeverthrowErr(
+				`Failed to determine if the redirect to HTTPS should be done${ERR_LOG_AFTER_COLON}${err}`,
+			);
 		}
 	}
 
@@ -155,16 +201,28 @@ export default class HSTSCacheEmulation extends Cache {
 	 */
 	async deleteEntry(): Promise<ResultAsync<void, Error>> {
 		// FIXME: THIS IS WRITTEN WRONG
-		const deleteRes = await new Promise<"success" | Error>((resolve, reject) => {
-			const idbReq = indexedDB.deleteDatabase(this.proxyHostname);
-			idbReq.onsuccess = (): void => resolve("success");
-			idbReq.onerror = (): void => reject(idbReq.error);
-		});
-		if (deleteRes instanceof Error)
-			return nErrAsync(new Error(`Failed to delete the HSTS entry ${this.proxyHostname}${ERR_LOG_AFTER_COLON}${deleteRes.message} `));
-		if (deleteRes === "success")
+		const deleteRes = await new Promise<"success" | Error>(
+			(resolve, reject) => {
+				const idbReq = indexedDB.deleteDatabase(this.proxyHostname);
+				idbReq.onsuccess = (): void => resolve("success");
+				idbReq.onerror = (): void => reject(idbReq.error);
+			},
+		);
+		if (deleteRes instanceof Error) {
+			return nErrAsync(
+				new Error(
+					`Failed to delete the HSTS entry ${this.proxyHostname}${ERR_LOG_AFTER_COLON}${deleteRes.message} `,
+				),
+			);
+		}
+		if (deleteRes === "success") {
 			return okAsync(undefined);
-		return nErrAsync(new Error(`Failed to determine if the attempt to delete the HSTS entry was successful${ERR_LOG_AFTER_COLON}${unexpectedPromiseResRetErrorExplanation}`));
+		}
+		return nErrAsync(
+			new Error(
+				`Failed to determine if the attempt to delete the HSTS entry was successful${ERR_LOG_AFTER_COLON}${unexpectedPromiseResRetErrorExplanation}`,
+			),
+		);
 	}
 
 	/**
@@ -179,10 +237,18 @@ export default class HSTSCacheEmulation extends Cache {
 	 * // See the processHSTS method for an example of how to use this method. It reveals how I define the maxAge and includeSubdomains variables.
 	 * await this.storeEntry(maxAge, includeSubdomains);
 	 */
-	async storeEntry(age: string, includeSubdomains: boolean): Promise<ResultAsync<void, Error>> {
-		const dbRes = await this.safeOpenDatabase();
-		if (dbRes.isErr())
-			return nErrAsync(new Error(`Failed to open the IndexedDB database used for storing the HSTS entry${ERR_LOG_AFTER_COLON}${dbRes.error.message}`))
+	async storeEntry(
+		age: string,
+		includeSubdomains: boolean,
+	): Promise<ResultAsync<void, Error>> {
+		const dbRes = await HSTSCacheEmulation.safeOpenDatabase();
+		if (dbRes.isErr()) {
+			return nErrAsync(
+				new Error(
+					`Failed to open the IndexedDB database used for storing the HSTS entry${ERR_LOG_AFTER_COLON}${dbRes.error.message}`,
+				),
+			);
+		}
 		const db = dbRes.value;
 
 		let tx: IDBTransaction;
@@ -192,47 +258,68 @@ export default class HSTSCacheEmulation extends Cache {
 			store = tx.objectStore(this.proxyHostname);
 		} catch (err) {
 			// @ts-ignore
-			return fmtNeverthrowErr(`Failed to get the store for the HSTS entry${ERR_LOG_AFTER_COLON}${err}`);
+			return fmtNeverthrowErr(
+				`Failed to get the store for the HSTS entry${ERR_LOG_AFTER_COLON}${err}`,
+			);
 		}
 
-		const idbReqPromise = await new Promise<"success" | Error>((reject, resolve) => {
-			const idbReq = store.put({
-				age: age,
-				subdomains: includeSubdomains
-			});
-			idbReq.onsuccess = (): void => resolve("success");
-			idbReq.onerror = (): void => reject(idbReq.error);
-		});
-		if (idbReqPromise instanceof Error)
-			return nErrAsync(new Error(`Failed to store the HSTS entry${ERR_LOG_AFTER_COLON}${idbReqPromise.message} `));
+		const idbReqPromise = await new Promise<"success" | Error>(
+			(reject, resolve) => {
+				const idbReq = store.put({
+					age: age,
+					subdomains: includeSubdomains,
+				});
+				idbReq.onsuccess = (): void => resolve("success");
+				idbReq.onerror = (): void => reject(idbReq.error || new Error("IndexedDB operation failed"));
+			},
+		);
+		if (idbReqPromise instanceof Error) {
+			return nErrAsync(
+				new Error(
+					`Failed to store the HSTS entry${ERR_LOG_AFTER_COLON}${idbReqPromise.message} `,
+				),
+			);
+		}
 
 		const firstPromise = await Promise.race([
 			new Promise<"success" | Error>((reject, resolve) => {
 				tx.oncomplete = (): void => {
 					db.close();
 					resolve("success");
-				}
-				tx.onerror = (): void => reject(tx.error);
+				};
+				tx.onerror = (): void => reject(tx.error || new Error("Transaction failed"));
 			}),
 			new Promise<{
-				type: "timeout"
+				type: "timeout";
 			}>((reject) => {
-				setTimeout(() => reject({
-					type: "timeout"
-				}), aeroConfig.dbTransactionTimeout);
-			})
+				setTimeout(() =>
+					reject({
+						type: "timeout",
+					}), aeroConfig.dbTransactionTimeout);
+			}),
 		]);
-		// @ts-ignore: We know they have overlap
-		if (firstPromise === {
-			type: "timeout"
-		})
-			return nErrAsync(new Error("The transaction used for storing the HSTS entry unexpectedly timed out!"));
-		if (firstPromise instanceof Error)
+		// Check if the promise returned a timeout object
+		if (typeof firstPromise === "object" && firstPromise !== null && "type" in firstPromise && firstPromise.type === "timeout") {
+			return nErrAsync(
+				new Error(
+					"The transaction used for storing the HSTS entry unexpectedly timed out!",
+				),
+			);
+		}
+		if (firstPromise instanceof Error) {
 			// @ts-ignore
-			return fmtNeverthrowErr(`Failed to close the transaction used for storing the HSTS entry${ERR_LOG_AFTER_COLON}${firstPromise}`);
-		if (firstPromise === "success")
+			return fmtNeverthrowErr(
+				`Failed to close the transaction used for storing the HSTS entry${ERR_LOG_AFTER_COLON}${firstPromise}`,
+			);
+		}
+		if (firstPromise === "success") {
 			return okAsync(undefined);
-		return nErrAsync(new Error(`Failed to determine if the attempt to store the HSTS entry was successful${ERR_LOG_AFTER_COLON}${unexpectedPromiseResRetErrorExplanation}!`));
+		}
+		return nErrAsync(
+			new Error(
+				`Failed to determine if the attempt to store the HSTS entry was successful${ERR_LOG_AFTER_COLON}${unexpectedPromiseResRetErrorExplanation}!`,
+			),
+		);
 	}
 
 	/**
@@ -241,25 +328,43 @@ export default class HSTSCacheEmulation extends Cache {
 	 * @param hostname - The hostname to retrieve the entry for.
 	 * @returns The emulated HSTS entry from the store
 	 */
-	async getEntry(hostname: string): Promise<ResultAsync<Nullable<IDBRequest<any>>, Error>> {
-		// FIXME: This error catching and req stuff is wrong
-		let hostnameStore: IDBObjectStore;
+	async getEntry(
+		hostname: string,
+	): Promise<ResultAsync<Nullable<{ subdomains: boolean; age: number }>, Error>> {
 		try {
-			const db = await this.safeOpenDatabase();
+			const dbRes = await HSTSCacheEmulation.safeOpenDatabase();
+			if (dbRes.isErr()) {
+				return nErrAsync(dbRes.error);
+			}
+			const db = dbRes.value;
 			const tx = db.transaction(hostname, "readwrite");
 			const store = tx.objectStore(hostname);
-			hostnameStore = store.get(hostname);
+			const request = store.get(hostname);
+
+			// Wait for the request to complete
+			const result = await new Promise<any>((resolve, reject) => {
+				request.onsuccess = () => resolve(request.result);
+				request.onerror = () => reject(request.error);
+			});
+
+			return okAsync(result);
 		} catch (err) {
-			// @ts-ignore
-			return fmtNeverthrowErr(`Failed to get the HSTS entry for the hostname, ${hostname}`, err);
+			return fmtNeverthrowErr(
+				`Failed to get the HSTS entry for the hostname, ${hostname}`,
+				err instanceof Error ? err : new Error(String(err)),
+			);
 		}
-		return okAsync(hostnameStore);
 	}
 
 	static async clear(proxyOrigin: string): Promise<ResultAsync<void, Error>> {
 		const dbRes = await this.safeOpenDatabase();
-		if (dbRes.isErr())
-			return nErrAsync(new Error(`Failed to open the IndexedDB database used for clearing the HSTS entry${ERR_LOG_AFTER_COLON}${dbRes.error.message} `));
+		if (dbRes.isErr()) {
+			return nErrAsync(
+				new Error(
+					`Failed to open the IndexedDB database used for clearing the HSTS entry${ERR_LOG_AFTER_COLON}${dbRes.error.message} `,
+				),
+			);
+		}
 		const db = dbRes.value;
 
 		const tx = db.transaction(proxyOrigin, "readwrite");
@@ -269,11 +374,15 @@ export default class HSTSCacheEmulation extends Cache {
 			clearReq.onsuccess = (): void => resolve("success");
 			clearReq.onerror = (): void => reject(clearReq.error);
 		});
-		if (clearRes instanceof Error)
-			return fmtNeverthrowErr(`Failed to clear the HSTS entry${ERR_LOG_AFTER_COLON}${clearRes}`, clearRes);
+		if (clearRes instanceof Error) {
+			return fmtNeverthrowErr(
+				`Failed to clear the HSTS entry${ERR_LOG_AFTER_COLON}${clearRes}`,
+				clearRes,
+			);
+		}
 
 		return okAsync(undefined);
-	};
+	}
 
 	/**
 	 * A safe and modernized abstraction for opening the IndexedDB database we need for HSTSCacheEmulation.
@@ -310,6 +419,11 @@ function failedToFormVar(variableName: string, variableType: string): string {
 function failedToDeleteVar(variableName: string): string {
 	return failedToGeneric("delete", variableName);
 }
-function failedToGeneric(action: string, variableName: string, variableType?: string): string {
-	return `Failed to ${action} the ${variableName} variable ${variableType ? `(${variableType}) ` : ""}when trying to`;
+function failedToGeneric(
+	action: string,
+	variableName: string,
+	variableType?: string,
+): string {
+	return `Failed to ${action} the ${variableName} variable ${variableType ? `(${variableType}) ` : ""
+		}when trying to`;
 }

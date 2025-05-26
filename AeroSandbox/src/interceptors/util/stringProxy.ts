@@ -10,20 +10,23 @@ function proxy(
 	// biome-ignore lint/complexity/noBannedTypes: <explanation>
 	rewriteResult?: Function
 ): ProxyHandler<object> {
-	if (api in window)
+	if (api in window) {
 		return new Proxy(window[api], {
 			apply(target, that, args) {
-				if (mapRewriteArgs)
-					for (const [argNum, rewrite] of mapRewriteArgs.entries())
+				if (mapRewriteArgs) {
+					for (const [argNum, rewrite] of mapRewriteArgs.entries()) {
 						if (rewrite) args[argNum] = rewrite(...args);
+					}
+				}
 
 				let ret = Reflect.apply(target, that, args);
 
 				if (rewriteResult) ret = rewriteResult(ret, ...args);
 
 				return ret;
-			}
+			},
 		});
+	}
 }
 
 function proxyGet(
@@ -31,20 +34,18 @@ function proxyGet(
 	// biome-ignore lint/complexity/noBannedTypes: <explanation>
 	mapReplaceProps: Map<string, Function>
 ): ProxyHandler<object> {
-	if (api in window)
+	if (api in window) {
 		return new Proxy(window[api], {
 			get(target, theProp) {
-				if (
-					typeof theProp === "string" &&
-					mapReplaceProps.has(theProp)
-				) {
+				if (typeof theProp === "string" && mapReplaceProps.has(theProp)) {
 					const handler = mapReplaceProps.get(theProp);
 					if (handler) return handler(theProp);
 				}
 
 				return Reflect.get(target, theProp);
-			}
+			},
 		});
+	}
 }
 
 function proxyConstructString(
@@ -56,20 +57,19 @@ function proxyConstructString(
 		const map = new Map<number, (...args: string[]) => string>();
 
 		// I forgot what this is for
-		for (const argNum of argNums)
+		for (const argNum of argNums) {
 			map.set(argNum, () => {
 				return getConfig().prefix + arguments[argNum];
 			});
+		}
 
 		return proxy(apiName, map);
 	}
-	if (res)
+	if (res) {
 		return proxy(apiName, undefined, (res: string) => afterPrefix(res));
+	}
 }
-function proxyGetString(
-	apiName: string,
-	props: string[]
-): ProxyHandler<object> {
+function proxyGetString(apiName: string, props: string[]): ProxyHandler<object> {
 	const map = new Map();
 
 	for (const prop of props) map.set(prop, afterPrefix);

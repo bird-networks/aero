@@ -3,7 +3,7 @@
  */
 
 export default function fmtScriptWithCalc(injCode: string): string {
-	return /* ts */ `
+  return /* ts */ `
 // I might want to use a promise for this
 (async () => {
 	async function calc(integrityHeader: string, html: string) {
@@ -24,4 +24,4 @@ export default function fmtScriptWithCalc(injCode: string): string {
 	${injCode}
 });
 	`;
-};
+}

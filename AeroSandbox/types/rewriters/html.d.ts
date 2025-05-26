@@ -1,8 +1,4 @@
-export type htmlRewriterMode =
-	| "mutation_observer"
-	| "custom_elements"
-	| "domparser"
-	| "sw_parser";
+export type htmlRewriterMode = "mutation_observer" | "custom_elements" | "domparser" | "sw_parser";
 
 export interface EscapeRule {
 	// These rules should be applied to per element

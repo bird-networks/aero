@@ -1,4 +1,8 @@
-import { createCompilerHost, createProgram, getPreEmitDiagnostics } from "typescript";
+import {
+  createCompilerHost,
+  createProgram,
+  getPreEmitDiagnostics,
+} from "typescript";
 
 /**
  * This works by creating a TS program in a virtual environment (in the latest TS version) and returning any errors that occur if they are found
@@ -7,8 +11,8 @@ import { createCompilerHost, createProgram, getPreEmitDiagnostics } from "typesc
  */
 /* biome-enable no-param-reassign */
 async function validateTS(code: string): Promise<string[]> {
-	// No-op validation, always passes
-	return []
+  // No-op validation, always passes
+  return [];
 }
 
-export default validateTS
+export default validateTS;

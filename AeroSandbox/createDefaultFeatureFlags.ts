@@ -10,7 +10,7 @@ export default (ctx: CtxType) =>
 			"mutation_observer",
 			"custom_elements",
 			"domparser",
-			"sw_parser"
+			"sw_parser",
 		],
 		htmlUseIsAttr: false,
 		htmlUseNavEvents: false,
@@ -26,7 +26,8 @@ export default (ctx: CtxType) =>
 		fetchPublicSuffixPriority: "compile-time",
 		fetchPublicSuffixHaveFallback: true,
 		publicSuffixApi: "https://publicsuffix.org/list/public_suffix_list.dat",
-		failedToFetchSuffixErrMsg: "Failed to fetch the public suffixes list for use in determining if the two URLs are the same site",
+		failedToFetchSuffixErrMsg:
+			"Failed to fetch the public suffixes list for use in determining if the two URLs are the same site",
 		errLogAfterColon: ":\n\t",
-		debug: ctx.debugMode
+		debug: ctx.debugMode,
 	}) as FeatureFlags;

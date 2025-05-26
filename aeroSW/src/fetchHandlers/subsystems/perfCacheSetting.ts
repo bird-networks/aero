@@ -14,17 +14,17 @@ import { fmtNeverthrowErr } from "$aero/AeroSandbox/tests/shared/fmtErrTest";
 export default async function perfCacheSetting({
 	cacheMan,
 	reqUrlHref,
-	rewrittenResp
-	clientsWithSameProxyOrigin
+	rewrittenResp,
+	clientId
 }: {
-	cacheMan: CacheManager, reqUrlHref: string, rewrittenResp: Response, clientsWithSameEmuControl: Clients
+	cacheMan: CacheManager, reqUrlHref: string, rewrittenResp: Response, clientId: string
 }): Promise<ResultAsync<void, Error>> {
 	const varyHeader = rewrittenResp.headers.get("vary");
 	if (varyHeader === null)
 		// Skip (we don't need to cache this)
 		return okAsync(undefined);
 	// Cache the response
-	const cacheManSetRes = await cacheMan.set(reqUrlHref, rewrittenResp, varyHeader, clientsWithSameProxyOrigin);
+	const cacheManSetRes = await cacheMan.set(reqUrlHref, rewrittenResp, varyHeader, clientId);
 	if (cacheManSetRes.isErr())
 		return fmtNeverthrowErr("Failed to set the new emulated cache", cacheManSetRes.error);
 	logger.debug("Cached the response: ", rewrittenResp);

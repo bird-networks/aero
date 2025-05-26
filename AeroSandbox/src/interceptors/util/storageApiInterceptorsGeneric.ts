@@ -8,7 +8,10 @@ import { SupportEnum } from "$types/enums/apiInterceptors";
 import { createStorageNomenclatureHandlers, unprefixKey } from "./storage";
 import { escapeWithOrigin } from "$shared/escaping/escape";
 
-export default function createStorageApiInterceptors(key: string, storeId: string): APIInterceptor[] {
+export default function createStorageApiInterceptors(
+	key: string,
+	storeId: string
+): APIInterceptor[] {
 	const storageNomenclatureHandlers = createStorageNomenclatureHandlers(storeId);
 	const storageAPIInterceptorsGeneric = [
 		{
@@ -18,16 +21,17 @@ export default function createStorageApiInterceptors(key: string, storeId: strin
 					for (let i = 0; i < storageApi.length; i++) {
 						const realKey = storageApi.key(i);
 						const storeIdKey = escapeWithOrigin(storeId);
-						if (realKey.startsWith(`${storeIdKey}_`))
+						if (realKey.startsWith(`${storeIdKey}_`)) {
 							storageApi.removeItem(realKey);
+						}
 					}
-				}
+				},
 			} as ProxyHandler<Storage>,
-			globalProp: ".clear"
+			globalProp: ".clear",
 		},
 		{
 			proxyHandler: storageNomenclatureHandlers.unprefix,
-			globalProp: ".getItem"
+			globalProp: ".getItem",
 		},
 		{
 			proxyHandler: {
@@ -38,27 +42,31 @@ export default function createStorageApiInterceptors(key: string, storeId: strin
 					for (let i = 0; i < storageApi.length; i++) {
 						const realKey = storageApi.key(i);
 						const storeIdKey = escapeWithOrigin(storeId);
-						if (realKey.startsWith(`${storeIdKey}_`))
+						if (realKey.startsWith(`${storeIdKey}_`)) {
 							proxifiedKeys.push(unprefixKey(storeId, realKey));
+						}
 					}
 					return proxifiedKeys[getIndex];
-				}
+				},
 			} as ProxyHandler<Storage>,
-			globalProp: ".key"
+			globalProp: ".key",
 		},
 		{
 			proxyHandler: storageNomenclatureHandlers.prefix,
-			globalProp: ".setItem"
+			globalProp: ".setItem",
 		},
 		{
 			proxyHandler: storageNomenclatureHandlers.unprefix,
-			globalProp: ".removeItem"
+			globalProp: ".removeItem",
 		},
 	] as APIInterceptor[];
 	return storageAPIInterceptorsGeneric.map(apiInterceptor => {
 		apiInterceptor.forStorage = true;
 		apiInterceptor.globalProp = key + apiInterceptor.globalProp;
-		apiInterceptor.supports = key === "sharedStorage" ? SupportEnum.shippingChromium | SupportEnum.draft : SupportEnum.widelyAvailable;
+		apiInterceptor.supports =
+			key === "sharedStorage"
+				? SupportEnum.shippingChromium | SupportEnum.draft
+				: SupportEnum.widelyAvailable;
 		return apiInterceptor;
 	});
 }

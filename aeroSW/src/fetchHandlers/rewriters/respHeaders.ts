@@ -11,19 +11,18 @@ import { okAsync as nOkAsync } from "neverthrow";
 import { fmtNeverthrowErr } from "$shared/fmtErr";
 
 // Separate header rewriters
-import { rewriteSetCookie } from "$sandbox/shared/cookie";
 import { rewriteAuthServer } from "./auth";
 
 // Utility
 import rewriteSrc from "$util/src";
 
 // Types for passthrough
-import type { BareMux } from "@mercuryworkshop/bare-mux";
+import type BareMux from "@mercuryworkshop/bare-mux";
 import type { rewrittenParamsOriginalsType } from "$types/commonPassthrough"
 
 interface Passthrough {
 	proxyUrl: URL;
-	bc: BareMux.BareClient;
+	bc: BareMux;
 	clientId: string;
 }
 
@@ -69,7 +68,7 @@ export default async function (
 	const { proxyUrl, bc, clientId } = passthrough;
 
 	/** Possibly the external speculation rules, but now inlined */
-	let speculationRules: string;
+	let speculationRules: string | undefined;
 
 	//const referrerPolicy = headers.get("referrer-policy");
 	for (const [key, value] of Object.entries(respHeaders)) {
@@ -88,11 +87,11 @@ export default async function (
 				break;
 			// Inline the sourcemap in the external scripts as a comment instead of a header (so it can spawn another request)
 			case "sourcemap":
-				respHeaders.set(key, rewriteSrc(value));
+				respHeaders.set(key, rewriteSrc(value, aeroConfig.prefix, logger));
 				break;
 			case "x-sourcemap":
 				// `x-sourcemap` is deprecated
-				respHeaders.set(key, rewriteSrc(value));
+				respHeaders.set(key, rewriteSrc(value, aeroConfig.prefix, logger));
 				break;
 			case "access-control-allow-origin":
 				if (CORS_EMULATION)
@@ -106,9 +105,9 @@ export default async function (
 					/** We don't have to worry about not complying with the mandate for handling CSP for inline speculation rules because this was meant to be external, but it is being inlined now, so the header will be deleted */
 					let extSpeculationRulesResp: Response;
 					try {
-						extSpeculationRulesResp = await bc.fetch(rewriteSrc(value, proxyUrl.origin));
+						extSpeculationRulesResp = await bc.fetch(rewriteSrc(value, aeroConfig.prefix, logger));
 					} catch (err) {
-						return fmtNeverthrowErr("Failed to fetch the external speculation rules with intent to inline them", err.message);
+						return fmtNeverthrowErr("Failed to fetch the external speculation rules with intent to inline them", err instanceof Error ? err : new Error(String(err)));
 					}
 					speculationRules = await extSpeculationRulesResp.text();
 					break;
@@ -124,20 +123,20 @@ export default async function (
 			default:
 				respHeaders.set(key, value);
 		}
-
-		// Force the referrer policy to always show the full URL
-		respHeaders.set("referrer-policy", "unsafe-url");
-
-		let ret: {
-			speculationRules?: string
-		} = {};
-		// @ts-ignore
-		if (speculationRules) ret.speculationRules = speculationRules;
-		return nOkAsync((ret);
 	}
 
-	// @ts-ignore
-	return typeof speculationRules !== "undefined" ? nOkAsync((speculationRules) : nOkAsync((undefined);
+	// Force the referrer policy to always show the full URL
+	respHeaders.set("referrer-policy", "unsafe-url");
+
+	let ret: {
+		speculationRules: Maybe<string>;
+		sourcemapPath: Maybe<string>;
+	} = {
+		speculationRules: speculationRules || null,
+		sourcemapPath: null
+	};
+
+	return nOkAsync(ret);
 };
 
 /**

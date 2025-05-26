@@ -8,9 +8,9 @@
 			"indentWidth": 4
 		}
 	},
-  "files": {
-    "ignoreUnknown": true
-  },
+	"files": {
+		"ignoreUnknown": true
+	},
 	"linter": {
 		"rules": {
 			"nursery": {
@@ -30,7 +30,7 @@
 				"noClassAssign": "error"
 			},
 			"style": {
-        "noParameterAssign": "error",
+				"noParameterAssign": "error",
 				"noNamespace": "error",
 				"noNamespaceImport": "error",
 				"noNegationElse": "error",

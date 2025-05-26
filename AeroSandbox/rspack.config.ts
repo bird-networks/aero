@@ -17,8 +17,7 @@ export default async function () {
 	const liveBuildMode = "LIVE_BUILD" in process.env;
 	let debugMode = liveBuildMode || "DEBUG" in process.env;
 	/** This var is enabled by default */
-	const verboseMode =
-		!("VERBOSE" in process.env) || process.env.VERBOSE !== "false";
+	const verboseMode = !("VERBOSE" in process.env) || process.env.VERBOSE !== "false";
 	/** Build AeroSandbox without the extra APIs. This should be used when building just for the proxy only; **/
 	const minimalBuild = "BUILD_MINIMAL" in process.env;
 	const minimalSharedBuild = "BUILD_SHARED_MINIMAL" in process.env;
@@ -43,15 +42,13 @@ export default async function () {
 		const imported = await import("./createFeatureFlags.ts");
 		featureFlagOverrides = imported.default;
 	} catch (_err) {
-		console.warn(
-			"⚠️ Unable to find any feature flag overrides. Is this intentional?"
-		);
+		console.warn("⚠️ Unable to find any feature flag overrides. Is this intentional?");
 	}
 
 	/** The feature flags to be used in the build config */
 	const featureFlags = createDefaultFeatureFlags({
 		...featureFlagOverrides,
-		debugMode
+		debugMode,
 	});
 
 	/** The plugins to be used in the build config */
@@ -62,8 +59,8 @@ export default async function () {
 		new NodePolyfillPlugin(),
 		new rspack.DefinePlugin(featureFlagsBuilder(featureFlags) as Record<string, string>),
 		new rspack.DefinePlugin({
-			BUILD_CONFIG_PATH: JSON.stringify(buildConfigPath)
-		})
+			BUILD_CONFIG_PATH: JSON.stringify(buildConfigPath),
+		}),
 	];
 
 	// Inject proxy and config keys from build config
@@ -73,7 +70,7 @@ export default async function () {
 		new rspack.DefinePlugin({
 			PROXY_NAMESPACE: JSON.stringify(bc.proxyNamespaceObj),
 			OUR_NAMESPACE: JSON.stringify(bc.aeroSandboxNamespaceObj),
-			CONFIG_KEY: JSON.stringify(bc.configKey)
+			CONFIG_KEY: JSON.stringify(bc.configKey),
 		})
 	);
 
@@ -92,12 +89,12 @@ export default async function () {
 				linter: {
 					rules: {
 						// Don't warn about using non ES5 features
-						"ecma-version-check": "off"
-					}
+						"ecma-version-check": "off",
+					},
 				},
 				supports: {
-					generateTileGraph: true
-				}
+					generateTileGraph: true,
+				},
 			})
 		);
 	}
@@ -105,16 +102,14 @@ export default async function () {
 	const properDirType = debugMode ? "debug" : "prod";
 	const properDir = path.resolve(__dirname, "dist", properDirType);
 
-	logger.log(
-		`\nBuilding in ${properDirType === "prod" ? "production" : "debug"} mode`
-	);
+	logger.log(`\nBuilding in ${properDirType === "prod" ? "production" : "debug"} mode`);
 	if (liveBuildMode) logger.log("Building in live build mode");
 
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	const output: any = {
 		filename: "[name].js",
 		path: testBuild ? path.resolve(__dirname, "../../tests/aero") : properDir,
-		clean: false
+		clean: false,
 	};
 
 	if (testBuild) output.library = ["Mod", "[name]"];
@@ -124,7 +119,7 @@ export default async function () {
 		//featureFlags: "./src/featureFlags.ts",
 		swAdditions: "./src/swAdditions.ts",
 		init$aero: "./src/init$aero.ts",
-		end$aero: "./src/end$aero.ts"
+		end$aero: "./src/end$aero.ts",
 	};
 
 	function genEntryFiles(entryFiles) {
@@ -139,39 +134,33 @@ export default async function () {
 	}
 
 	const config: Configuration = {
-		ignoreWarnings: [
-			/Critical dependency: the request of a dependency is an expression/
-		],
+		ignoreWarnings: [/Critical dependency: the request of a dependency is an expression/],
 		infrastructureLogging: { level: "error" },
 		externalsPresets: { node: true },
 		mode: debugMode ? "development" : "production",
 		optimization: {
-			chunkIds: "named"
+			chunkIds: "named",
 		},
 		entry: genEntryFiles(
 			testBuild
 				? {
-					// API Interceptors for the Script Sandbox
-					location: "./src/interceptors/loc/location.ts",
-					scriptSandbox:
-						"./src/interceptors/concealer/misc/scriptSandboxing.ts",
-					// Libs for the API Interceptors
-					loggers: "./src/shared/Loggers.ts",
-					replaceProxyNamespace: "./build/replaceProxyNamespace.ts",
-					jsDiffTestData: "./src/sandboxers/JS/ProxyParse/tests/shared/testData.ts"
-				}
+						// API Interceptors for the Script Sandbox
+						location: "./src/interceptors/loc/location.ts",
+						scriptSandbox: "./src/interceptors/concealer/misc/scriptSandboxing.ts",
+						// Libs for the API Interceptors
+						loggers: "./src/shared/Loggers.ts",
+						replaceProxyNamespace: "./build/replaceProxyNamespace.ts",
+						jsDiffTestData: "./src/sandboxers/JS/ProxyParse/tests/shared/testData.ts",
+					}
 				: minimalBuild
 					? {
-						...defaultBuild,
-						// Extra APIs
-						storageIsolation:
-							"./src/apis/StorageIsolator/storageIsolation.ts",
-						ControlView: "./src/apis/CustomViews/ControlView.ts",
-						ElectronControlView:
-							"./src/apis/CustomViews/ElectronControlView.ts",
-						ElectronWebView:
-							"./src/apis/CustomViews/ElectronWebView.ts"
-					}
+							...defaultBuild,
+							// Extra APIs
+							storageIsolation: "./src/apis/StorageIsolator/storageIsolation.ts",
+							ControlView: "./src/apis/CustomViews/ControlView.ts",
+							ElectronControlView: "./src/apis/CustomViews/ElectronControlView.ts",
+							ElectronWebView: "./src/apis/CustomViews/ElectronWebView.ts",
+						}
 					: defaultBuild
 		),
 		plugins,
@@ -179,14 +168,14 @@ export default async function () {
 			extensions: [".ts", ".d.ts"],
 			tsConfig: path.resolve(__dirname, "./tsconfig.json"),
 			alias: {
-				"$shared": path.resolve(__dirname, "src/shared"),
-				"$util": path.resolve(__dirname, "src/interceptors/util"),
-				"$interceptorUtil": path.resolve(__dirname, "src/interceptors/util"),
-				"$cors": path.resolve(__dirname, "src/security/cors"),
-				"$src": path.resolve(__dirname, "src"),
-				"$sandbox": path.resolve(__dirname, "src/sandboxers"),
-				"$apis": path.resolve(__dirname, "src/apis"),
-				"$types": path.resolve(__dirname, "types"),
+				$shared: path.resolve(__dirname, "src/shared"),
+				$util: path.resolve(__dirname, "src/interceptors/util"),
+				$interceptorUtil: path.resolve(__dirname, "src/interceptors/util"),
+				$cors: path.resolve(__dirname, "src/security/cors"),
+				$src: path.resolve(__dirname, "src"),
+				$sandbox: path.resolve(__dirname, "src/sandboxers"),
+				$apis: path.resolve(__dirname, "src/apis"),
+				$types: path.resolve(__dirname, "types"),
 				BUILD_CONFIG_PATH: path.resolve(__dirname, process.env.BUILD_CONFIG_PATH as string),
 			},
 		},
@@ -197,9 +186,9 @@ export default async function () {
 					exclude: [/[\\/]node_modules[\\/]/],
 					use: [
 						{
-							loader: "builtin:swc-loader"
-						}
-					]
+							loader: "builtin:swc-loader",
+						},
+					],
 				},
 				{
 					test: /\.val\.ts$/,
@@ -207,14 +196,14 @@ export default async function () {
 						{
 							loader: "val-loader",
 							options: {
-								compiler: "@swc-node/register"
-							}
-						}
-					]
-				}
-			]
+								compiler: "@swc-node/register",
+							},
+						},
+					],
+				},
+			],
 		},
-		output
+		output,
 	};
 
 	if (debugMode) config.watch = true;

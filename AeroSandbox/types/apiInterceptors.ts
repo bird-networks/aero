@@ -17,7 +17,7 @@ export enum InterceptionFeaturesEnum {
 	errorConcealment,
 	messageIsolation,
 	/** Only use this member if you aren't using it for a regular SW proxy */
-	requestUrlProxifier
+	requestUrlProxifier,
 }
 
 export enum URL_IS_ESCAPE {
@@ -25,7 +25,7 @@ export enum URL_IS_ESCAPE {
 	HOSTNAME,
 	DOMAIN,
 	PROTOCOL,
-	FULL_URL
+	FULL_URL,
 }
 
 // biome-ignore lint/style/useEnumInitializers: preserve initializer comments from .d.ts
@@ -36,7 +36,7 @@ export enum SupportEnum {
 	shippingChromium,
 	originTrialExclusive,
 	/** In Firefox, Chromium, and WebKit */
-	widelyAvailable
+	widelyAvailable,
 }
 
 export enum ExposedContextsEnum {
@@ -48,11 +48,11 @@ export enum ExposedContextsEnum {
 	sharedStorageWorklet,
 	paintWorklet,
 	serviceWorker,
-	window
+	window,
 }
 
 export enum AltProtocolEnum {
 	wrtc,
 	ws,
-	wt
+	wt,
 }

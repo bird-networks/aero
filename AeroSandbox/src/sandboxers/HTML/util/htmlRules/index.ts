@@ -13,12 +13,15 @@ import setRulesForMediaEmulation from "./media";
 
 // biome-ignore lint/suspicious/noExplicitAny: TODO: Make `any`, Element
 const htmlRules = new Map<any, htmlRule>();
-setRulesContentRewriters(htmlRules)
-if (!HTML_USE_HREF_EMULATION)
+setRulesContentRewriters(htmlRules);
+if (!HTML_USE_HREF_EMULATION) {
 	setRulesLinks(htmlRules);
+}
 setRulesSecurity(htmlRules);
-if (SUPPORT_FRAMES)
+if (SUPPORT_FRAMES) {
 	setRulesFrames(htmlRules);
-if (HTML_INTERCEPT_MEDIA_STREAMS)
+}
+if (HTML_INTERCEPT_MEDIA_STREAMS) {
 	setRulesForMediaEmulation(htmlRules);
+}
 export default htmlRules;

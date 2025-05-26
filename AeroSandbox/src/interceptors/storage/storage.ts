@@ -8,7 +8,10 @@ import { escapeWithOrigin } from "$shared/escaping/escape";
 export default [
 	...createStorageAPIInterceptors("sharedStorage", $aero.sandbox.config.sharedStorageId),
 	...createStorageAPIInterceptors("storage", $aero.sandbox.config.storageStoreId),
-	...createStorageAPIInterceptors("sessionStorage", `${$aero.sandbox.config.sessionStoreId}_${$aero.clientId}`),
+	...createStorageAPIInterceptors(
+		"sessionStorage",
+		`${$aero.sandbox.config.sessionStoreId}_${$aero.clientId}`
+	),
 	{
 		init() {
 			// For emulating the `Clear-Site-Data` header
@@ -17,7 +20,7 @@ export default [
 		globalProp: "localStorage",
 		// Because of the emulation of the `Clear-Site-Data` header
 		forCors: true,
-		supports: SupportEnum.widelyAvailable
+		supports: SupportEnum.widelyAvailable,
 	},
 	{
 		init() {
@@ -27,7 +30,7 @@ export default [
 		globalProp: "sessionStorage",
 		// Because of the emulation of the `Clear-Site-Data` header
 		forCors: true,
-		supports: SupportEnum.widelyAvailable
+		supports: SupportEnum.widelyAvailable,
 	},
 	// This is needed for Session Storage only
 	{
@@ -36,11 +39,16 @@ export default [
 			for (let i = 0; i < sessionStorage.length; i++) {
 				const realKey = sessionStorage.key(i);
 				if (realKey.startsWith(proxyLocation().origin)) {
-					const keyWithoutOriginEscape = realKey.replace(new RegExp(`^${proxyLocation().origin}_`), "");
+					const keyWithoutOriginEscape = realKey.replace(
+						new RegExp(`^${proxyLocation().origin}_`),
+						""
+					);
 					if (
 						// Is key from a previous session?
-						keyWithoutOriginEscape.startsWith(`${$aero.sandbox.config.sessionStoreId}_`))
+						keyWithoutOriginEscape.startsWith(`${$aero.sandbox.config.sessionStoreId}_`)
+					) {
 						sessionStorage.removeItem(realKey);
+					}
 				}
 			}
 
@@ -51,9 +59,9 @@ export default [
 		forStorage: true,
 		// Because of the emulation of the `Clear-Site-Data` header
 		forCors: true,
-		supports: SupportEnum.widelyAvailable
-	}
-] as APIInterceptor[]
+		supports: SupportEnum.widelyAvailable,
+	},
+] as APIInterceptor[];
 
 /**
  * For emulating the `Clear-Site-Data` header

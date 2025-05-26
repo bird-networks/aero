@@ -32,23 +32,22 @@ function set(el: Element, attr: string, val = "", backup = true): void {
 			// @ts-ignore
 			get: Object.getOwnPropertyDescriptors(elBak).get,
 			// @ts-ignore
-			set: Object.getOwnPropertyDescriptors(el).set
+			set: Object.getOwnPropertyDescriptors(el).set,
 		});
 	}
 }
 
-export default function rewriteElement(
-	el: Element | Element,
-	attrName?: string
-): Element {
+export default function rewriteElement(el: Element | Element, attrName?: string): Element {
 	// Don't exclusively rewrite attributes or check for already observed elements
 	const isNew = typeof attrName === "undefined";
 
 	// Check if the element's classes are any from the ignore classes
 	const elClassList = Array.from(el.classList);
-	for (const elClass of elClassList)
-		for (const ignoreClass of $aero.config.rewriters.html.ignoreClasses)
+	for (const elClass of elClassList) {
+		for (const ignoreClass of $aero.config.rewriters.html.ignoreClasses) {
 			if (elClass === ignoreClass) return el;
+		}
+	}
 
 	if (isNew && "integrity" in el && el.integrity !== "") {
 		const cloner = new Cloner(el);
@@ -58,27 +57,31 @@ export default function rewriteElement(
 	}
 
 	// @ts-ignore
-	for (const [elForRule, htmlRule] of htmlRules.entries())
+	for (const [elForRule, htmlRule] of htmlRules.entries()) {
 		if (
 			el instanceof elForRule && htmlRule.mustBeNew
 				? isNew
 				: true && attrName in htmlRule.onAttrHandlers
 		) {
 			const attrHandler = htmlRule.onAttrHandlers[attrName];
-			if (attrHandler instanceof Function)
+			if (attrHandler instanceof Function) {
 				set(el, attrName, attrHandler[attrName](el, attrName));
-			else if (attrHandler === "rewrite-src")
+			} else if (attrHandler === "rewrite-src") {
 				set(el, attrName, rewriteSrc(attrName));
-			else if (attrHandler === "rewrite-html-src")
+			} else if (attrHandler === "rewrite-html-src") {
 				set(el, attrName, rewriteHtmlSrc(el.getAttribute(attrName)));
+			}
 		}
+	}
 
 	// @ts-ignore
-	if (typeof el.onload === "string")
+	if (typeof el.onload === "string") {
 		// @ts-ignore
 		set(el, "onload", $aero.rewriters.js(el.getAttribute("onload")));
+	}
 	// @ts-ignore
-	if (typeof el.error === "string")
+	if (typeof el.error === "string") {
 		// @ts-ignore
 		set(el, "onerror", $aero.rewriters.js(el.getAttribute("onload")));
+	}
 }

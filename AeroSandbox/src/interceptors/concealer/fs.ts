@@ -9,8 +9,8 @@ export default {
 	},
 	escapeFixes: {
 		what: "URL_STRING",
-		type: URL_IS_ESCAPE.FULL_URL
+		type: URL_IS_ESCAPE.FULL_URL,
 	},
 	globalProp: "File.prototype.webkitRelativePath",
-	exposedContexts: "ALL"
+	exposedContexts: "ALL",
 } as APIInterceptor;

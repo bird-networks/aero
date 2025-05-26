@@ -13,7 +13,7 @@ if (escapeHandlerResult.isOk()) {
 } else {
 	$aero.logger.fatalErr(
 		`Failed to initialize escape property handler for XHR interceptor: ${escapeHandlerResult.error.message}. ` +
-		"Escaping/unescaping for 'isSync' will not work."
+			"Escaping/unescaping for 'isSync' will not work."
 	);
 }
 
@@ -27,11 +27,11 @@ export default {
 			}
 			return xhrInstance;
 		},
-		...escapeMethods
+		...escapeMethods,
 	},
 	globalProp: "XMLHttpRequest",
 	exposedContexts: "ALL_EXCEPT_SERVICE_WORKER",
 	supports: SupportEnum.widelyAvailable,
 	for: "AERO_INTERNAL_ESCAPING",
-	escapeFixes: []
+	escapeFixes: [],
 } as APIInterceptor;

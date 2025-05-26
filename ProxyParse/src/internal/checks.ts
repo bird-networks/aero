@@ -28,6 +28,6 @@
  * }
  */
 export function containsAmbiguousAccess(chain: string): boolean {
-    // Check for `window` or `location` in a chain
-    return /window|location/.test(chain);
+  // Check for `window` or `location` in a chain
+  return /window|location/.test(chain);
 }

@@ -3,7 +3,8 @@ title: Index
 description: This directory contains docs for how to run specific tests or benchmarks
 ---
 
-> Some tests or benchmarks contain CLIs that you can run with `npx` on your own proxy, and some also contain GitHub Actions
+> Some tests or benchmarks contain CLIs that you can run with `npx` on your own
+> proxy, and some also contain GitHub Actions
 
 # In general
 

@@ -1,6 +1,6 @@
-import { useState, useRef, type ChangeEvent } from "react";
-import { Editor, DiffEditor, type Monaco} from "@monaco-editor/react";
-import { latte, frappe, macchiato, mocha } from "@catppuccin/vscode";
+import { type ChangeEvent, useRef, useState } from "react";
+import { DiffEditor, Editor, type Monaco } from "@monaco-editor/react";
+import { frappe, latte, macchiato, mocha } from "@catppuccin/vscode";
 
 /** Initialize the Catppuccin themes for Monaco */
 function initThemes(monaco: Monaco) {
@@ -31,7 +31,6 @@ function initThemes(monaco: Monaco) {
   });
 }
 
-
 const sharedStyle = {};
 const sharedOptions = {
   fontFamily: "JetBrains Mono",
@@ -43,7 +42,7 @@ const sharedOptions = {
   bracketPairColorization: {
     enabled: true,
   },
-}
+};
 
 export default function AeroSandboxRewriteDemo() {
   const [lang, setLang] = useState("javascript");
@@ -57,7 +56,7 @@ export default function AeroSandboxRewriteDemo() {
     language: lang,
     ref: editorRef,
     key: lang,
-  }
+  };
 
   const [diffCode, setDiffCode] = useState("");
 
@@ -73,7 +72,8 @@ export default function AeroSandboxRewriteDemo() {
       <select
         id="langDropdown"
         className="select w-full max-w-xs"
-        onChange={(e: ChangeEvent<HTMLSelectElement>) => setLang(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+          setLang(e.target.value)}
       >
         <option disabled selected>Select a rewriter to try</option>
         <option value="html">HTML</option>
@@ -113,7 +113,7 @@ export default function AeroSandboxRewriteDemo() {
           // @ts-ignore
           options={{
             ...sharedOptions,
-            renderSideBySide: false
+            renderSideBySide: false,
           }}
         />
       </div>

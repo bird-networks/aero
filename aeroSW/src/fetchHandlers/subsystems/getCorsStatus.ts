@@ -4,7 +4,7 @@ import { okAsync, errAsync as nErrAsync } from "neverthrow";
 import { fmtNeverthrowErr } from "$shared/fmtErr";
 
 // Passthrough types
-import { Sec } from "$aero/types";
+import type { Sec } from "$types/index";
 
 // Security
 // CORS Emulation
@@ -12,10 +12,10 @@ import block from "../isolation/corsTesting";
 // Cache Emulation
 import HSTSCacheEmulation from "../isolation/HstsCacheEmulation";
 // TODO: Fix import - import clear from "./isolation/execClearEmulationOnWindowClients";
-import CacheManager from "$aero/src/this/util/internal/isolation/CacheManager";
+import CacheManager from "../isolation/CacheManager";
 
 // Utility
-import redir from "$util/redir";
+import redir from "$swUtil/redir";
 
 /**
  * This method also modifies the `sec` object you pass in accordingly
@@ -40,7 +40,7 @@ export default async function getCORSStatus({
 	if (FEATURES_CACHE_EMULATION) {
 		const reqBlockedRes = await block(proxyUrl.href);
 		if (reqBlockedRes.isErr())
-			return fmtNeverthrowErr("Failed to deterine if the request should be blocked due to a would've been CORS violation", reqBlockedRes.error().message);
+			return fmtNeverthrowErr("Failed to deterine if the request should be blocked due to a would've been CORS violation", reqBlockedRes.error);
 		// TODO: Print the context
 		logger.debug("Request blocked by CORS");
 		return okAsync({
@@ -54,8 +54,9 @@ export default async function getCORSStatus({
 	// Rewrite the request headers
 	if (FEATURES_CACHE_EMULATION) {
 		if (proxyUrl.protocol === "http:") {
+			const hstsHeader = reqHeaders.get("strict-transport-security");
 			const hstsCacheEmulator = new HSTSCacheEmulation(
-				reqHeaders.get("strict-transport-security"),
+				hstsHeader || "",
 				proxyUrl.origin
 			);
 
@@ -64,19 +65,19 @@ export default async function getCORSStatus({
 				return fmtNeverthrowErr("Failed to determine if the client should redirect when using the cache emulator", redirectRes.error);
 			const redirUrl = proxyUrl;
 			redirUrl.protocol = "https:";
-			return redir(redirUrl.href);
+			return okAsync(redir(redirUrl.href));
 		}
 	}
 
 	if (FEATURES_CORS_EMULATION) {
 		if (reqHeaders.has("timing-allow-origin"))
-			sec.timing = reqHeaders.get("timing-allow-origin");
+			sec.timing = reqHeaders.get("timing-allow-origin")!;
 		if (reqHeaders.has("permissions-policy"))
-			sec.perms = reqHeaders.get("permissions-policy");
+			sec.perms = reqHeaders.get("permissions-policy")!;
 		if (reqHeaders.has("x-frame-options"))
-			sec.frame = reqHeaders.get("x-frame-options");
+			sec.frame = reqHeaders.get("x-frame-options")!;
 		if (reqHeaders.has("content-security-policy"))
-			sec.csp = reqHeaders.get("content-security-policy");
+			sec.csp = reqHeaders.get("content-security-policy")!;
 	}
 
 	/*
@@ -93,19 +94,40 @@ export default async function getCORSStatus({
 	if (FEATURES_CACHE_EMULATION) {
 		cacheMan = new CacheManager(reqHeaders);
 
-		if (cacheMan.mode === "only-if-cached")
-			return nErrAsync(new Error("Can't find an emulated cached response");
-
-		const cacheAge = cacheMan.getAge(
-			reqHeaders.get("cache-control"),
-			reqHeaders.get("expires")
+		const cacheControlHeader = reqHeaders.get("cache-control");
+		const expiresHeader = reqHeaders.get("expires");
+		const cacheAgeRes = await cacheMan.getAge(
+			cacheControlHeader || "",
+			expiresHeader || ""
 		);
+		if (cacheAgeRes.isErr()) {
+			return fmtNeverthrowErr(
+				`Failed to parse cache age from headers: ${cacheAgeRes.error.message}`,
+				cacheAgeRes.error
+			);
+		}
 
-		const cachedResp = await cacheMan.get(reqUrl, cacheAge);
-		if (cachedResp) return okAsync({ cachedResp: cachedResp });
+		const cacheAge = cacheAgeRes.value;
+
+		if (typeof cacheAge === "number") {
+			const cachedResponse = await cacheMan.get(reqUrl.href, cacheAge);
+			if (cachedResponse)
+				return okAsync({ cachedResponse });
+		}
+
+		// If the request mode is "only-if-cached" and no cached response was found, return an error
+		if (cacheMan.mode === "only-if-cached")
+			return nErrAsync(new Error("Can't find an emulated cached response"));
+
+		const cacheKey = reqHeaders.get("x-aero-cache-key");
+		// Handle the Cache-Key header if present
+		if (cacheKey) {
+			// TODO: Implement Cache-Key logic
+			logger.debug("Cache-Key header found, but not yet implemented");
+		}
 	}
 
 	if (cacheMan)
-		return okAsync({});
-	return okAsync({ cacheMan });
+		return okAsync({ cacheMan });
+	return okAsync({});
 }

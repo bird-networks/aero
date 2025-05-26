@@ -1,5 +1,5 @@
 type proxyOrigin = true;
-self.nestedSWs = new Map<proxyOrigin, NestedSW>();
+self.nestedSWs = new Map<proxyOrigin, NestedSW[]>();
 
 // TODO: Use this polyfill if needed https://github.com/GoogleChromeLabs/dynamic-import-polyfill
 
@@ -24,36 +24,41 @@ function rewriteSource(sourceCode: string) {
 	return sourceCode;
 }
 
-const createNestedSWFetchSandbox = nestedSWListener => {};
+const createNestedSWFetchSandbox = (nestedSWListener: any) => { };
 // TODO: Sandbox the Content Index and Cache APIs
-const createNestedSWRunnerSandbox = (sourceCode: string, nestedSW) => {
+const createNestedSWRunnerSandbox = (sourceCode: string, nestedSW: NestedSW) => {
 	const proxified: NestedSWAPIInterceptors = {
 		addEventListener: new Proxy(self.addEventListener, {
 			apply(_target, _that, args) {
 				const [type, listener] = args;
 
-				if (type === "fetch")
-					nestedSW.events.fetch = realSWEvent => {
+				if (type === "fetch") {
+					nestedSW.events.fetch = (realSWEvent: any) => {
 						listener(realSWEvent);
 					};
+				}
 				// TODO: Support other the other SW events
-			}
-		})
+			},
+		}),
+		removeEventListener: self.removeEventListener,
+		postMessage: self.postMessage,
 	};
 	proxified.self = new Proxy(self, {
-		get(target, prop) {
-			if (prop in proxified) return proxified[prop];
+		get(target, prop: string | symbol) {
+			if (prop in proxified) return (proxified as any)[prop];
 			else return Reflect.get(target, prop);
-		}
+		},
 	});
 	proxified.Function = new Proxy(Function, {
-		construct(target, that, args) {
-			const [_funcArgs, evalCode] = args;
+		construct(target, argArray, newTarget) {
+			// Handle function construction arguments
+			if (argArray.length >= 2) {
+				const evalCode = argArray[argArray.length - 1]; // Last argument is the function body
+				argArray[argArray.length - 1] = rewriteSource(evalCode);
+			}
 
-			args[2] = rewriteSource(evalCode);
-
-			const createdFunc = Reflect.construct(target, that, args);
-			return createdFunc.bind(proxified.self);
+			const createdFunc = Reflect.construct(target, argArray, newTarget);
+			return createdFunc;
 		},
 		get(target, prop) {
 			if (prop === "bind" || prop === "call" || prop === "apply") {
@@ -63,66 +68,69 @@ const createNestedSWRunnerSandbox = (sourceCode: string, nestedSW) => {
 
 						thisArg = {
 							...proxified.self,
-							...thisArg
+							...thisArg,
 						};
 
 						return Reflect.apply(target, that, [
 							thisArg,
-							...bindArgs
+							...bindArgs,
 						]);
-					}
+					},
 				});
 			}
-		}
+		},
 	});
 	return new Function(...Object.keys(proxified), sourceCode)(
 		proxified.self,
 		proxified.addEventListener,
 		proxified.removeEventListener,
-		proxified.postMessage
+		proxified.postMessage,
 	);
 };
 
 export default () => {
 	const nestedSWBC = new BroadcastChannel("nestedSW");
 
-	function continueWithSource(data, sourceCode) {
-		const nestedSWSandbox = createNestedSWRunnerSandbox(sourceCode);
+	function continueWithSource(data: any, sourceCode: string) {
+		const nestedSWSandbox = createNestedSWRunnerSandbox(sourceCode, {
+			options: {},
+			events: { fetch: () => { } },
+		});
 
 		try {
 			nestedSWSandbox(sourceCode);
 			nestedSWBC.postMessage({
 				type: "registered",
 				data: {
-					id: data.id
-				}
+					id: data.id,
+				},
 			});
 		} catch (err) {
 			nestedSWBC.postMessage({
 				type: "registration_failed",
 				data: {
-					id: data.id
-				}
+					id: data.id,
+				},
 			});
 		}
 	}
 
-	nestedSWBC.onmessage = ev => {
+	nestedSWBC.onmessage = (ev) => {
 		if (ev.data.type === "register") {
 			if ("swURL" in ev.data) {
 				fetch(ev.data.swURL)
-					.then(resp => {
-						const sourceCode = resp.text();
+					.then(async (resp) => {
+						const sourceCode = await resp.text();
 						continueWithSource(ev.data, sourceCode);
 					})
-					.catch(err => {
+					.catch((err) => {
 						nestedSWBC.postMessage({
 							type: "err_fetch_failed",
 							data: {
 								url: ev.data.swURL,
 								id: ev.data.id,
-								error: err
-							}
+								error: err,
+							},
 						});
 					});
 			} else if ("sourceCode" in ev.data) {
@@ -132,8 +140,8 @@ export default () => {
 					type: "err_invalid_sw_url",
 					data: {
 						url: ev.data.swURL,
-						id: ev.data.id
-					}
+						id: ev.data.id,
+					},
 				});
 			}
 		}

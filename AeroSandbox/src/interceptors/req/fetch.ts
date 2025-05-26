@@ -1,7 +1,4 @@
-import {
-	type APIInterceptor,
-	AnyWorkerEnumMember
-} from "$types/apiInterceptors.d.ts";
+import { AnyWorkerEnumMember, type APIInterceptor } from "$types/apiInterceptors.d.ts";
 //import { handleFetchEvent } from "$aero_browser/util/swlessUtils";
 
 export default {
@@ -13,9 +10,9 @@ export default {
 			opts =
 				args[0] instanceof Request
 					? {
-						...args[0],
-						...opts
-					}
+							...args[0],
+							...opts,
+						}
 					: opts;
 
 			const headers: Record<string, string> = {};
@@ -24,15 +21,12 @@ export default {
 				if (
 					opts.cache &&
 					// only-if-cached requires the mode to be same origin
-					!(
-						opts.mode !== "same-origin" &&
-						opts.cache === "only-if-cached"
-					)
+					!(opts.mode !== "same-origin" && opts.cache === "only-if-cached")
 				) {
 					// Emulate cache mode
-					if (headers instanceof Headers)
+					if (headers instanceof Headers) {
 						headers.append("x-aero-cache", opts.cache);
-					else headers["x-aero-cache"] = opts.cache;
+					} else headers["x-aero-cache"] = opts.cache;
 				}
 			}
 
@@ -57,9 +51,9 @@ export default {
 
 				return resp;
 			});
-		}
+		},
 	},
-	globalProp: "fetch"
+	globalProp: "fetch",
 } as APIInterceptor;
 
 /*

@@ -17,13 +17,10 @@ import getCSPPolicyRules from "$src/security/csp/getPolicyRules";
 			class ProxifiedElement extends OriginalHTMLElement {
 				constructor() {
 					super();
-					observeAttributesArray = Object.keys(
-						htmlRule.onAttrHandlers
-					);
+					observeAttributesArray = Object.keys(htmlRule.onAttrHandlers);
 				}
 				attributeChangedCallback(attrName, _oldVal, newVal) {
 					if (htmlRule.cspSrcBlock) {
-
 						if (getCSPPolicyRules(htmlRule.cspSrcBlock)) {
 							super.removeAttribute(attrName);
 							return;
@@ -31,18 +28,17 @@ import getCSPPolicyRules from "$src/security/csp/getPolicyRules";
 					}
 					const handler = htmlRule.onAttrHandlers[attrName];
 					if (handler) {
-						const rewriteHandler =
-							htmlRule.onAttrHandlers[attrName];
+						const rewriteHandler = htmlRule.onAttrHandlers[attrName];
 						let actualRewriteHandler: onAttrHandler;
-						if (rewriteHandler === "rewrite-src")
+						if (rewriteHandler === "rewrite-src") {
 							actualRewriteHandler = (newVal: string) => {
 								return rewriteSrc(newVal);
 							};
-						else if (rewriteHandler === "rewrite-html-src")
+						} else if (rewriteHandler === "rewrite-html-src") {
 							actualRewriteHandler = (newVal: string) => {
 								return htmlSrc(newVal);
 							};
-						else actualRewriteHandler = rewriteHandler[attrName];
+						} else actualRewriteHandler = rewriteHandler[attrName];
 						super.setAttribute(
 							attrName,
 							// @ts-ignore
@@ -55,7 +51,7 @@ import getCSPPolicyRules from "$src/security/csp/getPolicyRules";
 				}
 			},
 			{
-				extends: htmlRule.tagName
+				extends: htmlRule.tagName,
 			}
 		);
 	}
@@ -70,20 +66,15 @@ import getCSPPolicyRules from "$src/security/csp/getPolicyRules";
 		connectedCallback() {
 			for (const child of super.children) {
 				if (!alreadyRewrittenChildren.has(child)) {
-					for (const [
-						OriginalHTMLElement,
-						htmlRule
-					] of htmlRules.entries()) {
+					for (const [OriginalHTMLElement, htmlRule] of htmlRules.entries()) {
 						if (
 							// @ts-ignore
 							child instanceof OriginalHTMLElement &&
 							// Parity check
 							htmlRule.tagName === child.tagName
-						)
-							child.setAttribute(
-								"is",
-								proxifyCustomElementName(child.tagName)
-							);
+						) {
+							child.setAttribute("is", proxifyCustomElementName(child.tagName));
+						}
 					}
 					alreadyRewrittenChildren.add(child);
 				} else {

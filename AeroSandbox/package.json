@@ -58,6 +58,7 @@
 		"@rspack/core": "^1.0.13",
 		"@swc-node/register": "^1.10.9",
 		"@titaniumnetwork-dev/ultraviolet": "^3.2.7",
+		"@types/glob": "^8.1.0",
 		"@types/node": "^22.15.17",
 		"@types/webappsec-credential-management": "^0.6.8",
 		"@types/websql": "^0.0.30",

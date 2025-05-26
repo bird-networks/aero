@@ -1,8 +1,8 @@
 {
 	"compilerOptions": {
 		"target": "ESNext",
-		"moduleResolution": "NodeNext",
-		"module": "NodeNext",
+		"moduleResolution": "bundler",
+		"module": "ESNext",
 		"baseUrl": "./",
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"sourceMap": true,
@@ -23,7 +23,8 @@
 			"$types/apiInterceptors": ["types/apiInterceptors.d.ts"]
 		},
 		"types": ["@types/websql", "@types/node", "@types/glob"],
-		"allowImportingTsExtensions": true
+		"allowImportingTsExtensions": true,
+		"noEmit": true
 	},
 	"include": [
 		"rspack.config.ts",

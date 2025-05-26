@@ -3,15 +3,15 @@ import contextualIdentities from "./contextualIdentities";
 export default {
 	contextualIdentities,
 	proxifiedAPIs: {
-		localStorage: () => (),
-		sessionStorage
-	}
+		localStorage: () => ({}),
+		sessionStorage: () => ({}),
+	},
 };
 
 // FORGET ALL OF THIS SIMPLY MAKE IT AN SDK FOR THE SW BACKEND APIS
 /*
 function getStorageIsolatorKeys(getActive = true) {
-// TODO: In the backend this will call 
+// TODO: In the backend this will call
 }
 
 export default storageIsolator(affectedApis: StorageIsolationOptions) {

@@ -10,4 +10,4 @@ importScripts(aeroConfig.bundles.handle);
 
 addEventListener("install", skipWaiting);
 
-addEventListener("fetch", event => event.respondWith(aeroHandle(event)));
+addEventListener("fetch", (event) => event.respondWith(aeroHandle(event)));

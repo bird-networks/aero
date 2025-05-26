@@ -3,16 +3,20 @@ import { ExposedContextsEnum } from "$types/enums/apiInterceptors";
 
 import { proxyLocation } from "$shared/proxyLocation";
 
-export default [{
-	proxifyGetter: (_ctx) => proxyLocation().protocol === "https:",
-	globalProp: "isSecureContext",
-	conceals: [{
-		what: "itself",
-		revealerType: {
-			type: "url",
-			// Because of fake protocol emulation!
-			reveals: "realProtocol"
-		}
-	}],
-	exposedContexts: ExposedContextsEnum.window
-}] as APIInterceptor[];
+export default [
+	{
+		proxifyGetter: _ctx => proxyLocation().protocol === "https:",
+		globalProp: "isSecureContext",
+		conceals: [
+			{
+				what: "itself",
+				revealerType: {
+					type: "url",
+					// Because of fake protocol emulation!
+					reveals: "realProtocol",
+				},
+			},
+		],
+		exposedContexts: ExposedContextsEnum.window,
+	},
+] as APIInterceptor[];

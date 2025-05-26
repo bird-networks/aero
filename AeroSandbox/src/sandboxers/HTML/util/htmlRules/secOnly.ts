@@ -16,25 +16,25 @@ export default function setRulesCORS(htmlRules) {
 	// Permissions Policy and Content Security Policy (CSP) emulation
 	/**
 	 * Permission Policy Directives: @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy#directives'
-	 *
 	 */
 
 	htmlRules.set(HTMLImageElement, {
 		onAttrHandlers: {
 			src: {
-				ppBlock: "img-src"
-			}
+				ppBlock: "img-src",
+			},
 		},
-		cspSrcBlock: "img-src"
+		cspSrcBlock: "img-src",
 	});
 
-	for (const autoplayElement of autoplayElements)
+	for (const autoplayElement of autoplayElements) {
 		htmlRules.set(autoplayElement, {
 			onAttrHandlers: {
 				autoplay: {
 					/** @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy/autoplay */
-					ppBlock: "autoplay"
-				}
-			}
+					ppBlock: "autoplay",
+				},
+			},
 		});
+	}
 }

@@ -1,53 +1,53 @@
 {
-	"version": "0.2.0",
-	"configurations": [
-		{
-			"type": "chrome",
-			"request": "launch",
-			"name": "Start: aero dev session",
-			"url": "http://localhost:2525",
-			"urlFilter": "/go/*",
-			"webRoot": "${workspaceFolder}/dev-server/demo-site",
-			"resolveSourceMapLocations": [
-				"${workspaceFolder}/dist/sw",
-				"${workspaceFolder}/AeroSandbox/dist"
-			],
-			"preLaunchTask": "aero: start live build",
-			"server": {
-				"program": "pm2 start ecosystem.config.js"
-			},
-			"trace": true
-		},
-		{
-			"name": "Launch aero.sh in Firefox",
-			"type": "firefox",
-			"request": "launch",
-			"reAttach": true,
-			"url": "http://localhost:2525",
-			"webRoot": "${workspaceFolder}/aero.sh",
-			"pathMappings": [
-				{
-					"url": "http://localhost:2525/",
-					"path": "${workspaceFolder}/aero.sh"
-				}
-			],
-			"preLaunchTask": "Start aero.sh Dev Server"
-		},
-		{
-			"name": "Launch aero.sh in Zen Browser",
-			"type": "firefox",
-			"request": "launch",
-			"reAttach": true,
-			"url": "http://localhost:2525",
-			"webRoot": "${workspaceFolder}/aero.sh",
-			"firefoxExecutable": "/Applications/Zen.app/Contents/MacOS/zen",
-			"pathMappings": [
-				{
-					"url": "http://localhost:2525/",
-					"path": "${workspaceFolder}/aero.sh"
-				}
-			],
-			"preLaunchTask": "Start aero.sh Dev Server"
-		}
-	]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Start: aero dev session",
+      "url": "http://localhost:2525",
+      "urlFilter": "/go/*",
+      "webRoot": "${workspaceFolder}/dev-server/demo-site",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/dist/sw",
+        "${workspaceFolder}/AeroSandbox/dist"
+      ],
+      "preLaunchTask": "aero: start live build",
+      "server": {
+        "program": "pm2 start ecosystem.config.js"
+      },
+      "trace": true
+    },
+    {
+      "name": "Launch aero.sh in Firefox",
+      "type": "firefox",
+      "request": "launch",
+      "reAttach": true,
+      "url": "http://localhost:2525",
+      "webRoot": "${workspaceFolder}/aero.sh",
+      "pathMappings": [
+        {
+          "url": "http://localhost:2525/",
+          "path": "${workspaceFolder}/aero.sh"
+        }
+      ],
+      "preLaunchTask": "Start aero.sh Dev Server"
+    },
+    {
+      "name": "Launch aero.sh in Zen Browser",
+      "type": "firefox",
+      "request": "launch",
+      "reAttach": true,
+      "url": "http://localhost:2525",
+      "webRoot": "${workspaceFolder}/aero.sh",
+      "firefoxExecutable": "/Applications/Zen.app/Contents/MacOS/zen",
+      "pathMappings": [
+        {
+          "url": "http://localhost:2525/",
+          "path": "${workspaceFolder}/aero.sh"
+        }
+      ],
+      "preLaunchTask": "Start aero.sh Dev Server"
+    }
+  ]
 }

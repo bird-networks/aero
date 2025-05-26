@@ -1,4 +1,4 @@
-import type { AeroLogger, AeroSandboxLogger } from "$shared/Loggers";
+import type { AeroLogger, AeroSandboxLogger } from "../src/shared/Loggers";
 
 /** A union of all Logger classes */
 export type eitherLogger = AeroLogger | AeroSandboxLogger;

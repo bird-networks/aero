@@ -1,5 +1,4 @@
-import type { BareWebSocket } from "@mercuryworkshop/bare-mux" with { "resolution-mode": "import" };
-
+import { BareWebSocket } from "@mercuryworkshop/bare-mux";
 
 export type emuWSState = {
 	extensions: string;

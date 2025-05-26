@@ -6,12 +6,13 @@ title: How to use aero on your proxy
 
 ## JS
 
-Add these static path imports to the top of your main JS server file or Vite/Astro config:
+Add these static path imports to the top of your main JS server file or
+Vite/Astro config:
 
 ```js
 // static path imports
 // aero
-import { default as aeroPath, aeroExtrasPath } from "aero-proxy" // You only need to import this if you are using handleWithExtras
+import { aeroExtrasPath, default as aeroPath } from "aero-proxy"; // You only need to import this if you are using handleWithExtras
 import aeroSandboxPath from "aero-sandbox/path.js";
 // bare-mux 2.0
 import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
@@ -41,17 +42,17 @@ Add these routes:
 
 ```js
 fastify.register(fastifyStatic, {
-	root: join(
-		fileURLToPath(new URL(".", import.meta.url)),
-		aeroSandboxPath
-	),
-	prefix: "/aero/sandbox/",
-	decorateReply: false
+  root: join(
+    fileURLToPath(new URL(".", import.meta.url)),
+    aeroSandboxPath,
+  ),
+  prefix: "/aero/sandbox/",
+  decorateReply: false,
 });
 fastify.register(fastifyStatic, {
-	root: join(fileURLToPath(new URL(".", import.meta.url)), aeroPath),
-	prefix: "/aero/",
-	decorateReply: false
+  root: join(fileURLToPath(new URL(".", import.meta.url)), aeroPath),
+  prefix: "/aero/",
+  decorateReply: false,
 });
 ```
 
@@ -150,6 +151,11 @@ end
 
 # Instructions - site (static)
 
-1. Create `/sw.js` (in your static folder) with the contents of `/examples/swWithExtras.js` (in this git repo) and modify that file to your liking
-2. Copy the contents of `/examples/config.js` (in this Git repo) to `/aero/config.js` (in your static folder) and modify that file to your liking
-3. Copy the contents of `/AeroSandbox/examples/config.js` (in this Git repo) to `/aero/sandbox/config.js` (in your static folder) and modify that file to your liking
+1. Create `/sw.js` (in your static folder) with the contents of
+   `/examples/swWithExtras.js` (in this git repo) and modify that file to your
+   liking
+2. Copy the contents of `/examples/config.js` (in this Git repo) to
+   `/aero/config.js` (in your static folder) and modify that file to your liking
+3. Copy the contents of `/AeroSandbox/examples/config.js` (in this Git repo) to
+   `/aero/sandbox/config.js` (in your static folder) and modify that file to
+   your liking

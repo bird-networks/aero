@@ -1,9 +1,9 @@
 import type { ResultAsync } from "neverthrow";
-import { nOkAsync(as nnOkAsync(, errAsync as nErrAsync, Result, ok as nOk, err as nErr } from "neverthrow";
+import { okAsync as nOkAsync, errAsync as nErrAsync, Result, ok as nOk, err as nErr } from "neverthrow";
 
-import Cache from "./Cache";
+import BaseCache from "./Cache";
 
-export default class extends Cache {
+export default class CacheManager extends BaseCache {
 	mode: RequestCache;
 
 	/**
@@ -35,7 +35,7 @@ export default class extends Cache {
 
 		// Check for explicit cache mode header
 		const passCacheMode = headers.get("x-aero-cache");
-		if (this.#isValidCacheMode(passCacheMode)) {
+		if (passCacheMode && this.#isValidCacheMode(passCacheMode)) {
 			// @ts-ignore
 			return passCacheMode;
 		}
@@ -85,7 +85,7 @@ export default class extends Cache {
 	 * @param - Proxy origin
 	 */
 	static async clear(origin: string): Promise<void> {
-		const cache = await this.#getCache();
+		const cache = await CacheManager.#getCache();
 		const keys = await cache.keys();
 
 		for (const req of keys) {
@@ -110,24 +110,28 @@ export default class extends Cache {
 			try {
 				const dirs = cacheControl.split(";").map(dir => dir.trim());
 
-				secs = Number.parseInt(
-					dirs
-						.find(dir => dir.startsWith("max-age"))
-						// FIXME: Breaks on https://dailymail.com
-						.split("=")
-						.pop()
-				);
+				const maxAgeDir = dirs.find(dir => dir.startsWith("max-age"));
+				if (!maxAgeDir) {
+					return nErrAsync(new Error("No max-age directive found in Cache-Control header"));
+				}
+
+				const maxAgeValue = maxAgeDir.split("=").pop();
+				if (!maxAgeValue) {
+					return nErrAsync(new Error("Invalid max-age directive format"));
+				}
+
+				secs = Number.parseInt(maxAgeValue);
 			} catch (err) {
 				return nErrAsync(
 					new Error(
-						`Failed to parse cache control header for the max age${ERR_LOG_AFTER_COLON}${err.message}`
+						`Failed to parse cache control header for the max age: ${err instanceof Error ? err.message : String(err)}`
 					)
 				);
 			}
-			return nOkAsync((secs ? secs + this.getTime : false);
-		} return this.#parseAge(expiry);
+			return nOkAsync(secs ? secs + this.getTime : false);
+		}
 
-		return false;
+		return this.#parseAge(expiry);
 	}
 
 	/**
@@ -135,8 +139,8 @@ export default class extends Cache {
 	 * @param age Cache age
 	 * @returns Cached resp
 	 */
-	async get(path, age): Promise<Response | false> {
-		const cache = await this.#getCache();
+	async get(path: string, age: number): Promise<Response | false> {
+		const cache = await CacheManager.#getCache();
 
 		if (
 			// Bypass caches
@@ -149,9 +153,9 @@ export default class extends Cache {
 				// Check the freshness
 				this.isFresh(age))
 		) {
-			const resp = cache.match(path);
+			const resp = await cache.match(path);
 
-			return resp instanceof Response ? resp : false;
+			return resp || false;
 		}
 
 		return false;
@@ -165,7 +169,7 @@ export default class extends Cache {
 	 * @param
 	 */
 	async set(proxyPath: string, resp: Response, vary: string, clientId: string): Promise<ResultAsync<void, Error>> {
-		const cache = await this.#getCache();
+		const cache = await CacheManager.#getCache();
 
 		if (
 			this.mode !== "no-store" &&
@@ -177,20 +181,21 @@ export default class extends Cache {
 			} catch (err) {
 				const action = "to put the response into the cache";
 				// TODO: Use fmtNeverthrowErr instead
-				return nErrAsync(new Error(err instanceof TypeError ? `The URL for the path ${action} is invalid: ${err.message}` : `Uncaught error while trying ${action}${ERR_LOG_AFTER_COLON}${err.message}`));
+				return nErrAsync(new Error(err instanceof TypeError ? `The URL for the path ${action} is invalid: ${err.message}` : `Uncaught error while trying ${action}: ${err instanceof Error ? err.message : String(err)}`));
 			}
 		} else {
 			// TODO: If in verbose/debug mode, log that nothing was put into the cache
 			self.logger.log(`Nothing was put into the Cache for the request path (${proxyPath})`);
 		}
 
-		for (const client of clientsWithSameProxyOrigin) {
+		// TODO: Implement clientsWithSameProxyOrigin properly
+		/*for (const client of clientsWithSameProxyOrigin) {
 			const broadcast = new BroadcastChannel("$aero-perf-timing-res-cached");
 			client.postMessage({
 				clientId,
-				msg: 
+				msg: "cache-updated"
 			});
-		}
+		}*/
 
 		return nOk(undefined);
 	}
@@ -204,14 +209,14 @@ export default class extends Cache {
 	 * @param - The Expire HTTP Header to convert
 	 * @returns - The number of seconds until the expiry date
 	 */
-	#parseAge(expiry: string): Result<number> {
+	#parseAge(expiry: string): ResultAsync<number | false, Error> {
 		let date: number;
 		try {
 			date = Date.parse(expiry)
 		} catch (err) {
-			return nErr(new Error(`Failed to parse the date for the expiry HTTP header${ERR_LOG_AFTER_COLON}${err.message}`));
+			return nErrAsync(new Error(`Failed to parse the date for the expiry HTTP header: ${err instanceof Error ? err.message : String(err)}`));
 		}
-		return (date / 1000) | 0;
+		return nOkAsync((date / 1000) | 0);
 	}
 
 	get bypass(): boolean {

@@ -8,19 +8,25 @@
  * @param toGet THe variable to get
  */
 export default function getValFromSW(toGet: {
-	name: string
+	name: string;
 }): void {
-	return $aero.sandbox.extLib.syncify(new Promise((resolve, reject) => {
-		const bc = new BroadcastChannel(`$aero-stored-val`);
-		bc.postMessage({
-			clientId: $aero.clientId,
-			for: "get",
-			...toGet
+	return $aero.sandbox.extLib.syncify(
+		new Promise((resolve, reject) => {
+			const bc = new BroadcastChannel(`$aero-stored-val`);
+			bc.postMessage({
+				clientId: $aero.clientId,
+				for: "get",
+				...toGet,
+			});
+			bc.onmessage = (event: MessageEvent) => {
+				if (
+					event.data.clientId === $aero.clientId &&
+					event.data.for === "get" &&
+					event.data.name === toGet.name
+				) {
+					resolve(event.data.val);
+				}
+			};
 		})
-		bc.onmessage = (event: MessageEvent) => {
-			if (event.data.clientId === $aero.clientId && event.data.for === "get" && event.data.name === toGet.name) {
-				resolve(event.data.val);
-			}
-		};
-	}));
+	);
 }

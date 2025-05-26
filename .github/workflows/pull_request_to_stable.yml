@@ -1,5 +1,5 @@
 name: PR stable checks (to main)
-on: 
+on:
   pull_request:
     branches:
       - main
@@ -16,13 +16,13 @@ jobs:
       - uses: mongolyy/reviewdog-action-biome@v1
         with:
           github_token: ${{ secrets.github_token }}
-          reporter: github-pr-review 
+          reporter: github-pr-review
       # For AeroSandbox
       - uses: mongolyy/reviewdog-action-biome@v1
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
-          workdir: "AeroSandbox" 
+          workdir: "AeroSandbox"
   tsc:
     name: runner / tsc
     runs-on: ubuntu-latest
@@ -43,15 +43,15 @@ jobs:
           workdir: AeroSandbox
   # FIXME: This doesn't quite work
   #linter_name:
-    #name: runner / LanguageTool
-    #runs-on: ubuntu-latest
-    #steps:
-      #- uses: actions/checkout@v4
-      #- uses: reviewdog/action-languagetool@v1
-        #with:
-          #github_token: ${{ secrets.github_token }}
-          #reporter: github-pr-review
-          #level: info
+  #name: runner / LanguageTool
+  #runs-on: ubuntu-latest
+  #steps:
+  #- uses: actions/checkout@v4
+  #- uses: reviewdog/action-languagetool@v1
+  #with:
+  #github_token: ${{ secrets.github_token }}
+  #reporter: github-pr-review
+  #level: info
   molt:
     name: molt action
     runs-on: ubuntu-latest

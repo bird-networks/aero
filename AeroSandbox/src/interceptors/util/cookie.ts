@@ -4,7 +4,7 @@
  * Neverthrow is used here because it contains potentially dangerous RegExp code
  */
 
-import { Result, ok as nOk, err as nErr, Err } from "neverthrow";
+import { Err, err as nErr, ok as nOk, Result } from "neverthrow";
 
 /**
  * Rewrites the `cookie` header
@@ -13,23 +13,19 @@ import { Result, ok as nOk, err as nErr, Err } from "neverthrow";
  * @param prefix The proxy prefix to be used
  * @returns The rewritten `cookie` header
  */
-function rewriteGetCookie(cookieHeader: string, proxyLoc: URL, prefix: string): Result<string, Error> {
+function rewriteGetCookie(
+	cookieHeader: string,
+	proxyLoc: URL,
+	prefix: string
+): Result<string, Error> {
 	try {
-		return nOk(cookieHeader
-			.replace(
-				new RegExp(
-					`(?<=path\=)${prefix}${proxyLoc.origin}.*(?= )`,
-					"g"
-				),
-				match =>
-					match.replace(
-						new RegExp(
-							`^(${prefix}${proxyLoc.origin})`
-						),
-						""
-					)
-			)
-			.replace(/_path\=.*(?= )/g, ""));
+		return nOk(
+			cookieHeader
+				.replace(new RegExp(`(?<=path\=)${prefix}${proxyLoc.origin}.*(?= )`, "g"), match =>
+					match.replace(new RegExp(`^(${prefix}${proxyLoc.origin})`), "")
+				)
+				.replace(/_path\=.*(?= )/g, "")
+		);
 	} catch (err) {
 		return fmtErrfailedToRewriteAHeader("get cookie", err.message);
 	}
@@ -44,10 +40,7 @@ function rewriteGetCookie(cookieHeader: string, proxyLoc: URL, prefix: string): 
 function rewriteSetCookie(cookie: string, proxyLoc: URL, prefix: string): Result<string, Error> {
 	try {
 		// Escape the paths
-		return nOk(cookie.replace(
-			/(?<=path\=).*(?= )/g,
-			`${prefix}${proxyLoc.origin}$& _path=$&`
-		));
+		return nOk(cookie.replace(/(?<=path\=).*(?= )/g, `${prefix}${proxyLoc.origin}$& _path=$&`));
 	} catch (err) {
 		return fmtErrfailedToRewriteAHeader("set cookie", err.message);
 	}
@@ -58,7 +51,11 @@ function rewriteSetCookie(cookie: string, proxyLoc: URL, prefix: string): Result
  * This is a helper method meant to be for internal-use only, but it is exposed just in case you want to use it for whatever reason.
  */
 function fmtErrfailedToRewriteAHeader(headerType: string, errMsg: string): Err<string, Error> {
-	return nErr(new Error(`Failed to rewrite the ${headerType} header (most likely a RegExp error)${ERR_LOG_AFTER_COLON}${errMsg}`));
+	return nErr(
+		new Error(
+			`Failed to rewrite the ${headerType} header (most likely a RegExp error)${ERR_LOG_AFTER_COLON}${errMsg}`
+		)
+	);
 }
 
 export { rewriteGetCookie, rewriteSetCookie };

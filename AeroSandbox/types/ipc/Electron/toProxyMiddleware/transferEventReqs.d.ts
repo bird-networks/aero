@@ -7,19 +7,19 @@ export interface GetWebcontentsIdReq {
 	clientId: string;
 	data: {
 		webContentsUUID: string;
-	}
+	};
 }
 
 /**
  * For the `<webview>` element, which is triggered as a fail response to the `<webview>.loadURL` method
  */
 export interface GetDomEventDidFailLoad {
-	for: "get",
+	for: "get";
 	clientId: string;
 	/**
-	* For `<webview>.loadURL`'s fail response
-	*/
+	 * For `<webview>.loadURL`'s fail response
+	 */
 	data: {
 		proxyUrl: string;
-	}
+	};
 }

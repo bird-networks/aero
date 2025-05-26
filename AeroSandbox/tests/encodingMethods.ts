@@ -35,9 +35,9 @@ interface BobCodecsMod {
 }
 interface MeteorCodecsMod {
 	default: {
-		encode: encodeFactoryMeteorGeneric,
-		decode: encodeFactoryMeteorGeneric,
-	}
+		encode: encodeFactoryMeteorGeneric;
+		decode: encodeFactoryMeteorGeneric;
+	};
 }
 interface UVCodecsMod {
 	none: encodeDecodeUVGeneric;
@@ -48,7 +48,7 @@ interface UVCodecsMod {
 type UVCodecsNebelForkMod = UVCodecsMod & {
 	getOrSetIdb: (storeName: string, key: string) => void;
 	nebelcrypt: encodeFuncUVGeneric;
-}
+};
 interface CompCodecsMod {
 	comp: encodeDecodeUVGeneric;
 }
@@ -61,40 +61,60 @@ async function testEncodingMethods() {
  * Creates a benchmark for the encoding methods used in aero and AeroSandbox
  * @returns The benchmark for the encoding methods wrapped in a `ResultAsync` from *Neverthrow* for safety
  */
-async function createBenchEncodingMethods(benchOptions: Options): Promise<ResultAsync<Bench, Error>> {
+async function createBenchEncodingMethods(
+	benchOptions: Options
+): Promise<ResultAsync<Bench, Error>> {
 	let bench: Bench;
 	try {
 		bench = new Bench(benchOptions);
 	} catch (err: any) {
-		return fmtNeverthrowErr("Failed to create the benchmark for encoding methods", err.message, true);
+		return fmtNeverthrowErr(
+			"Failed to create the benchmark for encoding methods",
+			err.message,
+			true
+		);
 	}
 
 	/** The URLs to get with */
 	let testUrlsRes = await getUrlTestData();
-	if (testUrlsRes.isErr())
-		return fmtNeverthrowErr("Failed to get test URLs required for benchmarking the encoding methods", testUrlsRes.error, true);
+	if (testUrlsRes.isErr()) {
+		return fmtNeverthrowErr(
+			"Failed to get test URLs required for benchmarking the encoding methods",
+			testUrlsRes.error,
+			true
+		);
+	}
 	const testUrls = testUrlsRes.value;
 
 	// Init the encoders
 	const precompXOR = new PrecompXOR(["2"]);
 	// @ts-ignore: Node can import from URLs with `customImportResolveHooks.mjs` pre-imported like how it is done in the package.json script to run this file
-	const uvCodecs: UVCodecsMod = await import("https://raw.githubusercontent.com/titaniumnetwork-dev/Ultraviolet/refs/heads/main/src/rewrite/codecs.js");
+	const uvCodecs: UVCodecsMod = await import(
+		"https://raw.githubusercontent.com/titaniumnetwork-dev/Ultraviolet/refs/heads/main/src/rewrite/codecs.js"
+	);
 	// @ts-ignore: Node can import from URLs with `customImportResolveHooks.mjs` pre-imported like how it is done in the package.json script to run this file
 	//const uvCodecsNebelFork: UVCodecsNebelForkMod = await import("https://raw.githubusercontent.com/Nebelung-Dev/Ultraviolet/refs/heads/main/src/rewrite/codecs.js");
 	// @ts-ignore: Node can import from URLs with `customImportResolveHooks.mjs` pre-imported like how it is done in the package.json script to run this file
-	const compCodecs: CompCodecsMod = await import("https://raw.githubusercontent.com/Eclipse-Proxy/Eclipse/refs/heads/main/src/codecs/comp.ts");
+	const compCodecs: CompCodecsMod = await import(
+		"https://raw.githubusercontent.com/Eclipse-Proxy/Eclipse/refs/heads/main/src/codecs/comp.ts"
+	);
 	// @ts-ignore: Node can import from URLs with `customImportResolveHooks.mjs` pre-imported like how it is done in the package.json script to run this file
-	const bobCodecs: BobCodecsMod = await import("https://gist.githubusercontent.com/theogbob/89bfd228d7ec646bac14db867f33b8b2/raw/09cac229de8fa84db84111218ed8cbc020627e44/sillyxor.js");
+	const bobCodecs: BobCodecsMod = await import(
+		"https://gist.githubusercontent.com/theogbob/89bfd228d7ec646bac14db867f33b8b2/raw/09cac229de8fa84db84111218ed8cbc020627e44/sillyxor.js"
+	);
 	// @ts-ignore: Node can import from URLs with `customImportResolveHooks.mjs` pre-imported like how it is done in the package.json script to run this file
-	const meteorCodecs: MeteorCodecsMod = await import("https://raw.githubusercontent.com/MeteorProxy/meteor/refs/heads/main/src/codecs/locvar.ts")
+	const meteorCodecs: MeteorCodecsMod = await import(
+		"https://raw.githubusercontent.com/MeteorProxy/meteor/refs/heads/main/src/codecs/locvar.ts"
+	);
 	const doNothingWithUrl = (url: string) => url;
 
 	const sharedKey = "2";
 	bench.add(`Precomputed XOR (with key "${sharedKey}")`, () => {
 		for (const testUrl of testUrls) {
 			const encUrlRes = precompXOR.encodeUrl(testUrl, "2");
-			if (encUrlRes.isErr())
+			if (encUrlRes.isErr()) {
 				throw fmtErr("Failed to encode the URL with precomputed XOR	", encUrlRes.error);
+			}
 			const encUrl = encUrlRes.value;
 			precompXOR.decodeUrl(encUrl, "2");
 			//console.log(encUrl);
@@ -153,7 +173,7 @@ async function createBenchEncodingMethods(benchOptions: Options): Promise<Result
 			const encUrl = doNothingWithUrl(testUrl);
 			doNothingWithUrl(encUrl);
 		}
-	})
+	});
 
 	return okAsync(bench);
 }
@@ -164,21 +184,25 @@ async function createBenchEncodingMethods(benchOptions: Options): Promise<Result
 const isCLI =
 	// For Deno
 	// @ts-ignore: This is a Deno-only feature
-	"Deno" in globalThis ? import.meta.main :
-		// For Node (this does the same thing functionally as the above)
-		import.meta.url === `file://${process.argv[1]}`;
+	"Deno" in globalThis
+		? import.meta.main // For Node (this does the same thing functionally as the above)
+		: import.meta.url === `file://${process.argv[1]}`;
 if (isCLI) {
 	(async () => {
 		// TODO: Add a flag for iterations
 		const benchEncodingMethodsResRes = await createBenchEncodingMethods({
 			iterations: 1000,
 		});
-		if (benchEncodingMethodsResRes.isErr())
-			throw fmtErr("Failed to create the benchmarks for encoding methods", benchEncodingMethodsResRes.error.message);
+		if (benchEncodingMethodsResRes.isErr()) {
+			throw fmtErr(
+				"Failed to create the benchmarks for encoding methods",
+				benchEncodingMethodsResRes.error.message
+			);
+		}
 		const benchEncodingMethodsRes = benchEncodingMethodsResRes.value;
-		await benchEncodingMethodsRes.run()
+		await benchEncodingMethodsRes.run();
 		const table = benchEncodingMethodsRes.table();
-		const tableMs = table.map((row) => {
+		const tableMs = table.map(row => {
 			// @ts-ignore
 			for (const [testName, val] of Object.entries(row)) {
 				if (testName === "Latency median (ns)") {
@@ -189,7 +213,7 @@ if (isCLI) {
 				}
 			}
 			return row;
-		})
+		});
 		console.table(tableMs);
 	})();
 }

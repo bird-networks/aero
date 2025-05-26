@@ -6,8 +6,9 @@ export default {
 		apply(target, that, args) {
 			const [arr, opts] = args;
 
-			if (isHTML(opts.type))
+			if (isHTML(opts.type)) {
 				args[0] = arr.map((html: string) => $aero.init + html);
+			}
 
 			const ret: any = Reflect.apply(target, that, args);
 
@@ -16,7 +17,7 @@ export default {
 			ret.size = size;
 
 			return ret;
-		}
+		},
 	},
-	globalProp: "Blob"
+	globalProp: "Blob",
 } as APIInterceptor;

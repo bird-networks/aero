@@ -32,12 +32,10 @@ export default class GenericLogger {
 	 * @msgs The messages you want to log
 	 */
 	log(branding: string, msgs: string | string[]): void {
-		if (!Array.isArray(msgs))
-			msgs = [msgs];
+		if (!Array.isArray(msgs)) msgs = [msgs];
 
 		// Log all of the messages
-		for (const msg in msgs)
-			console.log(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
+		for (const msg in msgs) console.log(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
 	}
 	/**
 	 * A method that wraps `console.warn` with custom branding using bubbles
@@ -45,25 +43,19 @@ export default class GenericLogger {
 	 * @msgs The messages you want to log
 	 */
 	warn(branding: string, msgs: string | string[]): void {
-		if (!Array.isArray(msgs))
-			msgs = [msgs];
+		if (!Array.isArray(msgs)) msgs = [msgs];
 
 		// Log all of the messages
-		for (const msg in msgs)
-			console.warn(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
+		for (const msg in msgs) console.warn(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
 	}
 	/**
 	 * A method that wraps `console.debug` with custom branding using bubbles only if debug mode is enabled.
 	 * @branding The name of the proxy and the text shown inside of the bubble
 	 * @msgs The messages you want to log
 	 */
-	debug(
-		branding: string,
-		msgs: string | string[],
-	): void {
+	debug(branding: string, msgs: string | string[]): void {
 		if (this.debugMode) {
-			if (!Array.isArray(msgs))
-				msgs = [msgs];
+			if (!Array.isArray(msgs)) msgs = [msgs];
 
 			// Log all of the messages
 			for (const msg in msgs)
@@ -76,16 +68,11 @@ export default class GenericLogger {
 	 * @branding The name of the proxy and the text shown inside of the bubble
 	 * @msgs The messages you want to log
 	 */
-	error(
-		branding: string,
-		msgs: string | string[],
-	): void {
-		if (!Array.isArray(msgs))
-			msgs = [msgs];
+	error(branding: string, msgs: string | string[]): void {
+		if (!Array.isArray(msgs)) msgs = [msgs];
 
 		// Log all of the messages
-		for (const msg in msgs)
-			console.error(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
+		for (const msg in msgs) console.error(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
 	}
 	/**
 	 * Log an error with the fatal bubble attached in addition to the branded bubble
@@ -94,8 +81,7 @@ export default class GenericLogger {
 	 * @msgs The messages you want to log
 	 */
 	fatalErr(branding: string, msgs: string | string[]): void {
-		if (!Array.isArray(msgs))
-			msgs = [msgs];
+		if (!Array.isArray(msgs)) msgs = [msgs];
 
 		// Log all of the messages
 		for (const msg in msgs)
@@ -113,7 +99,7 @@ export default class GenericLogger {
  * The Logger meant to be used in aero's SW
  */
 export class AeroLogger extends GenericLogger {
-	options: LoggerOptions;
+	options?: LoggerOptions;
 
 	/**
 	  * @param debugMode Log to the console when `this.debug(...)` is called
@@ -121,7 +107,7 @@ export class AeroLogger extends GenericLogger {
 	  */
 	constructor(debugMode: boolean, options?: LoggerOptions) {
 		super(debugMode);
-		if (options) this.options = options;
+		this.options = options;
 	}
 
 	/**
@@ -135,7 +121,7 @@ export class AeroLogger extends GenericLogger {
 	 * A method that wraps `console.warn` with aero branding using bubbles
 	 * @param msgs The messages you want to log
 	 */
-	warn(msgs: string | string[][] | string): void {
+	warn(msgs: string | string[]): void {
 		super.warn("aero SW", msgs);
 	}
 	/**
@@ -156,7 +142,7 @@ export class AeroLogger extends GenericLogger {
 	}
 	fatalErr(msgs: string | string[]): /* Response */ Error {
 		super.fatalErr("aero SW", msgs);
-		return new Error(`Caught Fatal Error: ${msgs}`);
+		return new Error(`Caught Fatal Error: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`);
 		/*
 		TODO: Only show the crash string when the proxy is in DEBUG mode
 		TODO: Unify the crash screen on the SW handler with extras and this one
@@ -185,7 +171,7 @@ export class AeroLogger extends GenericLogger {
 export class AeroSandboxLogger extends GenericLogger {
 	options: LoggerOptions;
 
-	constructor(debugMode: boolean; options: LoggerOptions) {
+	constructor(debugMode: boolean, options: LoggerOptions) {
 		super(debugMode);
 		this.options = options;
 	}
@@ -204,7 +190,7 @@ export class AeroSandboxLogger extends GenericLogger {
 		super.fatalErr("aero sandbox", msgs);
 
 		if (this.options.htmlTemplatingCallback !== undefined)
-			this.options.htmlTemplatingCallback(msgs);
+			this.options.htmlTemplatingCallback(Array.isArray(msgs) ? msgs.join(", ") : msgs);
 	}
 }
 
@@ -214,7 +200,7 @@ export class AeroSandboxLogger extends GenericLogger {
  * TODO: Write JSDoc examples for this
  */
 export function genBubbleStyle(color: string): string {
-	return /* css */`
+	return /* css */ `
 color: white;
 background-color: ${color};
 padding: 3px 6px 3px 6px;

@@ -14,7 +14,7 @@ import { rewriteAuthClient } from "./auth";
 
 // Utility
 import { afterPrefix } from "$util/getProxyURL";
-import getSiteDirective from "$shared/cors/siteTests";
+import getSiteDirective, { isSameSite } from "$shared/security/siteTests";
 
 import type BareClient from "@mercuryworkshop/bare-mux";
 
@@ -30,7 +30,10 @@ interface Passthrough {
  * A function that rewrites the request headers for aero
  * @param headers The headers to rewrite
  */
-export default async (headers: Headers, ctx: Passthrough): Promise<ResultAsync<void, Error>> => {
+export default async (
+	headers: Headers,
+	ctx: Passthrough,
+): Promise<ResultAsync<void, Error>> => {
 	for (const [key, value] of headers.entries()) {
 		if (key === "host") {
 			headers.set(key, ctx.proxyUrl?.host);
@@ -47,8 +50,8 @@ export default async (headers: Headers, ctx: Passthrough): Promise<ResultAsync<v
 		// TODO: Ignore commas inside of quotes
 		/*
 		if (key === "cookie") {
-			headers.set(key, rewriteGetCookie(value, proxyUrl));
-			continue;
+		  headers.set(key, rewriteGetCookie(value, proxyUrl));
+		  continue;
 		}
 		*/
 		if (
@@ -58,18 +61,21 @@ export default async (headers: Headers, ctx: Passthrough): Promise<ResultAsync<v
 			continue;
 		}
 		if (key === "sec-fetch-site") {
-			if (value === "none")
+			if (value === "none") {
 				continue;
-			const proxifiedDirectiveRes = await getSiteDirective(ctx.proxyUrl, ctx.clientUrl, ctx.bc);
-			if (proxifiedDirectiveRes.isErr())
-				// @ts-ignore
-				return fmtNeverthrowErr("Failed to create and get the proxified site directive for rewriting the header Sec-Fetch-Site", proxifiedDirectiveRes.error);
-			headers.set(key, proxifiedDirectiveRes.value);
+			}
+			const proxifiedDirective = await getSiteDirective(
+				ctx.proxyUrl,
+				ctx.clientUrl,
+				ctx.bc,
+			);
+			headers.set(key, proxifiedDirective);
 			continue;
 		}
 		// Delete the `x-aero-*` headers
-		if (key.startsWith("x-aero"))
+		if (key.startsWith("x-aero")) {
 			headers.delete(key);
+		}
 	}
-	return okAsync(undefined)
+	return okAsync(undefined);
 };

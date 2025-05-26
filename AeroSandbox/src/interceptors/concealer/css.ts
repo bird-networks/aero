@@ -19,11 +19,12 @@ function getSheet(sheet: CSSStyleSheet): CSSStyleSheet {
 			} else if (prop === "parentStyleSheet") {
 				// Parent recursion
 				const parentStyleSheet = target.parentStyleSheet;
-				if (parentStyleSheet !== null)
+				if (parentStyleSheet !== null) {
 					return getSheet(parentStyleSheet);
+				}
 			}
 			return target[prop];
-		}
+		},
 	});
 }
 
@@ -38,7 +39,7 @@ function getProcessingInstructionSheet(
 				if (sheet !== null) return getSheet(sheet);
 			}
 			return target[prop];
-		}
+		},
 	});
 }
 
@@ -51,13 +52,15 @@ export default {
 
 		return ret;
 	},
-	conceals: [{
-		what: "CSSStyleSheet.href",
-		revealerType: {
-			type: "url",
-			reveals: "escapedUrl"
-		}
-	}],
+	conceals: [
+		{
+			what: "CSSStyleSheet.href",
+			revealerType: {
+				type: "url",
+				reveals: "escapedUrl",
+			},
+		},
+	],
 	globalProp: "document.styleSheets",
-	exposedContexts: ExposedContextsEnum.window
+	exposedContexts: ExposedContextsEnum.window,
 } as APIInterceptor;

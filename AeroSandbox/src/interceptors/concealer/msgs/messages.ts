@@ -6,44 +6,47 @@ import { ExposedContextsEnum } from "$types/enums/apiInterceptors";
 // Utility
 import { afterPrefix } from "$intUtil/getProxyURL";
 
-const apiInterceptors = [{
-	proxyHandler: {
-		apply(_target, _that, args) {
-			// @ts-ignore
-			args[1] = eventInterceptor(...args);
-			return Reflect.apply(_target, _that, args);
+const apiInterceptors = [
+	{
+		proxyHandler: {
+			apply(_target, _that, args) {
+				// @ts-ignore
+				args[1] = eventInterceptor(...args);
+				return Reflect.apply(_target, _that, args);
+			},
 		},
+		globalProp: "addEventListener",
+		exposedContexts: ExposedContextsEnum.window,
 	},
-	globalProp: "addEventListener",
-	exposedContexts: ExposedContextsEnum.window,
-}, {
-	proxyHandler: {
-		// FIXME: Breaks on Google
-		apply(_target, _that, args) {
-			let [data, origin] = args;
+	{
+		proxyHandler: {
+			// FIXME: Breaks on Google
+			apply(_target, _that, args) {
+				let [data, origin] = args;
 
-			if (origin !== "*") {
-				args[1] = "*";
+				if (origin !== "*") {
+					args[1] = "*";
 
-				data.origin = origin;
-				args[0] = data;
-			}
+					data.origin = origin;
+					args[0] = data;
+				}
 
-			return Reflect.apply(_target, _that, args);
+				return Reflect.apply(_target, _that, args);
+			},
 		},
+		globalProp: "postMessage",
+		exposedContexts: ExposedContextsEnum.window,
 	},
-	globalProp: "postMessage",
-	exposedContexts: ExposedContextsEnum.window,
-}];
+];
 
 for (const [eventName] of ["message", "messageerror", "storage", "hashchange"]) {
 	const proxifier = listener => eventInterceptor(eventName, listener);
 	apiInterceptors.push({
-		proxifyGetter: (_ctx) => proxifier,
-		proxifySetter: (_ctx) => proxifier,
+		proxifyGetter: _ctx => proxifier,
+		proxifySetter: _ctx => proxifier,
 		globalProp: `on${eventName}`,
 		exposedContexts: ExposedContextsEnum.window,
-	})
+	});
 }
 
 function eventInterceptor(type, listener) {
@@ -71,6 +74,5 @@ function eventInterceptor(type, listener) {
 
 	return listener;
 }
-
 
 export default apiInterceptors as APIInterceptor[];

@@ -21,25 +21,32 @@ async function main() {
 	const properDirType = debugMode ? "debug" : "prod";
 	const properDir = path.resolve(__dirname, "..", "dist", properDirType);
 
-	console.log(`Initializing for ${properDirType} build in ${properDir} (Debug mode: ${debugMode})...`);
+	console.log(
+		`Initializing for ${properDirType} build in ${properDir} (Debug mode: ${debugMode})...`
+	);
 
 	try {
 		const result = await initAll(
 			{
 				dist: path.resolve(__dirname, "..", "dist"),
-				proper: properDir
+				proper: properDir,
 			},
 			{
 				verboseMode: debugMode,
-				properDirType
+				properDirType,
 			}
 		);
 
 		result.match(
 			() => {
-				console.log("Initialization successful, running main build script (npm run buildRaw)...");
-				const buildProcess = spawn("npm", ["run", "buildRaw"], { stdio: "inherit", shell: true });
-				buildProcess.on("close", (code) => {
+				console.log(
+					"Initialization successful, running main build script (npm run buildRaw)..."
+				);
+				const buildProcess = spawn("npm", ["run", "buildRaw"], {
+					stdio: "inherit",
+					shell: true,
+				});
+				buildProcess.on("close", code => {
 					if (code !== 0) {
 						console.error(`'npm run buildRaw' exited with code ${code}`);
 						process.exit(code || 1);

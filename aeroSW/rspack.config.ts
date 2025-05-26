@@ -1,3 +1,3 @@
-import createRspackConfig from "../aeroSW/createRspackConfig";
+import createRspackConfig from "./createRspackConfig";
 
 export default createRspackConfig();

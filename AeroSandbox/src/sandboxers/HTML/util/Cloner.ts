@@ -24,11 +24,13 @@ export default class Cloner {
 
 		copy["observed"] = true;
 
-		for (const name of el.getAttributeNames())
+		for (const name of el.getAttributeNames()) {
 			if (name !== "integrity") copy[name] = el[name];
+		}
 
-		if ("innerHTML" in el && el.innerHTML !== "")
+		if ("innerHTML" in el && el.innerHTML !== "") {
 			safeText(copy, el.innerHTML);
+		}
 	}
 	clone() {
 		// Insert

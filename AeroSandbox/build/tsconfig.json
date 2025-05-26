@@ -5,16 +5,12 @@
 		"moduleResolution": "NodeNext",
 		"module": "NodeNext",
 		"baseUrl": ".",
+		"noEmit": true,
 		"paths": {
 			"../types/*": ["../types/*"],
 			"../src/*": ["../src/*"],
 			"$types/*": ["../types/*"]
 		}
 	},
-	"include": [
-		"runtime/**/*.ts",
-		"../types/**/*.d.ts",
-		"../types/**/*.ts",
-		"../src/**/*.ts"
-	]
-} 
+	"include": ["runtime/**/*.ts", "../types/**/*.d.ts", "../types/**/*.ts", "../src/**/*.ts"]
+}

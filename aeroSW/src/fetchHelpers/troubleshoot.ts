@@ -1,28 +1,33 @@
 // Neverthrow for improved error handling
-import type { Result } from "neverthrow"
-import { ok as nOk, err as nErr } from "neverthrow";
+import type { Result } from "neverthrow";
+import { err as nErr, ok as nOk } from "neverthrow";
 import { fmtNeverthrowErr } from "$shared/fmtErr";
-import { createGenericTroubleshootingStrs } from "$shared/genericTroubleshootingStrs";
+// Note: aeroLoggerType not needed as logger is global
+import createGenericTroubleshootingStrs from "$shared/createGenericTroubleshootingStrs";
 
 // For runtime type validation
 import typia from "typia";
 
-// For runtime type validation
-import type BareMux from "@mercuryworkshop/bare-mux";
+// For runtime type validation  
+import BareMux from "@mercuryworkshop/bare-mux";
 import type { AeroLogger } from "$shared/Loggers";
-import type { Config } from "$aero/config";
+// Note: Config and aeroConfig are globals
 
 const baremuxValidation = typia.validate<BareMux>(BareMux);
 const loggerValidation = typia.validate<AeroLogger>(logger);
-const configValidation = typia.validate<Config>(aeroConfig);
+const configValidation = typia.validate<any>(aeroConfig);
 
 /** Shared strings used across aero for error messages **/
 // TODO: Make something like this for AeroSandbox
+const genericStrs = createGenericTroubleshootingStrs(ERR_LOG_AFTER_COLON);
+
 export const troubleshootingStrs = {
-	...createGenericTroubleshootingStrs(ERR_LOG_AFTER_COLON),
-	noFetchEventMsg: `${this.devErrTag}Can't validate the fetch event argument passed inside of aero's SW handler. This probably means you are using aero's SW handler outside of the SW, which is improper use. Perhaps you should look at the server-only docs for aero if you want to run it on the server?`,
+	...genericStrs,
+	noFetchEventMsg:
+		`${genericStrs.devErrTag}Can't validate the fetch event argument passed inside of aero's SW handler. This probably means you are using aero's SW handler outside of the SW, which is improper use. Perhaps you should look at the server-only docs for aero if you want to run it on the server?`,
 	/** A message for when the user fails to import a bundle properly or not at all */
-	tryImportingItMsg: `. Try importing the bundle. Perhaps you ordered the bundles wrong (with importScripts)?
+	tryImportingItMsg:
+		`. Try importing the bundle. Perhaps you ordered the bundles wrong (with importScripts)?
 Ensure the bundles are in this order:
 	1. BareMux
 	2. aero loggers (logger.js)
@@ -30,40 +35,68 @@ Ensure the bundles are in this order:
 	3. aero's config (config.js)
 	5. aero's SW bundle (aeroSW.js)`,
 	/** Whose fault it is for the configs not validating */
-	validationTarget: DEBUG ? "you (the proxy site developer)" : "the proxy site hoster"
-}
+	validationTarget: DEBUG
+		? "you (the proxy site developer)"
+		: "the proxy site hoster",
+};
 
 /**
  * Checks for common proxy site dev problems when configuring their SW for aero and validate that everything is prepared properly for the rest of aero's SW handler
  */
 export default function troubleshoot(): Result<void, Error> {
 	// Sanity checks to ensure that everything has been initalized properly
-	if (!("logger" in self))
-		return nErr(new Error(`${troubleshootingStrs.devErrTag}The logger hasn't been initalized!${troubleshootingStrs.tryImportingItMsg}`));
-	if (!("BareMux" in self))
-		throw nErr(new Error(`${troubleshootingStrs.devErrTag}There is no bare client (likely BareMux) provided!${troubleshootingStrs.tryImportingItMsg}`));
+	if (!("logger" in self)) {
+		return nErr(
+			new Error(
+				`${troubleshootingStrs.devErrTag}The logger hasn't been initalized!${troubleshootingStrs.tryImportingItMsg}`,
+			),
+		);
+	}
+	if (!("BareMux" in self)) {
+		throw nErr(
+			new Error(
+				`${troubleshootingStrs.devErrTag}There is no bare client (likely BareMux) provided!${troubleshootingStrs.tryImportingItMsg}`,
+			),
+		);
+	}
 	const troubleshootJustConfigsRes = troubleshootJustConfigs();
-	if (troubleshootJustConfigsRes.isErr())
+	if (troubleshootJustConfigsRes.isErr()) {
 		// Propogate the error result up the chain (`troubleshootJustConfigs` is already meant to handle errors itself)
 		return troubleshootJustConfigsRes;
+	}
 	/// Runtime type validations
-	if (!baremuxValidation.success)
-		// @ts-ignore: the spread is intentional
-		return fmtNeverthrowErr(`${troubleshootingStrs.devErrTag}The BareMux bundle you provided is invalid! You may have imported a bare client that doesn't fully support the BareMux 2.0 specification. This could happen if you are using the classic bare client from TompHTTP and not the new one from Mercury Workshop or if you haven't updated the one from Mercury Workshop to 2.0+.`, ...baremuxValidation.errors);
-	if (!loggerValidation.success)
-		// @ts-ignore: the spread is intentional
-		return fmtNeverthrowErr(`${troubleshootingStrs.devErrTag}The logger bundle ${troubleshootingStrs.validationTarget} provided is invalid!`, ...loggerValidation.errors);
-	if (!configValidation.success)
-		// @ts-ignore: the spread is intentional
-		return fmtNeverthrowErr(`${troubleshootingStrs.devErrTag}The config ${troubleshootingStrs.validationTarget} provided is invalid!`, ...configValidation.errors);
+	if (!baremuxValidation.success) {
+		return nErr(
+			new Error(`${troubleshootingStrs.devErrTag}The BareMux bundle you provided is invalid! You may have imported a bare client that doesn't fully support the BareMux 2.0 specification. This could happen if you are using the classic bare client from TompHTTP and not the new one from Mercury Workshop or if you haven't updated the one from Mercury Workshop to 2.0+. Errors: ${baremuxValidation.errors.map(e => e.path).join(", ")}`),
+		);
+	}
+	if (!loggerValidation.success) {
+		return nErr(
+			new Error(`${troubleshootingStrs.devErrTag}The logger bundle ${troubleshootingStrs.validationTarget} provided is invalid! Errors: ${loggerValidation.errors.map(e => e.path).join(", ")}`),
+		);
+	}
+	if (!configValidation.success) {
+		return nErr(
+			new Error(`${troubleshootingStrs.devErrTag}The config ${troubleshootingStrs.validationTarget} provided is invalid! Errors: ${configValidation.errors.map(e => e.path).join(", ")}`),
+		);
+	}
 	return nOk(undefined);
 }
 
-export function troubleshootJustConfigs(): Result<void, Err> {
+export function troubleshootJustConfigs(): Result<void, Error> {
 	if (!("aeroConfig" in self)) {
-		if ("defaultConfig" in self)
-			return nErr(new Error(`${troubleshootingStrs.devErrTag}There is no default config provided! You need to create one other than the default `));
-		return nErr(new Error(`${troubleshootingStrs.devErrTag}There is no config provided!${troubleshootingStrs.tryImportingItMsg}`));
+		if ("defaultConfig" in self) {
+			return nErr(
+				new Error(
+					`${troubleshootingStrs.devErrTag}There is no default config provided! You need to create one other than the default `,
+				),
+			);
+		}
+		return nErr(
+			new Error(
+				`${troubleshootingStrs.devErrTag}There is no config provided!${troubleshootingStrs.tryImportingItMsg}`,
+			),
+		);
 	}
 	return nOk(undefined);
 }

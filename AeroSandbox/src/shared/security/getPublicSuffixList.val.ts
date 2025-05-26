@@ -17,21 +17,28 @@ interface ValOptions {
 
 /**
  * Gets the parsed public suffix list from the public suffix API
- * @param errLogAfterColon 
- * @returns 
+ * @param errLogAfterColon
+ * @returns
  * @throws {Error} Throws an error the public suffixes list could not be fetched. The reason why this Error isn't wrapped with *Neverthrow* is because this is a compile-time method and the error should be thrown at compile-time. There is no need for invalid builds.
  */
-export default async function ({ errLogAfterColon, publicSuffixApi, failedToFetchSuffixErrMsg }: ValOptions): string[] {
+export default async function ({
+	errLogAfterColon,
+	publicSuffixApi,
+	failedToFetchSuffixErrMsg,
+}: ValOptions): Promise<string[]> {
 	const { fmtErr } = createErrorFmters(errLogAfterColon);
 
 	// Try to get the public suffixes list
 	let publicSuffixesRes: Response;
 	try {
 		publicSuffixesRes = await fetch(publicSuffixApi);
-	} catch (err) {
-		throw fmtErr(failedToFetchSuffixErrMsg, err);
+	} catch (err: unknown) {
+		const formattedErr = err instanceof Error ? err : String(err);
+		throw fmtErr(failedToFetchSuffixErrMsg, formattedErr);
 	}
 	/** The public suffixes list - @see https://publicsuffix.org/ */
 	const publicSuffixesText = await publicSuffixesRes.text();
-	return publicSuffixesText.split("\n").filter(line => !(line.startsWith("//") || line.trim() === ""));
+	return publicSuffixesText
+		.split("\n")
+		.filter(line => !(line.startsWith("//") || line.trim() === ""));
 }

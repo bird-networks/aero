@@ -4,16 +4,23 @@
  */
 
 import type {
-	InNewStatementRefPassthrough,
 	BlockDepthRefPassthrough,
-	TrackPropertyChainRefPassthrough,
 	InitHandlersRefPassthrough,
+	EnteredNewStatementRefPassthrough,
 	KeywordGenConfig,
-	TrackerConfig
+	TrackerConfig,
+	TrackPropertyChainRefPassthrough,
 } from "./index.js";
-import { createHandleEscapeChars, StringSpecificHandlers, processStatement } from "./internal/handlers.js";
+import {
+	createHandleEscapeChars,
+	processStatement,
+	StringSpecificHandlers,
+} from "./internal/handlers.js";
 import { createBlockDepthCounter } from "./internal/counters.js";
-import { createPropertyChainTracker, createProxyApplyTracker } from "./internal/trackers.js"
+import {
+	createPropertyChainTracker,
+	createProxyApplyTracker,
+} from "./internal/trackers.js";
 
 /**
  * Allows you to incrementally parse parts of the script with distinction, where you can later use the results to replace keywords with the methods provided by *ProxyParse* in replaceKeyword
@@ -23,21 +30,26 @@ import { createPropertyChainTracker, createProxyApplyTracker } from "./internal/
  */
 /*@__INLINE__*/
 export default function* processKeyword(script: string, config: {
-	keywordGenConfig: KeywordGenConfig,
-	trackers: TrackerConfig
+	keywordGenConfig: KeywordGenConfig;
+	trackers: TrackerConfig;
 }) {
 	/** Is the character the first character in a new statement? (e.g. `;` or `}` or `(`) */
-	const inNewStatementRefPassthrough: InNewStatementRefPassthrough = {
-		inNewStatement: true
+	const inNewStatementRefPassthrough: EnteredNewStatementRefPassthrough = {
+		enteredNewStatement: true,
 	};
 
 	const blockDepthRefPassthrough: Partial<BlockDepthRefPassthrough> = {};
-	if (config.trackers.blockDepth ||
+	if (
+		config.trackers.blockDepth ||
 		// This system requires trackPropertyChain, so might as well include it
-		config.trackers.propertyChain)
+		config.trackers.propertyChain
+	) {
 		blockDepthRefPassthrough.blockDepth = 0;
+	}
 
-	const trackPropertyChainRefPassthrough: Partial<TrackPropertyChainRefPassthrough> = {};
+	const trackPropertyChainRefPassthrough: Partial<
+		TrackPropertyChainRefPassthrough
+	> = {};
 	if (config.trackers.propertyChain) {
 		trackPropertyChainRefPassthrough.currentChain = "";
 		trackPropertyChainRefPassthrough.inPropertyChain = false;
@@ -48,20 +60,28 @@ export default function* processKeyword(script: string, config: {
 	const initHandlersRefPassthrough: InitHandlersRefPassthrough = {
 		inString: false,
 		inTemplateLiteral: false,
-		inRegex: false
-	}
+		inRegex: false,
+	};
 
 	const handleEscapeChars = createHandleEscapeChars();
-	const stringSpecificHandlers = new StringSpecificHandlers(initHandlersRefPassthrough, config.keywordGenConfig.supportStrings, config.keywordGenConfig.supportTemplateLiterals)
+	const stringSpecificHandlers = new StringSpecificHandlers(
+		initHandlersRefPassthrough,
+		config.keywordGenConfig.supportStrings,
+		config.keywordGenConfig.supportTemplateLiterals,
+	);
 
 	// Init counters
 	/** A counter for the current depth into blocks */
 	const blockDepthCounter = createBlockDepthCounter(
-		blockDepthRefPassthrough);
+		blockDepthRefPassthrough,
+	);
 
 	// Init trackers
 	/** Track the property chain */
-	const propertyChainTracker = createPropertyChainTracker(blockDepthRefPassthrough, trackPropertyChainRefPassthrough);
+	const propertyChainTracker = createPropertyChainTracker(
+		blockDepthRefPassthrough,
+		trackPropertyChainRefPassthrough,
+	);
 	/** Track the apply handler in the `Proxy` object */
 	const proxyApplyTracker = createProxyApplyTracker();
 
@@ -69,41 +89,48 @@ export default function* processKeyword(script: string, config: {
 		const char = script[i];
 
 		// Handle escape character
-		if (handleEscapeChars(char))
+		if (handleEscapeChars(char)) {
 			yield {
 				char,
-				i
+				i,
 			};
+		}
 		// Handle string literals
-		if (stringSpecificHandlers.stringLiteral(char))
+		if (stringSpecificHandlers.stringLiteral(char)) {
 			yield {
 				char,
-				i
+				i,
 			};
+		}
 		// Handle template literals
-		if (stringSpecificHandlers.templateLiteral(char))
+		if (stringSpecificHandlers.templateLiteral(char)) {
 			yield {
 				char,
-				i
+				i,
 			};
+		}
 		// Handle RegEx
-		if (stringSpecificHandlers.regEx(char))
+		if (stringSpecificHandlers.regEx(char)) {
 			yield {
 				char,
-				i
+				i,
 			};
+		}
 
 		// Track block depth
 		blockDepthCounter(char);
 
 		// Check for new line or semicolon to start a new statement
-		if (processStatement(char, inNewStatementRefPassthrough.inNewStatement))
+		if (processStatement(char, inNewStatementRefPassthrough)) {
 			yield {
 				char,
-				i
+				i,
 			};
+		}
 		// We are no longer in a new statemnet
-		if (inNewStatementRefPassthrough.inNewStatement) inNewStatementRefPassthrough.inNewStatement = false;
+		if (inNewStatementRefPassthrough.enteredNewStatement) {
+			inNewStatementRefPassthrough.enteredNewStatement = false;
+		}
 
 		/** Did this character end the property chain? */
 		if (config.trackers.propertyChain) {
@@ -112,17 +139,18 @@ export default function* processKeyword(script: string, config: {
 			yield {
 				i,
 				inNewStatement: inNewStatementRefPassthrough,
-				...propertyChainData
+				...propertyChainData,
 			};
 		} else if (config.trackers.proxyApply) {
 			const applyData = proxyApplyTracker(char);
-			if (applyData)
+			if (applyData) {
 				yield {
 					i,
 					blockDepth: blockDepthRefPassthrough.blockDepth,
 					inNewStatement: inNewStatementRefPassthrough,
 					...applyData,
-				}
+				};
+			}
 		}
 		yield {
 			char,

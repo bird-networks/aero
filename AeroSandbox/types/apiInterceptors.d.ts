@@ -1,6 +1,18 @@
 import type { overwriteRecordsType } from "$types/generic";
-import type { InterceptionFeaturesEnum, URL_IS_ESCAPE, SupportEnum, ExposedContextsEnum, AltProtocolEnum } from "./apiInterceptors";
-export type { InterceptionFeaturesEnum, URL_IS_ESCAPE, SupportEnum, ExposedContextsEnum, AltProtocolEnum } from "./apiInterceptors";
+import type {
+	AltProtocolEnum,
+	ExposedContextsEnum,
+	InterceptionFeaturesEnum,
+	SupportEnum,
+	URL_IS_ESCAPE,
+} from "./apiInterceptors";
+export type {
+	AltProtocolEnum,
+	ExposedContextsEnum,
+	InterceptionFeaturesEnum,
+	SupportEnum,
+	URL_IS_ESCAPE,
+} from "./apiInterceptors";
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export type RevokableProxyRet = { proxy: any; revoke: () => void };
@@ -13,67 +25,79 @@ type CtxTypeShared = {
 	/** Runtime feature configuration */
 	featuresConfig: any;
 	this: any;
-}
+};
 type GeneratorCtxTypeProxyHandler = CtxTypeShared;
 type CreateProxifiedObjCtx = CtxTypeShared;
 export type ProxifiedObjType = RevokableProxyRet | CreateProxifiedObj;
-export type CreateProxifiedObj = (
-	ctx: CreateProxifiedObjCtx
-) => ProxifiedObjType;
+export type CreateProxifiedObj = (ctx: CreateProxifiedObjCtx) => ProxifiedObjType;
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 /** This is for trapping `get` */
 export type ProxifiedGetter = (ctx: CreateProxifiedObjCtx) => any;
 /** This is for trapping `get` */
-export type ProxifySetter = (ctx: CreateProxifiedObjCtx & {
-	/** The new value from the setter while trying to trap `set` */
-	newVal?: string
-}) => any;
-
-export type objectPropertyModifier = (
-	ctx: CreateProxifiedObjCtx
-) => void;
-
-type TypeShared<MORE_ESCAPE_TYPES> = Array<{
-	what: "URL_STRING"
-	is: URL_IS_ESCAPE
-} | ({
-	targeting: "VALUE_PROXIFIED_OBJ",
-	propsThatEscape: {
-		[key: string]: TypeShared<MORE_ESCAPE_TYPES>
+export type ProxifySetter = (
+	ctx: CreateProxifiedObjCtx & {
+		/** The new value from the setter while trying to trap `set` */
+		newVal?: string;
 	}
-} | {
-	targeting: "VALUE_PROXIFIED_OBJ",
-	props_that_reveal: {
-		[key: string]: TypeShared<MORE_ESCAPE_TYPES>
-	}
-}) | ({
-	targeting: "REAL_DATA_SIZE",
-} & ({
-	type: "BODY",
-	encoded: boolean
-} | {
-	type: "TRANSFER"
-})) | MORE_ESCAPE_TYPES>
+) => any;
+
+export type objectPropertyModifier = (ctx: CreateProxifiedObjCtx) => void;
+
+type TypeShared<MORE_ESCAPE_TYPES> = Array<
+	| {
+			what: "URL_STRING";
+			is: URL_IS_ESCAPE;
+	  }
+	| (
+			| {
+					targeting: "VALUE_PROXIFIED_OBJ";
+					propsThatEscape: {
+						[key: string]: TypeShared<MORE_ESCAPE_TYPES>;
+					};
+			  }
+			| {
+					targeting: "VALUE_PROXIFIED_OBJ";
+					props_that_reveal: {
+						[key: string]: TypeShared<MORE_ESCAPE_TYPES>;
+					};
+			  }
+	  )
+	| ({
+			targeting: "REAL_DATA_SIZE";
+	  } & (
+			| {
+					type: "BODY";
+					encoded: boolean;
+			  }
+			| {
+					type: "TRANSFER";
+			  }
+	  ))
+	| MORE_ESCAPE_TYPES
+>;
 type GenericProxifiedValue<MORE_ESCAPE_TYPES> = TypeShared<MORE_ESCAPE_TYPES>;
-type GenericProxyHandler<MORE_ESCAPE_TYPES> = ({
-	targeting: "API_PARAM" | "CONSTRUCTOR_PARAM" | "CONSTRUCTED_CLASS_PROPS",
-	/**
-	  * The index of the parameter in the function (the index starts from 1)
-	  */
-	targetingParam: number,
-	type: TypeShared<MORE_ESCAPE_TYPES>;
-} | {
-	targeting: "API_RETURN" | "CONSTRUCTOR_RETURN",
-	type: TypeShared<MORE_ESCAPE_TYPES>;
-})[];
+type GenericProxyHandler<MORE_ESCAPE_TYPES> = (
+	| {
+			targeting: "API_PARAM" | "CONSTRUCTOR_PARAM" | "CONSTRUCTED_CLASS_PROPS";
+			/**
+			 * The index of the parameter in the function (the index starts from 1)
+			 */
+			targetingParam: number;
+			type: TypeShared<MORE_ESCAPE_TYPES>;
+	  }
+	| {
+			targeting: "API_RETURN" | "CONSTRUCTOR_RETURN";
+			type: TypeShared<MORE_ESCAPE_TYPES>;
+	  }
+)[];
 
 type EscapeFixesProxifiedValue = GenericProxifiedValue<{}>;
 type EscapeFixesProxyHandler = GenericProxyHandler<{}>;
 
 type ConcealEscapeTypes = /** For perf emulation */ {
-	what: "REAL_SIZE",
-	propsThatReveal: string[]
-}
+	what: "REAL_SIZE";
+	propsThatReveal: string[];
+};
 type ConcealsProxifiedValue = GenericProxifiedValue<ConcealEscapeTypes>;
 type ConcealsProxyHandler = GenericProxyHandler<ConcealEscapeTypes>;
 
@@ -102,45 +126,59 @@ type APIInterceptorGeneric = {
 /** You use this when you haven't yet finished your implementation for your API and you want to skip it. If the Feature Flag DELETE_UNSUPPORTED_APIS is enabled, then it would delete the API instead of doing nothing. */
 export type APIInterceptorSkip = APIInterceptorGeneric & {
 	/** Please add a comment above setting this property explaining why you have decided to skip it */
-	skip: true,
-}
+	skip: true;
+};
 /** API initializer interceptor */
 export type APIInterceptorInitForAPI = {
 	/** Called to initialize the API with context */
 	init: (ctx: CtxTypeShared) => void;
 	/** The prop to the object of the API itself */
 	globalProp: string;
-}
-export type APIInterceptorForProxyObjects = APIInterceptorGeneric & ({
-	proxyHandler: ProxyHandler<any>;
-} | {
-	createProxyHandler: (ctx: CtxTypeShared) => ProxyHandler<any>;
-}) & ({
-	escapeFixes: GenericProxyHandler<unknown>;
-} | {
-	conceals: ConcealsProxifiedValue[];
-} | {
-	forCors: boolean;
-} | {
-	forStorage: boolean;
-})
+};
+export type APIInterceptorForProxyObjects = APIInterceptorGeneric &
+	(
+		| {
+				proxyHandler: ProxyHandler<any>;
+		  }
+		| {
+				createProxyHandler: (ctx: CtxTypeShared) => ProxyHandler<any>;
+		  }
+	) &
+	(
+		| {
+				escapeFixes: GenericProxyHandler<unknown>;
+		  }
+		| {
+				conceals: ConcealsProxifiedValue[];
+		  }
+		| {
+				forCors: boolean;
+		  }
+		| {
+				forStorage: boolean;
+		  }
+	);
 export type APIInterceptorForProxifiyingGettersAndSetters = APIInterceptorGeneric & {
 	proxifiedGetter?: ProxifiedGetter;
 	proxifySetter?: ProxifySetter;
-} & ({
-	escapeFixes: GenericProxifiedValue<unknown>[];
-} | {
-	conceals: ConcealsProxifiedValue[];
-} | {
-	forCors: boolean;
-});
+} & (
+		| {
+				escapeFixes: GenericProxifiedValue<unknown>[];
+		  }
+		| {
+				conceals: ConcealsProxifiedValue[];
+		  }
+		| {
+				forCors: boolean;
+		  }
+	);
 // TODO: Make it possible in AeroSandbox to view the API Interceptor and determine if it should be included in AeroSandbox or not with a handler
 /** This is what is exported in every API Interceptor. Omitting any of the properties with the Enum type will act as if every member of the Enum is present. */
 export type APIInterceptor =
 	| APIInterceptorInitForAPI
 	| APIInterceptorSkip
 	| APIInterceptorForProxyObjects
-	| APIInterceptorForProxifiyingGettersAndSetters
+	| APIInterceptorForProxifiyingGettersAndSetters;
 
 // TODO: Make something like SupportEnum, but instead you provide a browser string and it only includes API interceptors for the features supported by those browsers
 
@@ -159,7 +197,7 @@ export type AnyWorkerEnumMember =
 // Event stuff
 export type eventListener = (event) => any;
 export interface EventListener {
-	type: "window",
+	type: "window";
 	eventName: string;
 	listener: eventListener;
 }

@@ -14,14 +14,12 @@ const sharedProxyHandler = {
 		const item = localStorage.getItem("$aero_dbNames");
 		if (item !== null) {
 			const dbNames: string[] = JSON.parse(item);
-			if (dbNames.includes(proxifiedKey))
-				localStorage.setItem(
-					"$aero_dbNames",
-					JSON.stringify(dbNames.push(proxifiedKey))
-				);
+			if (dbNames.includes(proxifiedKey)) {
+				localStorage.setItem("$aero_dbNames", JSON.stringify(dbNames.push(proxifiedKey)));
+			}
 		}
 		return Reflect.apply(target, that, args);
-	}
+	},
 };
 
 export default [
@@ -29,11 +27,9 @@ export default [
 		init: () => {
 			const clear = $aero.sec.clear;
 			const all = clear.includes("'*'");
-			if (
-				all || clear.includes("'storage'") && localStorage.hasItem("$aero_dbNames")
-			) {
+			if (all || (clear.includes("'storage'") && localStorage.hasItem("$aero_dbNames"))) {
 				const dbNames = localStorage.getItem("$aero_dbNames");
-				if (dbNames !== null)
+				if (dbNames !== null) {
 					for (const dbName of dbNames) {
 						// @ts-ignore
 						openDatabase(dbName).transaction(tx => {
@@ -46,27 +42,26 @@ export default [
 										const tableName = data.rows.item(i).name;
 										if (
 											tableName.startsWith(escapeWithOrigin("")) &&
-											tableName !==
-											"__WebKitDatabaseInfoTable__"
-										)
-											tx.executeSql(
-												`DELETE FROM ${tableName}`
-											);
+											tableName !== "__WebKitDatabaseInfoTable__"
+										) {
+											tx.executeSql(`DELETE FROM ${tableName}`);
+										}
 									}
 								}
 							);
 						});
 					}
+				}
 			}
 		},
 		proxyHandler: sharedProxyHandler,
 		forCors: true,
 		globalProp: "openDatabase",
-		supports: SupportEnum.deprecated | SupportEnum.shippingChromium
+		supports: SupportEnum.deprecated | SupportEnum.shippingChromium,
 	},
 	{
 		proxyHandler: sharedProxyHandler,
 		globalProp: "openDatabaseSync",
-		supports: SupportEnum.deprecated | SupportEnum.shippingChromium
-	}
+		supports: SupportEnum.deprecated | SupportEnum.shippingChromium,
+	},
 ] as APIInterceptor[];

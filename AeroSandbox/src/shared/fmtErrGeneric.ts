@@ -6,13 +6,13 @@
 
 import type { Err, ResultAsync } from "neverthrow";
 import { err as nErr, errAsync as nErrAsync } from "neverthrow";
-import createGenericTroubleshootingStrs from "./createGenericTroubleshootingStrs.ts";
+import createGenericTroubleshootingStrs from "./createGenericTroubleshootingStrs";
 
 /**
  * I could've used a class for this, but I felt it would be overkill for its intended use case
  * @param errLogAfterColon A feature log to help with the formatting of the unpacked *Neverthrow* errors
  * @returns The methods for formatting *Neverthrow* errors
- * 
+ *
  * @example
  * export const { fmtErr, fmtNeverthrowErr } = createErrorFmters(ERR_LOG_AFTER_COLON);
  */
@@ -23,8 +23,12 @@ const createErrorFmters = (errLogAfterColon: string) => ({
 	 * @param originalErr The original error that was caught
 	 * @returns The formatted error
 	 */
-	fmtErr(explanation: string, originalErrs: string | readonly string[], customFaultTag?: string): Error {
-		return new Error(this.fmtRawErr(explanation, originalErrs, customFaultTag))
+	fmtErr(
+		explanation: string,
+		originalErrs: string | Error | readonly string[] | readonly Error[],
+		customFaultTag?: string
+	): Error {
+		return new Error(this.fmtRawErr(explanation, originalErrs, customFaultTag));
 	},
 	/**
 	 * Formats a *Neverthrow* error in a consistent way
@@ -35,16 +39,30 @@ const createErrorFmters = (errLogAfterColon: string) => ({
 	 */
 	// @ts-ignore I want to do this method switching, and it doesn't matter what the first template type is in `Err` from *Neverthrow*, because this method is meant to be generic
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	fmtNeverthrowErr(explanation: string, originalErrs: Error | readonly Error[], async = false, customFaultTag?: string): Err<any, Error> | ResultAsync<any, Error> {
-		const message = this.fmtRawErr(explanation, originalErrs, customFaultTag)
-		if (async)
-			return nErrAsync(message)
-		return nErr(message)
+	fmtNeverthrowErr(
+		explanation: string,
+		originalErrs: Error | string | readonly Error[] | readonly string[],
+		async = false,
+		customFaultTag?: string
+	): Err<any, Error> | ResultAsync<any, Error> {
+		const message = this.fmtRawErr(explanation, originalErrs, customFaultTag);
+		const wrappedErr = new Error(message);
+		if (async) return nErrAsync(wrappedErr);
+		return nErr(wrappedErr);
 	},
-	fmtRawErr: (explanation: string, originalErrs: Error | readonly Error[], customFaultTag?: string): string => {
-		const errsList: Error[] = Array.isArray(originalErrs) ? originalErrs : [originalErrs]
-		const tag = customFaultTag ?? createGenericTroubleshootingStrs(errLogAfterColon)!.aeroErrTag
-		return `${tag}${explanation}${errsList.map(err => (err.stack ?? "").split("\n").join("\n\t")).join(errLogAfterColon)}`
+	fmtRawErr: (
+		explanation: string,
+		originalErrs: Error | string | readonly Error[] | readonly string[],
+		customFaultTag?: string
+	): string => {
+		const errsList: Error[] = (Array.isArray(originalErrs) ? originalErrs : [originalErrs]).map(err =>
+			typeof err === "string" ? new Error(err) : err
+		);
+		const tag =
+			customFaultTag ?? createGenericTroubleshootingStrs(errLogAfterColon)!.aeroErrTag;
+		return `${tag}${explanation}${errsList
+			.map(err => (err.stack ?? "").split("\n").join("\n\t"))
+			.join(errLogAfterColon)}`;
 	},
 });
 export default createErrorFmters;

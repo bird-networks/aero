@@ -26,8 +26,9 @@ export default function fmtHTMLInjBundle({ DEBUG }: FeatureFlagsPassthrough) {
 	return {
 		cacheable: false,
 		code: `module.exports = \`${minifyHtml.minify(Buffer.from(base), {
-			keep_spaces_between_attributes: true,
-			keep_comments: DEBUG
-		})}\`})`
+			allow_removing_spaces_between_attributes: false,
+			keep_comments: DEBUG,
+		})
+			}\`})`,
 	};
 }

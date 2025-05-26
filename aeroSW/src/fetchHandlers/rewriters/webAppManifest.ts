@@ -1,6 +1,6 @@
 import type { WebAppManifest } from "web-app-manifest";
 
-import rewriteSrc from "$shared/src";
+import rewriteSrc from "$util/src";
 
 /**
  * A module to rewrite Web App Manifests
@@ -11,29 +11,37 @@ import rewriteSrc from "$shared/src";
 export default (body: string, proxyUrl: URL): string => {
 	const json: WebAppManifest = JSON.parse(body);
 
-	for (const prop of [
-		"scope",
-		"start_url",
-		"background_color",
-		"theme_color",
-		"shortcuts",
-		"screenshots"
-	]) {
+	for (
+		const prop of [
+			"scope",
+			"start_url",
+			"background_color",
+			"theme_color",
+			"shortcuts",
+			"screenshots",
+		]
+	) {
 		// @ts-ignore
 		if (prop in json) json[prop] = rewriteSrc(json[prop], proxyUrl.href);
 	}
 
-	for (const prop of ["icons", "screenshots"])
-		if (prop in json)
+	for (const prop of ["icons", "screenshots"]) {
+		if (prop in json) {
 			// @ts-ignore
-			for (const item of json[prop])
-				item.src = rewriteSrc(item.src, proxyUrl.href);
+			for (const item of json[prop]) {
+				item.src = rewriteSrc(item.src, aeroConfig.prefix, logger);
+			}
+		}
+	}
 
-	for (const prop of ["related_applications", "prefer_related_applications"])
-		if (prop in json)
+	for (const prop of ["related_applications", "prefer_related_applications"]) {
+		if (prop in json) {
 			// @ts-ignore
-			for (const app of json[prop])
-				app.platform.url = rewriteSrc(app.platform.url, proxyUrl.href);
+			for (const app of json[prop]) {
+				app.platform.url = rewriteSrc(app.platform.url, aeroConfig.prefix, logger);
+			}
+		}
+	}
 
 	return JSON.stringify(json);
 };

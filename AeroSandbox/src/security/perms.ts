@@ -20,42 +20,44 @@
 		return map;
 	};
 
-	$aero.perms = new Map([
-		...parsePerms($aero.sec.permsFrame),
-		...parsePerms($aero.sec.perms),
-	]);
+	$aero.perms = new Map([...parsePerms($aero.sec.permsFrame), ...parsePerms($aero.sec.perms)]);
 }
 
 const blockPerm = perm => block($aero.perms.get(perm));
 
 const block = (api: keyof Window, type) =>
-(window[api] = Promise.reject(
-	type ? new DOMException("", type) : new DOMException()
-));
+	(window[api] = Promise.reject(type ? new DOMException("", type) : new DOMException()));
 
-if (blockPerm("accelerometer")) delete Accelerometer;
-if (blockPerm("ambient-light-sensor")) delete AmbientLightSensor;
-if (blockPerm("autoplay"))
+if (blockPerm("accelerometer")) delete window.Accelerometer;
+if (blockPerm("ambient-light-sensor")) delete window.AmbientLightSensor;
+if (blockPerm("autoplay")) {
 	navigator.getAutoplayPolicy = () => "disallowed";
+}
 if (blockPerm("battery")) block(navigator.getBattery, "NotAllowedError");
-if (blockPerm("camera"))
+if (blockPerm("camera")) {
 	block(navigator.mediaDevices.getUserMedia, "NotAllowedError");
-if (blockPerm("display-capture"))
+}
+if (blockPerm("display-capture")) {
 	block(navigator.mediaDevices.getDisplayMedia, "NotAllowedError");
-if (blockPerm("document-domain"))
+}
+if (blockPerm("document-domain")) {
 	Object.defineProperty(document, "domain", {
 		set: () => {
 			throw new DOMException("", "SecurityError");
 		},
 	});
-if (blockPerm("encrypted-media"))
+}
+if (blockPerm("encrypted-media")) {
 	block(navigator.mediaDevices.getUserMedia);
+}
 // TODO: execution-while-not-rendered
 // TODO: execution-while-out-of-viewport
-if (blockPerm("fullscreen"))
+if (blockPerm("fullscreen")) {
 	Element.requestFullscreen = Promise.reject(new TypeError());
-if (blockPerm("gamepad"))
+}
+if (blockPerm("gamepad")) {
 	Navigator.getGamepads = () => {
 		throw new DOMException("SecurityError");
 	};
+}
 // TODO...

@@ -1,56 +1,56 @@
-  name: JS-Diff
-  author: Ryan Wilson
-  description: Runs JS-Diff on JS rewriters. JS-diff is a test and benchmark that runs the JS Rewriter on all of the tests that are used in the WebKit browser, processed as one large bundle.
+name: JS-Diff
+author: Ryan Wilson
+description: Runs JS-Diff on JS rewriters. JS-diff is a test and benchmark that runs the JS Rewriter on all of the tests that are used in the WebKit browser, processed as one large bundle.
 
-  on:
-    workflow_dispatch:
-      inputs: 
-        jsDiffBaseCmd:
-          description: The base command to run the JS-Diff CLI
-          required: false
-          default: npx run aero-sandbox/tests/jsdiff
-        jsDiffTestDataPath:
-          description: The path to your JS-Diff test data bundle (required to try the JS Rewriters)
-          required: true
-        resultsDirName:
-          description: The directory where the CSV results are stored (inside of the rootDir)
-          required: true
-        # Flags for the CLI
-        proxyURL:
-          description: The URL to your web proxy
-          required: true
-        webkitRepo:
-          description: The URL to a git repo of WebKit
-          required: false
-          default: "https://github.com/WebKit/WebKit.git"
-        webkitDir:
-          description: The directory name of what is cloned inside of the `checkoutsDir`
-          required: false
-          default: "WebKit"
-        rootDir:
-          description: The root directory of the project which contains the checkoutsDir
-          required: true
-        checkoutsDir:
-          description: The directory inside of root that is where the checkouts occur in the test
-          required: true
+on:
+  workflow_dispatch:
+    inputs:
+      jsDiffBaseCmd:
+        description: The base command to run the JS-Diff CLI
+        required: false
+        default: npx run aero-sandbox/tests/jsdiff
+      jsDiffTestDataPath:
+        description: The path to your JS-Diff test data bundle (required to try the JS Rewriters)
+        required: true
+      resultsDirName:
+        description: The directory where the CSV results are stored (inside of the rootDir)
+        required: true
+      # Flags for the CLI
+      proxyURL:
+        description: The URL to your web proxy
+        required: true
+      webkitRepo:
+        description: The URL to a git repo of WebKit
+        required: false
+        default: "https://github.com/WebKit/WebKit.git"
+      webkitDir:
+        description: The directory name of what is cloned inside of the `checkoutsDir`
+        required: false
+        default: "WebKit"
+      rootDir:
+        description: The root directory of the project which contains the checkoutsDir
+        required: true
+      checkoutsDir:
+        description: The directory inside of root that is where the checkouts occur in the test
+        required: true
 
-  jobs:
-    js-diff:
-      runs-on: ubuntu-latest
+jobs:
+  js-diff:
+    runs-on: ubuntu-latest
 
-      steps:
-        - uses: actions/checkout@v2
+    steps:
+      - uses: actions/checkout@v2
 
-        - name: Setup Node.js
-          uses: actions/setup-node@v1
-          with:
-            node-version: 21
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 21
 
-        - name: Run JS Diff
-          run: ${{ github.event.inputs.jsDiffBaseCmd --jsDiffTestDataPath ${{ github.event.inputs.jsDiffTestDataPath }} --proxyURL ${{ github.event.inputs.proxyURL }} --webkitRepo ${{ github.event.inputs.webkitRepo }} --webkitDir ${{ github.event.inputs.webkitDir }} --rootDir ${{ github.event.inputs.rootDir }} --checkoutsDir ${{ github.event.inputs.checkoutsDir }} }}" --outputDir=$${ github.event.inputs.rootDir }}/${{ github.event.inputs.resultsDir }}/jsDiffResults.csv
+      - name: Run JS Diff
+        run: ${{ github.event.inputs.jsDiffBaseCmd --jsDiffTestDataPath ${{ github.event.inputs.jsDiffTestDataPath }} --proxyURL ${{ github.event.inputs.proxyURL }} --webkitRepo ${{ github.event.inputs.webkitRepo }} --webkitDir ${{ github.event.inputs.webkitDir }} --rootDir ${{ github.event.inputs.rootDir }} --checkoutsDir ${{ github.event.inputs.checkoutsDir }} }}" --outputDir=$${ github.event.inputs.rootDir }}/${{ github.event.inputs.resultsDir }}/jsDiffResults.csv
 
-        - name: Upload the results as an artifact
-          uses: actions/upload-artifact@v4
-          with:
-            name: js-diff-results
-            path: $${ github.event.inputs.rootDir }}/${{ github.event.inputs.resultsDir }}/jsDiffResults.csv
+      - name: Upload the results as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: js-diff-results
+          path: $${ github.event.inputs.rootDir }}/${{ github.event.inputs.resultsDir }}/jsDiffResults.csv

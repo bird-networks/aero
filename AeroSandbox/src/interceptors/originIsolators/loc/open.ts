@@ -10,7 +10,7 @@ export default {
 			// Turn the real URL into a proxy URL (routed under aero)
 			args[0] = rewriteSrc(url);
 			return Reflect.apply(target, that, args);
-		}
+		},
 	} as ProxyHandler<Window["open"]>,
 	escapeFixes: [
 		{
@@ -23,5 +23,5 @@ export default {
 		},
 	],
 	globalProp: "open",
-	exposedContexts: ExposedContextsEnum.window
+	exposedContexts: ExposedContextsEnum.window,
 } as APIInterceptor;

@@ -1,10 +1,11 @@
 {
-	const originalJsTests = document.getElementById("JS_test");
+  const originalJsTests = document.getElementById("JS_test");
 
-	if (!originalJsTests)
-		throw new Error("The original JS rewrite tests are missing!");
+  if (!originalJsTests) {
+    throw new Error("The original JS rewrite tests are missing!");
+  }
 
-	const evalTestsContent = /* js */ `
+  const evalTestsContent = /* js */ `
   tests.set = new Proxy(tests.set, {
     apply(target, that, args) {
       const [testName] = args;
@@ -17,7 +18,7 @@
   ${originalJsTests.textContent}
   `;
 
-	eval(evalTestsContent);
+  eval(evalTestsContent);
 
-	new Function(evalTestsContent)();
+  new Function(evalTestsContent)();
 }

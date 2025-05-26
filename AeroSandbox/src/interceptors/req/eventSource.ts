@@ -1,13 +1,10 @@
-import {
-	type APIInterceptor,
-	SpecialInterceptionFeaturesEnum
-} from "$types/apiInterceptors.d.ts";
+import { type APIInterceptor, SpecialInterceptionFeaturesEnum } from "$types/apiInterceptors.d.ts";
 
 import { proxyConstructString } from "$util/stringProx";
 
 export default {
 	skip: true,
-	globalProp: "EventSource"
+	globalProp: "EventSource",
 	/*
 	You know this wouldn't work
 	proxifiedObj: ctx => {

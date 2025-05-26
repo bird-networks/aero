@@ -3,10 +3,7 @@ import { proxyLocation } from "$shared/proxyLocation";
 // Custom protocols
 export default {
 	get(scheme: string): string {
-		return scheme.replace(
-			new RegExp(`^(web+${proxyLocation().origin}+)`),
-			"web+"
-		);
+		return scheme.replace(new RegExp(`^(web+${proxyLocation().origin}+)`), "web+");
 	},
 	set(scheme: string): string {
 		const split = scheme.split("web+");
@@ -14,5 +11,5 @@ export default {
 		split.splice(1, 0, `${proxyLocation().origin}+`);
 
 		return split.join("");
-	}
+	},
 };

@@ -4,7 +4,7 @@ import { ok as nOk, err } from "neverthrow";
 import { fmtNeverthrowErr } from "$shared/fmtErr";
 
 // Utility
-import RequestUrlGetter from "$util/getRequestUrl";
+import RequestUrlGetter from "$swUtil/getRequestURL";
 
 /**
  * Get the proxy URL to be used for fetching the site under the proxy.
@@ -12,7 +12,7 @@ import RequestUrlGetter from "$util/getRequestUrl";
  * @param param0 The passthrough object needed to get the proxy URL
  * @returns The proxy URL ready to be fetched through a proxy fetcher wrapped in a `Result` object from *Neverthrow*
  */
-export default function getProxyUrl({
+export default async function getProxyUrl({
 	reqUrl,
 	clientUrl,
 	isNavigate,
@@ -29,7 +29,7 @@ export default function getProxyUrl({
 
 	/** The URL to the site that will be proxied in a raw form. This will later be parsed. */
 	const rawProxyUrlRes = requestUrlGetter.get(
-		clientUrl,
+		new URL(clientUrl),
 		reqUrl.pathname + reqUrl.search,
 		isNavigate,
 		isiFrame
@@ -43,7 +43,7 @@ export default function getProxyUrl({
 	let proxyUrl: URL;
 	try {
 		// Parse the request url to get the url to proxy
-		return nOkAsync((new URL(rawProxyUrlRes.value));
+		return nOk(new URL(rawProxyUrlRes.value));
 		// biome-ignore lint/suspicious/noExplicitAny: We know the type of the error
 	} catch (err: any) {
 		return fmtNeverthrowErr(`${err instanceof TypeError

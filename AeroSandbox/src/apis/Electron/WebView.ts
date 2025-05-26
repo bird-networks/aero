@@ -1,9 +1,9 @@
 import typia from "typia";
 
 // @ts-ignore: you must first run `npm i`
-import type { ExecLoadURLRespData } from "$types/ipc/Electron/fromProxyMiddleware/transferDataResps.ts"
+import type { ExecLoadURLRespData } from "$types/ipc/Electron/fromProxyMiddleware/transferDataResps.ts";
 
-import { LitElement, property, customElement } from "lit-element";
+import { customElement, LitElement, property } from "lit-element";
 
 /** Get the latest ID # for a webcontents instance. Intended for the SW */
 const getWebcontentsId = new BroadcastChannel("$middleware-$electron-get-webcontents-id");
@@ -12,7 +12,7 @@ interface GetWebcontentsRespData {
 	data: {
 		clientId: string;
 		webkitId: string;
-	}
+	};
 }
 const validateGetWebContentsRespData = typia.createValidate<GetWebcontentsRespData>();
 
@@ -27,7 +27,7 @@ interface ExecLoadURLReqData {
 	data: {
 		url: string;
 		options: any;
-	}
+	};
 }
 
 const validateExecLoadURLRespData = typia.createValidate<ExecLoadURLRespData>();
@@ -40,19 +40,26 @@ interface ExecDownloadURLReqData {
 	data: {
 		url: string;
 		options: any;
-	}
+	};
 }
 const validateExecDownloadURLReqData = typia.createValidator<ExecDownloadURLReqData>();
 
 @customElement("webview")
 export class WebView extends LitElement {
-	@property({ type: String }) src: string = "";
-	@property({ type: Boolean }) preload: boolean = false;
-	@property({ type: String }) httpReferrer: string = "";
-	@property({ type: String }) useragent: string = "";
-	@property({ type: String }) disablewebsecurity: string = "";
-	@property({ type: String }) partition: string = "";
-	@property({ type: String }) allowpopups: string = "";
+	@property({ type: String })
+	src: string = "";
+	@property({ type: Boolean })
+	preload: boolean = false;
+	@property({ type: String })
+	httpReferrer: string = "";
+	@property({ type: String })
+	useragent: string = "";
+	@property({ type: String })
+	disablewebsecurity: string = "";
+	@property({ type: String })
+	partition: string = "";
+	@property({ type: String })
+	allowpopups: string = "";
 
 	webkitId: string;
 	webContentsUUID = crypto.randomUUID();
@@ -60,24 +67,24 @@ export class WebView extends LitElement {
 	constructor() {
 		super();
 		this.webkitId = $aero.sandbox.extLib.syncify(
-			new Promise((resolve) => {
+			new Promise(resolve => {
 				getWebcontentsId.postMessage({
 					for: "get",
 					clientId: $aero.clientId,
-					webContentsUUID: this.webContentsUUID
-				})
+					webContentsUUID: this.webContentsUUID,
+				});
 				getWebcontentsId.onmessage = event => {
 					validateGetWebContentsRespData(event.data);
 					resolve(event.data.webkitId);
-				}
-			}))();
+				};
+			})
+		)();
 	}
 
 	/**
-	 * 
-	 * @param url 
+	 * @param url
 	 * @param options
-	 * @returns @see https://www.electronjs.org/docs/latest/api/webview-tag#webviewloadurlurl-options:~:text=load%20other%20files.-,returns,-Promise%3Cvoid%3E%20-%20The 
+	 * @returns @see https://www.electronjs.org/docs/latest/api/webview-tag#webviewloadurlurl-options:~:text=load%20other%20files.-,returns,-Promise%3Cvoid%3E%20-%20The
 	 */
 	private async loadURL(url, options): Promise<void> {
 		return await new Promise((resolve, reject) => {
@@ -87,8 +94,8 @@ export class WebView extends LitElement {
 				method: "loadURL",
 				data: {
 					url,
-					options
-				}
+					options,
+				},
 			});
 			execLoadURL.onmessage = event => {
 				validateExecLoadURLRespData(event.data);
@@ -98,15 +105,12 @@ export class WebView extends LitElement {
 					// FIXME: Idk what the actual error message is from Electron (the docs don't say)
 					reject(new Error("The page failed to load!"));
 				}
-			}
+			};
 		});
 		return;
 	}
 	private downloadURL(url, options) {
-		validateExecDownloadURLReqData()
-
+		validateExecDownloadURLReqData();
 	}
-	private getURL() {
-
-	}
+	private getURL() {}
 }

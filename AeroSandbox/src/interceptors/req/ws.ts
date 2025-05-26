@@ -15,15 +15,10 @@ export default [
 				Object.setPrototypeOf(emuWS, target.prototype);
 				emuWS.constructor = target;
 
-				const bareWS = $aero.bc.createWebSocket(
-					args[0],
-					args[1],
-					null,
-					{
-						"User-Agent": navigator.userAgent,
-						Origin: proxyLocation().origin,
-					}
-				);
+				const bareWS = $aero.bc.createWebSocket(args[0], args[1], null, {
+					"User-Agent": navigator.userAgent,
+					Origin: proxyLocation().origin,
+				});
 				const state: emuWSState = {
 					extensions: "",
 					protocol: "",
@@ -38,10 +33,12 @@ export default [
 
 				function emuEventSend(emuEvent: Event) {
 					const handlerFuncName = "on" + emuEvent.type;
-					if (handlerFuncName in state)
+					if (handlerFuncName in state) {
 						// @ts-ignore: this is a known global feature flag
-						$aero.logger.fatalErr(`The BareMux transport for WebSockets must be broken because it is missing the event handler for the event type${ERR_LOG_AFTER_COLON}${emuEvent.type}`);
-					else {
+						$aero.logger.fatalErr(
+							`The BareMux transport for WebSockets must be broken because it is missing the event handler for the event type${ERR_LOG_AFTER_COLON}${emuEvent.type}`
+						);
+					} else {
 						state["on" + emuEvent.type]?.(emuEvent);
 						emuWS.dispatchEvent(emuEvent);
 					}
@@ -50,18 +47,19 @@ export default [
 				bareWS.addEventListener("open", () => {
 					emuEventSend(new Event("open"));
 				});
-				bareWS.addEventListener("close", (event) => {
+				bareWS.addEventListener("close", event => {
 					emuEventSend(new CloseEvent("close", event));
 				});
-				bareWS.addEventListener("message", async (event) => {
+				bareWS.addEventListener("message", async event => {
 					let payload = event.data;
 					if (typeof payload !== "string") {
 						if ("byteLength" in payload) {
 							// arraybuffer, convert to blob if needed or set the proper prototype
-							if (state.binaryType === "blob")
+							if (state.binaryType === "blob") {
 								payload = new Blob([payload]);
-							else
+							} else {
 								Object.setPrototypeOf(payload, ArrayBuffer.prototype);
+							}
 						} else if ("arrayBuffer" in payload) {
 							// blob, convert to arraybuffer if neccesary.
 							if (state.binaryType === "arraybuffer") {
@@ -87,28 +85,31 @@ export default [
 				socketMap.set(emuWS, state);
 
 				return emuWS;
-			}
+			},
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "Websocket"
-	}, {
+		globalProp: "Websocket",
+	},
+	{
 		proxifyGetter: ctx => {
 			const ws = socketMap.get(ctx.this);
 			return ws.binaryType;
 		},
 		proxifySetter: ctx => {
 			const ws = socketMap.get(ctx.this);
-			if (ctx.newVal === "blob" || ctx.newVal === "arraybuffer") ws.binaryType = ctx.newVal;
+			if (ctx.newVal === "blob" || ctx.newVal === "arraybuffer") {
+				ws.binaryType = ctx.newVal;
+			}
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.binaryType"
+		globalProp: "WebSocket.prototype.binaryType",
 	},
 	{
-		proxifyGetter: (_ctx) => {
+		proxifyGetter: _ctx => {
 			return 0;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.bufferedAmount"
+		globalProp: "WebSocket.prototype.bufferedAmount",
 	},
 	{
 		proxifyGetter: ctx => {
@@ -116,8 +117,9 @@ export default [
 			return ws.extensions;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.extensions"
-	}, {
+		globalProp: "WebSocket.prototype.extensions",
+	},
+	{
 		proxifyGetter: ctx => {
 			const ws = socketMap.get(ctx.this);
 			return ws.onclose;
@@ -127,7 +129,7 @@ export default [
 			ws.onclose = ctx.newVal as any;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.onclose"
+		globalProp: "WebSocket.prototype.onclose",
 	},
 	{
 		proxifyGetter: ctx => {
@@ -139,7 +141,7 @@ export default [
 			ws.onerror = ctx.newVal as any;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.onerror"
+		globalProp: "WebSocket.prototype.onerror",
 	},
 	{
 		proxifyGetter: ctx => {
@@ -151,7 +153,7 @@ export default [
 			ws.onmessage = ctx.newVal as any;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.onmessage"
+		globalProp: "WebSocket.prototype.onmessage",
 	},
 	{
 		proxifyGetter: ctx => {
@@ -163,7 +165,7 @@ export default [
 			ws.onclose = ctx.newVal as any;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.onopen"
+		globalProp: "WebSocket.prototype.onopen",
 	},
 	{
 		proxifyGetter: ctx => {
@@ -171,7 +173,7 @@ export default [
 			return ws.url;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.url"
+		globalProp: "WebSocket.prototype.url",
 	},
 	{
 		proxifyGetter: ctx => {
@@ -179,7 +181,7 @@ export default [
 			return ws.protocol;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.protocol"
+		globalProp: "WebSocket.prototype.protocol",
 	},
 	{
 		proxifyGetter: ctx => {
@@ -187,7 +189,7 @@ export default [
 			return ws.bareWS.readyState;
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.readyState"
+		globalProp: "WebSocket.prototype.readyState",
 	},
 	{
 		proxyHandler: {
@@ -197,7 +199,7 @@ export default [
 			},
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.send"
+		globalProp: "WebSocket.prototype.send",
 	},
 	{
 		proxyHandler: {
@@ -209,8 +211,9 @@ export default [
 			},
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.close"
-	}, {
+		globalProp: "WebSocket.prototype.close",
+	},
+	{
 		proxyHandler: {
 			apply(target, that, args) {
 				if (args[1] instanceof Function) {
@@ -224,5 +227,6 @@ export default [
 			},
 		},
 		forAltProtocol: AltProtocolEnum.ws,
-		globalProp: "WebSocket.prototype.addEventListener"
-	}] as APIInterceptor[];
+		globalProp: "WebSocket.prototype.addEventListener",
+	},
+] as APIInterceptor[];

@@ -24,7 +24,7 @@ export default (dir: string): boolean => {
 	if (sources) {
 		let allowed = false;
 
-		if (!sources.includes("'none'"))
+		if (!sources.includes("'none'")) {
 			for (const source of sources) {
 				if (proxyLocation().href.startsWith(source)) {
 					allowed = true;
@@ -43,6 +43,7 @@ export default (dir: string): boolean => {
 					break;
 				}
 			}
+		}
 
 		if (!allowed) blocked = true;
 	}

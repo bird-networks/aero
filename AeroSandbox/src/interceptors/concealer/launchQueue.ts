@@ -13,9 +13,9 @@ export default {
 				launchParams.targetUrl = afterPrefix(launchParams.targetUrl);
 				callback(launchParams);
 			};
-		}
+		},
 	},
 	globalProp: "launchQueue.setConsumer",
 	//conceals: ["LaunchParams.targetURL"],
-	supports: SupportEnum.draft | SupportEnum.shippingChromium
+	supports: SupportEnum.draft | SupportEnum.shippingChromium,
 } as APIInterceptor;

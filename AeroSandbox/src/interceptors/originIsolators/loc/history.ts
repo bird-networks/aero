@@ -5,20 +5,23 @@ import { ExposedContextsEnum, URL_IS_ESCAPE } from "$types/enums/apiInterceptors
 import { proxyLocation } from "$shared/proxyLocation";
 import rewriteSrc from "$interceptorUtil/src";
 
-/** 
+/**
  * Shared proxy handlers for the methods on the history API that modify the state (`history.pushState` and `history.replaceState`)
  */
 const historySharedProxyHandlers = {
 	apply(target: any, that: ProxyHandler<object>, args: any[]) {
 		let url = "";
-		if (args.length > 2 && typeof args[2] === "string")
+		if (args.length > 2 && typeof args[2] === "string") {
 			url = args[2];
+		}
 
 		try {
-			if (args.length > 2)
+			if (args.length > 2) {
 				args[2] = rewriteSrc(url, proxyLocation().href, $aero.logger);
-			if (args.length > 3)
+			}
+			if (args.length > 3) {
 				args[3] = rewriteSrc(url, proxyLocation().href, $aero.logger);
+			}
 		} catch (err) {
 			$aero.logger.fatalErr(
 				`An error occurred while intercepting the source in the History API interceptor${ERR_LOG_AFTER_COLON}${err}`
@@ -26,7 +29,7 @@ const historySharedProxyHandlers = {
 		}
 
 		return Reflect.apply(target, that, args);
-	}
+	},
 } as ProxyHandler<History>;
 /**
  * The fix types for the history API metthods that modify the state (`history.pushState` and `history.replaceState`)
@@ -37,30 +40,30 @@ const historySharedEscapeFixTypes = [
 		targetingParam: 2,
 		type: {
 			what: "URL_STRING",
-			is: URL_IS_ESCAPE.FULL_URL
-		}
-	}
-	, {
+			is: URL_IS_ESCAPE.FULL_URL,
+		},
+	},
+	{
 		targeting: "API_PARAM",
 		targetingParam: 3,
 		type: {
 			what: "URL_STRING",
-			is: URL_IS_ESCAPE.FULL_URL
-		}
-	}
-]
+			is: URL_IS_ESCAPE.FULL_URL,
+		},
+	},
+];
 // @ts-ignore: bypass strict APIInterceptor type compatibility
 export default [
 	{
 		proxyHandler: historySharedProxyHandlers,
 		globalProp: "history.pushState",
 		escapeFixes: historySharedEscapeFixTypes,
-		exposedContexts: ExposedContextsEnum.window
+		exposedContexts: ExposedContextsEnum.window,
 	},
 	{
 		proxyHandler: historySharedProxyHandlers,
 		globalProp: "history.replaceState",
 		escapeFixes: historySharedEscapeFixTypes,
-		exposedContexts: ExposedContextsEnum.window
-	}
+		exposedContexts: ExposedContextsEnum.window,
+	},
 ] as APIInterceptor[];

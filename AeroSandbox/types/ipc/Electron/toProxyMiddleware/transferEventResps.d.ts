@@ -6,6 +6,6 @@ export interface SendLoadPing {
 	for: "send";
 	clientId: string;
 	data: {
-		loadedFine: true
-	}
+		loadedFine: true;
+	};
 }

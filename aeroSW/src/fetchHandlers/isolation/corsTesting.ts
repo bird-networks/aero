@@ -10,7 +10,7 @@
  *  return new Response("Blocked by CORS", { status: 500 });
  */
 
-import { ResultAsync, okAsync, errAsync as nErrAsync } from "neverthrow";}
+import { ResultAsync, okAsync, errAsync as nErrAsync } from "neverthrow";
 
 /**
  * Tests to see if the request would be blocked due to cors rules
@@ -30,8 +30,8 @@ export default async (proxyUrl: string): Promise<ResultAsync<boolean, Error>> =>
 		// Don't actually send the request
 		controller.abort();
 
-		return false;
+		return okAsync(false);
 	} catch (err) {
-		return err instanceof Error && err.name === "AbortError";
+		return okAsync(err instanceof Error && err.name === "AbortError");
 	}
 };

@@ -17,120 +17,119 @@ import { afterPrefix } from "$interceptorUtil/getProxyURL";
 import { upToProxyOrigin } from "$shared/proxyLocation";
 
 // @ts-ignore: bypass strict APIInterceptor compatibility
-export default [{
-	init() {
-		// Get the timing data whenever a new request comes in
-		getMsgFromSW("perf-timing-resp-cached", event => {
-			const { url, cached } = event.data.payload;
-			$aero.resInfo.set(url, cached);
-		});
-	},
-	globalProp: "performance"
-}, {
-	proxyHandler: {
-		apply(target, that, args) {
-			let realEntries: PerformanceEntryList = Reflect.apply(
-				target,
-				that,
-				args
-			);
-			const proxifiedEntries = realEntries
-				// Hide aero's injection (bundle)
-				.filter(
-					entry =>
-						!entry.name.startsWith(location.origin + $aero.config.bundle)
-				);
-			return proxifiedEntries;
+export default [
+	{
+		init() {
+			// Get the timing data whenever a new request comes in
+			getMsgFromSW("perf-timing-resp-cached", event => {
+				const { url, cached } = event.data.payload;
+				$aero.resInfo.set(url, cached);
+			});
 		},
+		globalProp: "performance",
 	},
-	conceals: [
-		{
-			targeting: "API_RETURN",
-			type: {
-				what: "URL_STRING",
-				is: URL_IS_ESCAPE.FULL_URL
-			}
-		}
-	],
-	globalProp: "performance.getEntries",
-	supports: SupportEnum.widelyAvailable
-}, {
-	proxifyGetter: ctx => {
-		const realUrl = ctx.this;
-		const proxyUrl = afterPrefix(realUrl);
-		return proxyUrl;
+	{
+		proxyHandler: {
+			apply(target, that, args) {
+				let realEntries: PerformanceEntryList = Reflect.apply(target, that, args);
+				const proxifiedEntries = realEntries
+					// Hide aero's injection (bundle)
+					.filter(entry => !entry.name.startsWith(location.origin + $aero.config.bundle));
+				return proxifiedEntries;
+			},
+		},
+		conceals: [
+			{
+				targeting: "API_RETURN",
+				type: {
+					what: "URL_STRING",
+					is: URL_IS_ESCAPE.FULL_URL,
+				},
+			},
+		],
+		globalProp: "performance.getEntries",
+		supports: SupportEnum.widelyAvailable,
 	},
-	conceals: [
-		{
-			targeting: "URL_STRING",
-			is: URL_IS_ESCAPE.FULL_URL
-		}
-	],
-	globalProp: "PerformanceResourceTiming.prototype.name",
-	supports: SupportEnum.widelyAvailable
-}, {
-	proxyHandler: {
-		get(target, prop, receiver) {
-			const realUrl = target.name;
+	{
+		proxifyGetter: ctx => {
+			const realUrl = ctx.this;
 			const proxyUrl = afterPrefix(realUrl);
-			const resCached = isCached(proxyUrl);
-			const resCrossOrigin = !proxyUrl.startsWith(
-				upToProxyOrigin()
-			);
-			const isZero =
-				resCached ||
-				resCrossOrigin ||
-				"timing" in $aero.sec;
-			const respCachedArchive = getRespCachedArchive();
-			const respCachedData = respCachedArchive.get(proxyUrl);
-			switch (prop) {
-				case "transferSize":
-					return isZero ? 0 : respCachedData.transferSize;
-				case "encodedBodySize":
-					return !respCachedData.encBody ? isZero ? 0 : respCachedData.bodySize :
-						// Let it error-out
-						Reflect.get(target, prop, receiver);
-				case "decodedBodySize":
-					return respCachedData.encBody ?
-						// Let it error-out
-						Reflect.get(target, prop, receiver) : isZero ? 0 : respCachedData.bodySize;
-				default:
-					return Reflect.get(target, prop, receiver);
-			}
+			return proxyUrl;
 		},
+		conceals: [
+			{
+				targeting: "URL_STRING",
+				is: URL_IS_ESCAPE.FULL_URL,
+			},
+		],
+		globalProp: "PerformanceResourceTiming.prototype.name",
+		supports: SupportEnum.widelyAvailable,
 	},
-	conceals: {
-		targeting: "VALUE_PROXIFIED_OBJ",
-		props_that_reveal: {
-			"transferSize": [
-				{
-					what: "REAL_DATA_SIZE",
-					type: "TRANSFER"
+	{
+		proxyHandler: {
+			get(target, prop, receiver) {
+				const realUrl = target.name;
+				const proxyUrl = afterPrefix(realUrl);
+				const resCached = isCached(proxyUrl);
+				const resCrossOrigin = !proxyUrl.startsWith(upToProxyOrigin());
+				const isZero = resCached || resCrossOrigin || "timing" in $aero.sec;
+				const respCachedArchive = getRespCachedArchive();
+				const respCachedData = respCachedArchive.get(proxyUrl);
+				switch (prop) {
+					case "transferSize":
+						return isZero ? 0 : respCachedData.transferSize;
+					case "encodedBodySize":
+						return !respCachedData.encBody
+							? isZero
+								? 0
+								: respCachedData.bodySize
+							: // Let it error-out
+								Reflect.get(target, prop, receiver);
+					case "decodedBodySize":
+						return respCachedData.encBody
+							? // Let it error-out
+								Reflect.get(target, prop, receiver)
+							: isZero
+								? 0
+								: respCachedData.bodySize;
+					default:
+						return Reflect.get(target, prop, receiver);
 				}
-			],
-			"encodedBodySize": [
-				{
-					what: "REAL_DATA_SIZE",
-					type: "BODY",
-					encoded: true
-				}
-			],
-			"decodedBodySize": [
-				{
-					what: "REAL_DATA_SIZE",
-					type: "BODY",
-					encoded: false
-				}
-			]
-		}
+			},
+		},
+		conceals: {
+			targeting: "VALUE_PROXIFIED_OBJ",
+			props_that_reveal: {
+				transferSize: [
+					{
+						what: "REAL_DATA_SIZE",
+						type: "TRANSFER",
+					},
+				],
+				encodedBodySize: [
+					{
+						what: "REAL_DATA_SIZE",
+						type: "BODY",
+						encoded: true,
+					},
+				],
+				decodedBodySize: [
+					{
+						what: "REAL_DATA_SIZE",
+						type: "BODY",
+						encoded: false,
+					},
+				],
+			},
+		},
+		globalProp: "PerformanceResourceTiming.prototype",
+		supports: SupportEnum.widelyAvailable,
 	},
-	globalProp: "PerformanceResourceTiming.prototype",
-	supports: SupportEnum.widelyAvailable
-}] as APIInterceptor[];
+] as APIInterceptor[];
 
 /**
  * Check if a recent request (from the proxy URL) on this page was cached
- * @param proxyUrl 
+ * @param proxyUrl
  * @returns Whether the request was cached
  */
 function isCached(proxyUrl: string): boolean {
@@ -151,12 +150,15 @@ function getRespCachedArchive(): {
 	const respCachedArchive = getValFromSW({
 		name: "resp-cached-archive",
 	});
-	if (!("timing" in respCachedArchive))
+	if (!("timing" in respCachedArchive)) {
 		$aero.logger.fatalErr(fmtIsMissingProp("timing"));
-	if (!("encBody" in respCachedArchive))
+	}
+	if (!("encBody" in respCachedArchive)) {
 		$aero.logger.fatalErr(fmtIsMissingProp("encBody"));
-	if (!("bodySize" in respCachedArchive))
+	}
+	if (!("bodySize" in respCachedArchive)) {
 		$aero.logger.fatalErr(fmtIsMissingProp("bodySize"));
+	}
 	return respCachedArchive;
 }
 /**
