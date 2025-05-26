@@ -99,7 +99,7 @@
     "envsafe": "^2.0.3",
     "flags": "^0.2.2",
     "import-sync": "^2.2.2",
-    "neverthrow": "^8.1.1",
+    "neverthrow": "^8.2.0",
     "octokit": "^4.0.2",
     "option-t": "^50.0.0",
     "playwright": "^1.48.1",
