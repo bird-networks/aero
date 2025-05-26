@@ -1,6 +1,6 @@
 # aero
 
-![aero logo](./aero.webp)
+![aero logo](aero.sh/public/imgs/aero.webp)
 
 Aero is a safe, declarative, developer-friendly, innovative interception web
 proxy with many features. Aero provides full site support without delay and has
@@ -9,6 +9,22 @@ restrictions, and bypasses web browser restrictions.
 
 You can refer to the [docs website](https://aero.sh/docs) if you are looking for
 instructions for how to get aero or how to work on aero
+
+## I just want to use aero
+
+Go to https://aero.sh
+
+If you want to run a live demo build on your own PC run `cd aero.sh && npm i && npm start`
+
+## How to build
+
+## aero's SW
+
+Run `cd aeroSW && npm i && npm run buildSW`
+
+## AeroSandbox
+
+Run `cd AeroSandbox && npm i && npm run build`
 
 ## What is a web proxy?
 
