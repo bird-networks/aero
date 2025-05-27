@@ -16,8 +16,16 @@
 		"vite-plugin-dreamland": "^1.0.0"
 	},
 	"dependencies": {
-		"dreamland": "latest",
+		"@material/material-color-utilities": "0.2.7",
 		"@material/web": "^2.0.0",
-		"@material/material-color-utilities": "^1.0.0"
+		"@mercuryworkshop/bare-mux": "^2.1.7",
+		"@mercuryworkshop/epoxy-transport": "^2.1.27",
+		"@mercuryworkshop/libcurl-transport": "^1.5.0",
+		"dreamland": "latest",
+		"vite-plugin-static-copy": "^3.0.0",
+		"wisp-server-node": "^1.1.7"
+	},
+	"overrides": {
+		"@material/material-color-utilities": "0.2.7"
 	}
 }

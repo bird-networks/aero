@@ -1,9 +1,9 @@
 /**
  * Badge components for Aero footer
- * Contains GitHubBadge, DreamlandBadge, and FooterBadges
+ * Contains GitHubBadge and FooterBadges
  */
 
-/** GitHub logo badge component (Material theme tone, larger, white logo, white circle) */
+/** GitHub logo badge component */
 const GitHubBadge: Component<{}> = function () {
 	this.css = `
     .github-logo-link {

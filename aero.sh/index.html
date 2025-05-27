@@ -18,18 +18,30 @@
       body {
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
-        font-family: "Roboto", sans-serif; /* Match your component's default */
-        background-color: #f0f2f5; /* Match your component's default */
-        color: #333; /* Match your component's default */
+        font-family: "Roboto", sans-serif; 
+        background-color: #f0f2f5;
+        color: #333;
+        min-height: 100vh;
+        height: auto;
       }
       #app {
-        width: 100%; /* Ensure #app can use the alignment from body */
-        display: flex; /* Continue flex pattern if needed */
+        width: 100%;
+        display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
+        height: auto;
+      }
+
+      @media screen and (min-width: 769px) {
+        body {
+          justify-content: center;
+        }
+        #app {
+          justify-content: center;
+        }
       }
     </style>
   </head>
@@ -37,4 +49,4 @@
     <div id="app"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
-</html> 
+</html>

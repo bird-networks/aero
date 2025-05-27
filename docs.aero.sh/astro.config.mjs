@@ -13,8 +13,7 @@ import node from "@astrojs/node";
 
 import { customCopyPlugin } from "./plugins/customCopyPlugin.ts";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = import.meta.dirname;
 
 // Unified configuration for copying and serving files
 const copyTargets = [

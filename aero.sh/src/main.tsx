@@ -2,7 +2,6 @@
 
 // Dreamland
 import "dreamland/dev";
-// Note: $store should be available globally with stores feature enabled
 
 // Theme
 import { applyAeroTheme } from "./theme.js";
@@ -15,8 +14,42 @@ import "@material/web/fab/fab.js";
 
 import { FooterBadges } from "./badges";
 import SearchBar from "./Omnibox.tsx";
+import Settings, { openSettings } from "./Settings.tsx";
 
-// Preset colors for the theme picker (officially from Material 3 Expressive)
+import packageJSON from "../../aeroSW/package.json" with { type: "json" };
+
+// Add global style for settings overlay and background hiding
+const globalSettingsStyle = document.createElement("style");
+globalSettingsStyle.textContent = `
+  body.settings-active {
+    overflow: hidden !important;
+  }
+  body.settings-active > :not(.settings-overlay):not(script):not(style) {
+    display: none !important;
+  }
+  .settings-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: var(--md-sys-color-surface-dim) !important;
+    z-index: 2147483647 !important;
+    display: none !important;
+    flex-direction: row;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.2,0,0,1);
+    pointer-events: none !important;
+  }
+  .settings-overlay.open {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+`;
+document.head.appendChild(globalSettingsStyle);
+
+/** Preset colors for the theme picker (officially from Material 3 Expressive) */
 const PRESET_COLORS = [
 	{ name: "Blue", hex: "#4285F4" },
 	{ name: "Green", hex: "#34A853" },
@@ -25,7 +58,7 @@ const PRESET_COLORS = [
 	{ name: "Purple", hex: "#8A2BE2" },
 ];
 
-// FAB Menu items for theme selection
+/** FAB Menu items for theme selection */
 const THEME_FAB_ITEMS = PRESET_COLORS.map((color) => ({
 	id: color.hex,
 	icon: "palette",
@@ -96,91 +129,103 @@ const App: Component<
 	this.css = `
     html,
     * {
-      box-sizing: border-box;
+        box-sizing: border-box;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+    a:visited {
+        /* Ensures visited links don't turn purple */
+        color: inherit;
     }
 
     html,
     body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
+      	height: 100%;
+      	margin: 0;
+      	padding: 0;
     }
 
     body {
-      background-color: var(--md-sys-color-surface-container-lowest, #fff);
-      color: var(--md-sys-color-on-surface, #000);
-      font-family: "Roboto", sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      	background-color: var(--md-sys-color-surface-container-lowest, #fff);
+      	color: var(--md-sys-color-on-surface, #000);
+      	font-family: "Google Sans", sans-serif;
+      	display: flex;
+      	flex-direction: column;
+      	justify-content: flex-start;
+      	align-items: center;
+        min-height: 100vh; 
+        height: auto; 
     }
 
     #app {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
 
     @font-face {
-      font-family: "Google Sans";
-      src: url("/fonts/GoogleSans-Regular.woff2") format("woff2");
-      font-weight: normal;
-      font-style: normal;
+        font-family: "Google Sans";
+        src: url("/fonts/GoogleSans-Regular.woff2") format("woff2");
+        font-weight: normal;
+        font-style: normal;
     }
     
     .app-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-      max-width: 800px; 
-      padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 800px; 
+        padding: 20px;
     }
 
     .content-block { 
-      width: 100%;
-      max-width: 700px;
-      margin-bottom: 1.5rem; 
-      display: flex;
-      justify-content: center;
+        width: 100%;
+        max-width: 700px;
+        margin-bottom: 1.5rem; 
+        display: flex;
+        justify-content: center;
     }
 
     .content-block:last-of-type { 
-      margin-bottom: 0;
+      	margin-bottom: 0;
     }
 
     .logo-container { 
-      margin-bottom: 1rem; /* Reduced margin to bring it closer to the search bar */
+	      /** Bring the logo closer to the search bar */
+      	margin-bottom: 1rem;
     }
 
     .logo-img { 
-      max-width: 400px; /* Increased logo size */
-      height: auto;  
+      	max-width: 20em;
+      	height: auto;  
     }
     
     .search-container-block { 
     }
 
     .footer-credits { 
-      font-style: italic;
-      color: var(--md-sys-color-on-surface-variant, #777);
-      font-family: "Google Sans", sans-serif;
-      text-align: center;
-      margin-top: 1.5rem; 
+      	font-style: italic;
+      	color: var(--md-sys-color-on-surface-variant, #777);
+      	font-family: "Google Sans", sans-serif;
+      	text-align: center;
+      	margin-top: 1.5rem; 
     }
     
     /* FAB Menu Styles */
     .fab-menu {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
     }
     
     .fab-menu-items {
@@ -308,17 +353,79 @@ const App: Component<
       margin: 0;
       vertical-align: middle;
     }
+
+    @media screen and (max-width: 768px) {
+      html {
+        padding-top: 0; 
+        margin-top: 0; 
+        min-height: 100vh; 
+        height: auto; 
+      }
+
+      body {
+        display: flex; 
+        align-items: center; 
+        padding-top: 0; 
+        margin-top: 0; 
+        min-height: 100vh; 
+        height: auto; 
+      }
+
+      #app {
+        justify-content: flex-start; 
+        padding-top: 0; 
+        margin-top: 0; 
+        height: auto; 
+      }
+
+      .app-container {
+        max-width: 100%; 
+        justify-content: flex-start; 
+      }
+
+      .content-block {
+        margin-bottom: 0.75rem; 
+      }
+
+      .logo-container.content-block {
+        margin-top: 6em;
+        margin-bottom: 0.75rem; 
+      }
+
+      .logo-img {
+        max-width: 16em;
+      }
+
+      .footer-credits.content-block {
+        margin-top: 1.5rem;
+      }
+
+      .footer-links {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    @media screen and (min-width: 769px) {
+      body {
+        justify-content: center; /* Center content on larger screens */
+      }
+    }
   `;
 
 	return (
 		<div class="app-container">
+			<meta property="og:title" content="aero proxy demo"/>
+			<meta property="og:description" content={packageJSON.description} />
+			<meta property="og:image" content="/imgs/aero.webp" />
 			<div class="logo-container content-block">
 				<img src="/imgs/aero.webp" alt="Aero Proxy Logo" class="logo-img" />
 			</div>
 			<SearchBar />
 			<div class="footer-credits content-block">
 				<p style="margin: 0; padding: 0;">
-					Made with ❤️ by <a href="https://ryanwilson.space">Ryan Wilson</a>
+					Made with ❤️ by <b><a href="https://ryanwilson.space" style="color: blue">Ryan Wilson</a></b><br/>
+          For the <b><a href="https://browserports.dev" style="color: blue">Browser Ports</a></b> project
 				</p>
 			</div>
 			<FooterBadges />
@@ -351,7 +458,7 @@ const App: Component<
 				</div>
 				{/* FAB Row: Settings and Theme Switcher */}
 				<div style="display: flex; flex-direction: row; align-items: center; gap: 12px;">
-					<md-fab class="settings-fab" size="medium" aria-label="Settings">
+					<md-fab class="settings-fab" size="medium" on:click={openSettings} aria-label="Settings">
 						<md-icon slot="icon">settings</md-icon>
 					</md-fab>
 					<md-fab
@@ -390,4 +497,5 @@ const App: Component<
 window.addEventListener("load", () => {
 	const root = document.getElementById("app")!;
 	root.replaceWith(<App />);
+	document.body.appendChild(<Settings />);
 });

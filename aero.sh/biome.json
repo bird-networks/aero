@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["../AeroSandbox/base.biome.json"],
+  "formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"indentWidth": 4,
+		"ignore": []
+	}
+}
