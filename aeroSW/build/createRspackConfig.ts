@@ -11,7 +11,7 @@ import { RsdoctorRspackPlugin } from "@rsdoctor/rspack-plugin";
 
 //import type { FeatureFlagsRspackOptional } from "types/featureFlags";
 import createDefaultFeatureFlags from "./createDefaultFeatureFlags";
-import featureFlagsBuilder from "../AeroSandbox/featureFlagsBuilder";
+import featureFlagsBuilder from "../../AeroSandbox/build/featureFlagsBuilder";
 
 const liveBuildMode = "LIVE_BUILD" in process.env;
 /** This var is enabled by default */
@@ -22,14 +22,14 @@ const debugMode = liveBuildMode || "DEBUG" in process.env;
 // Scripts
 // TODO: Instead use the one from AeroSandbox import InitDist from "./scripts/InitDist";
 
-import Logger from "../AeroSandbox/build/Logger";
+import Logger from "../../AeroSandbox/build/Logger";
 
 import importSync from "import-sync";
 
 // Attempt to import InitDist, path might need adjustment
 // import InitDist from "./scripts/InitDist";
 // TODO: Clarify correct path for InitDist, e.g., from "../AeroSandbox/scripts/InitDist" or similar
-import InitDist from "../AeroSandbox/scripts/InitDist"; // Removed .ts extension
+import InitDist from "../../AeroSandbox/scripts/InitDist"; // Removed .ts extension
 
 export default function createRspackConfig(
 	distName = "sw",
@@ -106,7 +106,7 @@ export default function createRspackConfig(
 	}
 
 	const properDirType = debugMode ? "debug" : "prod";
-	const properDir = path.resolve(__dirname, "dist", properDirType, distName);
+	const properDir = path.resolve(__dirname, "..", "dist", properDirType, distName);
 
 	logger.log(`Building in ${properDirType} mode`); // Changed from debug to log
 	if (liveBuildMode) logger.log("Building in live build mode"); // Changed from debug to log
@@ -115,7 +115,7 @@ export default function createRspackConfig(
 		mode: debugMode ? "development" : "production",
 		devtool: debugMode ? "eval-source-map" : "source-map",
 		entry: {
-			sw: path.resolve(__dirname, "./src/handle.ts"),
+			sw: path.resolve(__dirname, "..", "src", "handle.ts"),
 			// Building these bundles separately allows for the user to roll out their own config files without having to build aero as a whole
 		},
 		plugins,
@@ -128,28 +128,28 @@ export default function createRspackConfig(
 		resolve: {
 			extensions: [".ts", ".js"],
 			alias: {
-				"$aero": path.resolve(__dirname, ".."),
-				"$jsrewriter": path.resolve(__dirname, "../JSRewriter"),
-				"$proxyparse": path.resolve(__dirname, "../ProxyParse/src"),
-				"$sandbox": path.resolve(__dirname, "../AeroSandbox/src"),
-				"$internal": path.resolve(__dirname, "../AeroSandbox/internal"),
-				"$util": path.resolve(__dirname, "../AeroSandbox/src/interceptors/util"),
-				"$interceptorUtil": path.resolve(__dirname, "../AeroSandbox/src/interceptors/util"),
-				"$swUtil": path.resolve(__dirname, "./src/fetchHandlers/util"),
-				"$shared": path.resolve(__dirname, "../AeroSandbox/src/shared"),
-				"$fetchHandlers": path.resolve(__dirname, "./src/fetchHandlers"),
-				"$fetchHandlers/subsystems": path.resolve(__dirname, "./src/fetchHandlers/subsystems"),
-				"$fetchHandlers/isolation": path.resolve(__dirname, "./src/fetchHandlers/isolation"),
-				"$isolation": path.resolve(__dirname, "../AeroSandbox/src/isolation"),
-				"$src": path.resolve(__dirname, "./src"),
-				"$sw": path.resolve(__dirname, "./src"),
-				"$alt_backends": path.resolve(__dirname, "./src/altBackends"),
-				"$rewriters": path.resolve(__dirname, "./src/fetchHandlers/rewriters"),
-				"$nested_sws": path.resolve(__dirname, "./src/nestedSWs"),
-				"$embeds": path.resolve(__dirname, "./src/preprocessors"),
-				"$handlers": path.resolve(__dirname, "./src/handlers"),
-				"$types": path.resolve(__dirname, "./types"),
-				"$preprocessors": path.resolve(__dirname, "./src/preprocessors"),
+				"$aero": path.resolve(__dirname, "..", ".."),
+				"$jsrewriter": path.resolve(__dirname, "..", "..", "JSRewriter"),
+				"$proxyparse": path.resolve(__dirname, "..", "..", "ProxyParse", "src"),
+				"$sandbox": path.resolve(__dirname, "..", "..", "AeroSandbox", "src"),
+				"$internal": path.resolve(__dirname, "..", "..", "AeroSandbox", "internal"),
+				"$util": path.resolve(__dirname, "..", "..", "AeroSandbox", "src", "interceptors", "util"),
+				"$interceptorUtil": path.resolve(__dirname, "..", "..", "AeroSandbox", "src", "interceptors", "util"),
+				"$swUtil": path.resolve(__dirname, "..", "src", "fetchHandlers", "util"),
+				"$shared": path.resolve(__dirname, "..", "..", "AeroSandbox", "src", "shared"),
+				"$fetchHandlers": path.resolve(__dirname, "..", "src", "fetchHandlers"),
+				"$fetchHandlers/subsystems": path.resolve(__dirname, "..", "src", "fetchHandlers", "subsystems"),
+				"$fetchHandlers/isolation": path.resolve(__dirname, "..", "src", "fetchHandlers", "isolation"),
+				"$isolation": path.resolve(__dirname, "..", "..", "AeroSandbox", "src", "isolation"),
+				"$src": path.resolve(__dirname, "..", "src"),
+				"$sw": path.resolve(__dirname, "..", "src"),
+				"$alt_backends": path.resolve(__dirname, "..", "src", "altBackends"),
+				"$rewriters": path.resolve(__dirname, "..", "src", "fetchHandlers", "rewriters"),
+				"$nested_sws": path.resolve(__dirname, "..", "src", "nestedSWs"),
+				"$embeds": path.resolve(__dirname, "..", "src", "preprocessors"),
+				"$handlers": path.resolve(__dirname, "..", "src", "handlers"),
+				"$types": path.resolve(__dirname, "..", "types"),
+				"$preprocessors": path.resolve(__dirname, "..", "src", "preprocessors"),
 			},
 			fallback: {
 				"fs": false,
@@ -188,9 +188,9 @@ export default function createRspackConfig(
 
 	new InitDist(
 		{
-			dist: path.resolve(__dirname, "dist"),
+			dist: path.resolve(__dirname, "..", "dist"),
 			proper: properDir,
-			// sw: path.resolve(__dirname, "dist", properDirType, "sw") // Removed sw property
+			// sw: path.resolve(__dirname, "..", "dist", properDirType, "sw") // Removed sw property
 		},
 		properDirType,
 		verboseMode,

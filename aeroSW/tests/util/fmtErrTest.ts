@@ -7,7 +7,7 @@
  */
 
 // This is where the difference between the two version is
-import createDefaultFeatureFlags from "../../createDefaultFeatureFlags.js";
+import createDefaultFeatureFlags from "../../build/createDefaultFeatureFlags.js";
 
 // Remember this file isn't built into a bundle because it is a test file, so this must be done
 const defaultFeatureFlags = createDefaultFeatureFlags({ debugMode: false });
@@ -18,5 +18,5 @@ import createErrorFmters from "../../../AeroSandbox/src/shared/fmtErrGeneric.js"
 const errLogAfterColon = defaultFeatureFlags.errLogAfterColon;
 export default errLogAfterColon;
 export const { fmtErr, fmtNeverthrowErr } = createErrorFmters(
-  defaultFeatureFlags.errLogAfterColon,
+	defaultFeatureFlags.errLogAfterColon,
 );

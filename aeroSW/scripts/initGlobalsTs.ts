@@ -11,7 +11,7 @@ import { access, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 // Utility
-import { featureFlagsBuilderRaw } from "../../AeroSandbox/featureFlagsBuilder.ts";
+import { featureFlagsBuilderRaw } from "../../AeroSandbox/build/featureFlagsBuilder.ts";
 import getInterfaceKV from "./util/getInterfaceKV.ts";
 import validateTS from "./util/validateTS.ts";
 
@@ -25,103 +25,103 @@ const errorFormatters = createErrorFmters("AEROSW_INIT_GLOBALS");
  * @returns The result of the operation wrapped in a `Result` from *Neverthrow* for better error handling
  */
 export default async function initGlobalsTs(
-  featureFlagsGeneratedGlobalsPath =
-    "../../aeroSW/types/featureFlags.globals.d.ts",
-  featureFlagsInterfaceName = "FeatureFlagsRspack",
-  featureFlagsInterfaceSourcePath = "../../aeroSW/types/featureFlags.ts",
+	featureFlagsGeneratedGlobalsPath =
+		"../../aeroSW/types/featureFlags.globals.d.ts",
+	featureFlagsInterfaceName = "FeatureFlagsRspack",
+	featureFlagsInterfaceSourcePath = "../../aeroSW/types/featureFlags.ts",
 ): Promise<ResultAsync<void, Error>> {
-  const relFeatureFlagsOutputPath = path.resolve(
-    __dirname,
-    featureFlagsGeneratedGlobalsPath,
-  );
-  const relFeatureFlagsInterfacePath = path.resolve(
-    __dirname,
-    featureFlagsInterfaceSourcePath,
-  );
+	const relFeatureFlagsOutputPath = path.resolve(
+		__dirname,
+		featureFlagsGeneratedGlobalsPath,
+	);
+	const relFeatureFlagsInterfacePath = path.resolve(
+		__dirname,
+		featureFlagsInterfaceSourcePath,
+	);
 
-  // Read the interface structure from the dedicated interface definition file
-  const interfaceKVRawRes = await getInterfaceKV(
-    relFeatureFlagsInterfacePath,
-    featureFlagsInterfaceName,
-  );
-  if (interfaceKVRawRes.isErr()) {
-    // Log the specific path that failed
-    const specificError = new Error(
-      `Failed to find interface '${featureFlagsInterfaceName}' in ${relFeatureFlagsInterfacePath}. Original error: ${interfaceKVRawRes.error.message}`,
-    );
-    return errorFormatters.fmtNeverthrowErr(
-      "Failed to get the keys of the feature flags interface definition",
-      specificError,
-    ) as ResultAsync<void, Error>;
-  }
-  /** The KV of the feature flags interface, but in camel case */
-  const interfaceKVRaw = interfaceKVRawRes.value;
-  // @ts-ignore
-  const interfaceKV = featureFlagsBuilderRaw(interfaceKVRaw);
+	// Read the interface structure from the dedicated interface definition file
+	const interfaceKVRawRes = await getInterfaceKV(
+		relFeatureFlagsInterfacePath,
+		featureFlagsInterfaceName,
+	);
+	if (interfaceKVRawRes.isErr()) {
+		// Log the specific path that failed
+		const specificError = new Error(
+			`Failed to find interface '${featureFlagsInterfaceName}' in ${relFeatureFlagsInterfacePath}. Original error: ${interfaceKVRawRes.error.message}`,
+		);
+		return errorFormatters.fmtNeverthrowErr(
+			"Failed to get the keys of the feature flags interface definition",
+			specificError,
+		) as ResultAsync<void, Error>;
+	}
+	/** The KV of the feature flags interface, but in camel case */
+	const interfaceKVRaw = interfaceKVRawRes.value;
+	// @ts-ignore
+	const interfaceKV = featureFlagsBuilderRaw(interfaceKVRaw);
 
-  const lines: string[] = [
-    // We don't need to export anything
-    "export { };",
-    "",
-    "declare global {",
-  ];
-  for (const [featureFlag, type] of Object.entries(interfaceKV)) {
-    lines.push(`\tconst ${featureFlag}: ${type};`);
-  }
-  lines.push("}");
+	const lines: string[] = [
+		// We don't need to export anything
+		"export { };",
+		"",
+		"declare global {",
+	];
+	for (const [featureFlag, type] of Object.entries(interfaceKV)) {
+		lines.push(`\tconst ${featureFlag}: ${type};`);
+	}
+	lines.push("}");
 
-  const outputCode = lines.join("\n");
-  // Parity check the final TS output before writing it
-  const diagnosticErrors = await validateTS(outputCode);
-  if (diagnosticErrors.length > 0) {
-    return errorFormatters.fmtNeverthrowErr(
-      "Parity check failed: the final TS output failed to validate, so globals.d.ts will not be created",
-      new Error(diagnosticErrors.join("\n\t")),
-    ) as ResultAsync<void, Error>;
-  }
+	const outputCode = lines.join("\n");
+	// Parity check the final TS output before writing it
+	const diagnosticErrors = await validateTS(outputCode);
+	if (diagnosticErrors.length > 0) {
+		return errorFormatters.fmtNeverthrowErr(
+			"Parity check failed: the final TS output failed to validate, so globals.d.ts will not be created",
+			new Error(diagnosticErrors.join("\n\t")),
+		) as ResultAsync<void, Error>;
+	}
 
-  const dirsLeading = path.dirname(relFeatureFlagsOutputPath);
-  try {
-    await access(dirsLeading);
-  } catch (_err) {
-    await mkdir(dirsLeading, {
-      recursive: true,
-    });
-  }
+	const dirsLeading = path.dirname(relFeatureFlagsOutputPath);
+	try {
+		await access(dirsLeading);
+	} catch (_err) {
+		await mkdir(dirsLeading, {
+			recursive: true,
+		});
+	}
 
-  try {
-    await writeFile(
-      relFeatureFlagsOutputPath,
-      `/** Autogenerated by \\\`initGlobalsTs.ts\\\` */\\n${outputCode}`,
-      {
-        flag: "w",
-      },
-    );
-  } catch (err) {
-    return errorFormatters.fmtNeverthrowErr(
-      "Failed to write the feature flags to the globals TS types file",
-      err as Error,
-    ) as ResultAsync<void, Error>;
-  }
+	try {
+		await writeFile(
+			relFeatureFlagsOutputPath,
+			`/** Autogenerated by \\\`initGlobalsTs.ts\\\` */\\n${outputCode}`,
+			{
+				flag: "w",
+			},
+		);
+	} catch (err) {
+		return errorFormatters.fmtNeverthrowErr(
+			"Failed to write the feature flags to the globals TS types file",
+			err as Error,
+		) as ResultAsync<void, Error>;
+	}
 
-  return nOkAsync(undefined);
+	return nOkAsync(undefined);
 }
 
 /**
  * Detect if the script is being ran as a CLI script and not as a module
  */
 const isCLI =
-  // For Deno
-  // @ts-ignore: This is a Deno-only feature
-  "Deno" in globalThis
-    ? import.meta.main // For Node (this does the same thing functinally as the above)
-    // @ts-ignore
-    : import.meta && import.meta.url === `file://${process.argv[1]}`;
+	// For Deno
+	// @ts-ignore: This is a Deno-only feature
+	"Deno" in globalThis
+		? import.meta.main // For Node (this does the same thing functinally as the above)
+		// @ts-ignore
+		: import.meta && import.meta.url === `file://${process.argv[1]}`;
 if (isCLI) {
-  (async () => {
-    const initGlobalsTsRes = await initGlobalsTs();
-    if (initGlobalsTsRes.isErr()) {
-      throw initGlobalsTsRes.error;
-    }
-  })();
+	(async () => {
+		const initGlobalsTsRes = await initGlobalsTs();
+		if (initGlobalsTsRes.isErr()) {
+			throw initGlobalsTsRes.error;
+		}
+	})();
 }

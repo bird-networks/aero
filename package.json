@@ -2,6 +2,6 @@
   "name": "aero-monorepo",
   "description": "DO NOT PUBLISH",
   "scripts": {
-    "format": "cd aero.sh && npm run format && cd ../aeroSW && npm run format && cd AeroSandbox && npm run format",
+    "format": "cd aero.sh && npm run format && cd ../aeroSW && npm run format && cd AeroSandbox && npm run format"
   }
 }

@@ -8,7 +8,7 @@
 
 // This is where the difference between the two version is
 // @ts-ignore This is a module inside of a test, which means it isn't built, but run directly by node, so ignore what the linter says
-import createDefaultFeatureFlags from "../../createDefaultFeatureFlags.ts";
+import createDefaultFeatureFlags from "../../build/createDefaultFeatureFlags.ts";
 
 // @ts-ignore This is a module inside of a test, which means it isn't built, but run directly by node, so ignore what the linter says
 const defaultFeatureFlags = createDefaultFeatureFlags({ debugMode: false });

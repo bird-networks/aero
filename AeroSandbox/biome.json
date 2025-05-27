@@ -12,7 +12,7 @@
 		"enabled": true,
 		"formatWithErrors": false,
 		"indentStyle": "tab",
-		"indentWidth": 2,
+		"indentWidth": 4,
 		"lineWidth": 100,
 		"ignore": []
 	},

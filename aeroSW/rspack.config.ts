@@ -1,3 +1,3 @@
-import createRspackConfig from "./createRspackConfig";
+import createRspackConfig from "./build/createRspackConfig";
 
 export default createRspackConfig();

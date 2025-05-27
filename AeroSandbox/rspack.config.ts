@@ -7,9 +7,9 @@ import NodePolyfillPlugin from "node-polyfill-webpack-plugin";
 import Logger from "./build/Logger";
 
 import type { createFeatureFlags } from "./build/featureFlags";
-import createDefaultFeatureFlags from "./createDefaultFeatureFlags";
+import createDefaultFeatureFlags from "./build/createDefaultFeatureFlags";
 
-import featureFlagsBuilder from "./featureFlagsBuilder";
+import featureFlagsBuilder from "./build/featureFlagsBuilder";
 
 import type { Configuration } from "@rspack/core";
 
@@ -144,23 +144,23 @@ export default async function () {
 		entry: genEntryFiles(
 			testBuild
 				? {
-						// API Interceptors for the Script Sandbox
-						location: "./src/interceptors/loc/location.ts",
-						scriptSandbox: "./src/interceptors/concealer/misc/scriptSandboxing.ts",
-						// Libs for the API Interceptors
-						loggers: "./src/shared/Loggers.ts",
-						replaceProxyNamespace: "./build/replaceProxyNamespace.ts",
-						jsDiffTestData: "./src/sandboxers/JS/ProxyParse/tests/shared/testData.ts",
-					}
+					// API Interceptors for the Script Sandbox
+					location: "./src/interceptors/loc/location.ts",
+					scriptSandbox: "./src/interceptors/concealer/misc/scriptSandboxing.ts",
+					// Libs for the API Interceptors
+					loggers: "./src/shared/Loggers.ts",
+					replaceProxyNamespace: "./build/replaceProxyNamespace.ts",
+					jsDiffTestData: "./src/sandboxers/JS/ProxyParse/tests/shared/testData.ts",
+				}
 				: minimalBuild
 					? {
-							...defaultBuild,
-							// Extra APIs
-							storageIsolation: "./src/apis/StorageIsolator/storageIsolation.ts",
-							ControlView: "./src/apis/CustomViews/ControlView.ts",
-							ElectronControlView: "./src/apis/CustomViews/ElectronControlView.ts",
-							ElectronWebView: "./src/apis/CustomViews/ElectronWebView.ts",
-						}
+						...defaultBuild,
+						// Extra APIs
+						storageIsolation: "./src/apis/StorageIsolator/storageIsolation.ts",
+						ControlView: "./src/apis/CustomViews/ControlView.ts",
+						ElectronControlView: "./src/apis/CustomViews/ElectronControlView.ts",
+						ElectronWebView: "./src/apis/CustomViews/ElectronWebView.ts",
+					}
 					: defaultBuild
 		),
 		plugins,
@@ -183,7 +183,6 @@ export default async function () {
 			rules: [
 				{
 					test: /\.ts$/,
-					exclude: [/[\\/]node_modules[\\/]/],
 					use: [
 						{
 							loader: "builtin:swc-loader",

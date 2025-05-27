@@ -23,7 +23,7 @@ First, ensure you have at least NodeJS v21
 ## aero's SW
 
 1. If you are on NodeJS v21+, run `npm i neverthrow --legacy-peer-deps`
-2. Run `cd aeroSW && npm i && npm run buildSW`
+2. Run `cd aeroSW && npm i && npm run build`
 
 ## AeroSandbox
 
