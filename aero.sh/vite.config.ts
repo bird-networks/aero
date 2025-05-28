@@ -21,6 +21,7 @@ const autoUpdate =
 	process.env.AUTO_UPDATE === "true" ||
 	process.env.AUTO_UPDATE === "1" ||
 	false;
+const port = Number.parseInt(process.env.PORT || "2525", 10);
 
 /**
  * Parse debounce delay from environment variable with default fallback
@@ -389,7 +390,8 @@ function viteBuildWatchPlugin(): Plugin {
 
 export default defineConfig({
 	server: {
-		port: 2525,
+		port,
+		allowedHosts: true,
 	},
 	plugins: [
 		[
