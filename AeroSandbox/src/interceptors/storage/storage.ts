@@ -1,16 +1,22 @@
 import type { APIInterceptor } from "$types/apiInterceptors";
 import { SupportEnum } from "$types/enums/apiInterceptors";
 
-import createStorageAPIInterceptors from "$util/storageAPIInterceptorsGeneric";
+import createStorageAPIInterceptors from "$util/storageApiInterceptorsGeneric";
 import { proxyLocation } from "$shared/proxyLocation";
 import { escapeWithOrigin } from "$shared/escaping/escape";
 
 export default [
-	...createStorageAPIInterceptors("sharedStorage", $aero.sandbox.config.sharedStorageId),
-	...createStorageAPIInterceptors("storage", $aero.sandbox.config.storageStoreId),
+	...createStorageAPIInterceptors(
+		"sharedStorage",
+		$aero.sandbox.config.sharedStorageId,
+	),
+	...createStorageAPIInterceptors(
+		"storage",
+		$aero.sandbox.config.storageStoreId,
+	),
 	...createStorageAPIInterceptors(
 		"sessionStorage",
-		`${$aero.sandbox.config.sessionStoreId}_${$aero.clientId}`
+		`${$aero.sandbox.config.sessionStoreId}_${$aero.clientId}`,
 	),
 	{
 		init() {
@@ -41,11 +47,13 @@ export default [
 				if (realKey.startsWith(proxyLocation().origin)) {
 					const keyWithoutOriginEscape = realKey.replace(
 						new RegExp(`^${proxyLocation().origin}_`),
-						""
+						"",
 					);
 					if (
 						// Is key from a previous session?
-						keyWithoutOriginEscape.startsWith(`${$aero.sandbox.config.sessionStoreId}_`)
+						keyWithoutOriginEscape.startsWith(
+							`${$aero.sandbox.config.sessionStoreId}_`,
+						)
 					) {
 						sessionStorage.removeItem(realKey);
 					}
