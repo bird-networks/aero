@@ -22,12 +22,12 @@ import escapeJS from "$swUtil/escapeJS";
 import rewriteRespHeaders from "$rewriters/respHeaders";
 import rewriteCacheManifest from "$rewriters/cacheManifest";
 import rewriteManifest from "$rewriters/webAppManifest";
-import JSRewriter from "$jsrewriter/JSRewriter";
+//import JSRewriter from "$jsrewriter/JSRewriter";
 
 import type { Sec } from "$aero/aeroSW/types";
 import type { rewrittenParamsOriginalsType } from "$types/commonPassthrough";
 
-const jsRewriter = new JSRewriter(aeroConfig.sandbox.jsParserConfig);
+//const jsRewriter = new JSRewriter(aeroConfig.sandbox.jsParserConfig);
 
 /**
  * Rewrites the response with the content rewriters and the response headers rewriter
@@ -50,13 +50,16 @@ export default async function rewriteResp(
 		rewrittenParamsOriginals: rewrittenParamsOriginalsType;
 		electronWebViewControls?: Readonly<WebViewControls>;
 	}>,
-	accessControlRuleMap: Map<string, string>,
+	accessControlRuleMap: Map<string, string>
 ): Promise<
-	ResultAsync<{
-		rewrittenBody: string | ReadableStream;
-		rewrittenRespHeaders: Headers;
-		rewrittenStatus: number;
-	}, Error>
+	ResultAsync<
+		{
+			rewrittenBody: string | ReadableStream;
+			rewrittenRespHeaders: Headers;
+			rewrittenStatus: number;
+		},
+		Error
+	>
 > {
 	const {
 		originalResp,
@@ -68,20 +71,25 @@ export default async function rewriteResp(
 		isNavigate,
 		isMod,
 		sec,
-		rewrittenParamsOriginals,
+		rewrittenParamsOriginals
 	} = pass;
 
 	// Rewrite the response headers
 	const rewrittenRespHeaders = { ...originalResp.headers };
-	const rewrittenRespHeadersRes = await rewriteRespHeaders(rewrittenRespHeaders, rewrittenParamsOriginals, accessControlRuleMap, {
-		proxyUrl,
-		clientId: clientUrl,
-		bc: new BareMux(),
-	});
+	const rewrittenRespHeadersRes = await rewriteRespHeaders(
+		rewrittenRespHeaders,
+		rewrittenParamsOriginals,
+		accessControlRuleMap,
+		{
+			proxyUrl,
+			clientId: clientUrl,
+			bc: new BareMux()
+		}
+	);
 	if (rewrittenRespHeadersRes.isErr()) {
 		return fmtNeverthrowErr(
 			"Failed to rewrite the response",
-			rewrittenRespHeadersRes.error,
+			rewrittenRespHeadersRes.error
 		);
 	}
 	const { speculationRules, sourcemapPath } = rewrittenRespHeadersRes.value;
@@ -98,10 +106,10 @@ export default async function rewriteResp(
 		typeof type === "undefined" || isHTML(type || "");
 
 	// Initialize variables that are used throughout the function
-	let rewrittenStatus = originalResp.status;
+	const rewrittenStatus = originalResp.status;
 	// Define integrityMainCheck function
 	const integrityMainCheck = (isMod: boolean) => `
-		// Integrity check for ${isMod ? 'module' : 'script'}
+		// Integrity check for ${isMod ? "module" : "script"}
 		console.log('Integrity check passed');
 	`;
 
@@ -109,43 +117,62 @@ export default async function rewriteResp(
 	// Rewrite the body
 	if (REWRITER_HTML && isNavigate && html) {
 		const body = await originalResp.text();
-		const rewrittenBodyBeforeImportRes = injFmtWrapper(mainFmtHTML({ DEBUG: Boolean(DEBUG) }).code, {
-			"BUNDLES_SANDBOX_INIT": aeroConfig.bundles.sandboxInitAero,
-			"BUNDLES_SANDBOX_END": aeroConfig.bundles.sandboxEndAero,
-			"BUNDLES_LOGGER_CLIENT": aeroConfig.bundles.loggerClient,
-			"FORCE_INLINED_SPECULATION_RULES": speculationRules && speculationRules.length > 0
-				? `
+		const rewrittenBodyBeforeImportRes = injFmtWrapper(
+			mainFmtHTML({ DEBUG: Boolean(DEBUG) }).code,
+			{
+				BUNDLES_SANDBOX_INIT: aeroConfig.bundles.sandboxInitAero,
+				BUNDLES_SANDBOX_END: aeroConfig.bundles.sandboxEndAero,
+				BUNDLES_LOGGER_CLIENT: aeroConfig.bundles.loggerClient,
+				FORCE_INLINED_SPECULATION_RULES:
+					speculationRules && speculationRules.length > 0
+						? `
 <script type="speculationRules">
 	${speculationRules}
 </script>`
-				: "",
-		}, {
-			"CLIENT_ID": aeroConfig.clientId,
-			// $aero (global proxy namespace) passthrough
-			"SEC": sec ? `...${JSON.stringify(sec)}` : "",
-			"ELECTRON_WEBVIEW_CONTROLS": "electronWebViewControls" in pass
-				? `...${JSON.stringify(pass.electronWebViewControls)}`
-				: "",
-			"PREFIX": aeroConfig.prefix,
-			"SEARCH_PARAM_OPTIONS": JSON.stringify(aeroConfig.searchParamOptions),
-			// Bundles
-			"BUNDLES_SANDBOX_CONFIG": aeroConfig.bundles.aeroSandboxConfig,
-			// Misc config options (branding, etc.)
-			"IMAGE_LOG": DEBUG || AERO_BRANDING_IN_PROD
-				? `$aero.logger.image(${aeroConfig.bundles.logo})`
-				: "",
-			"GITHUB_REPO": aeroConfig.githubRepo,
-		});
+						: ""
+			},
+			{
+				CLIENT_ID: aeroConfig.clientId,
+				// $aero (global proxy namespace) passthrough
+				SEC: sec ? `...${JSON.stringify(sec)}` : "",
+				ELECTRON_WEBVIEW_CONTROLS:
+					"electronWebViewControls" in pass
+						? `...${JSON.stringify(pass.electronWebViewControls)}`
+						: "",
+				PREFIX: aeroConfig.prefix,
+				SEARCH_PARAM_OPTIONS: JSON.stringify(
+					aeroConfig.searchParamOptions
+				),
+				// Bundles
+				BUNDLES_SANDBOX_CONFIG: aeroConfig.bundles.aeroSandboxConfig,
+				// Misc config options (branding, etc.)
+				IMAGE_LOG:
+					DEBUG || AERO_BRANDING_IN_PROD
+						? `$aero.logger.image(${aeroConfig.bundles.logo})`
+						: "",
+				GITHUB_REPO: aeroConfig.githubRepo
+			}
+		);
 		if (rewrittenBodyBeforeImportRes.isErr()) {
-			return fmtNeverthrowErr("Failed to format HTML", rewrittenBodyBeforeImportRes.error);
+			return fmtNeverthrowErr(
+				"Failed to format HTML",
+				rewrittenBodyBeforeImportRes.error
+			);
 		}
 		const rewrittenBodyBeforeImport = rewrittenBodyBeforeImportRes.value;
 		// Recursion (for iframes)
-		const rewrittenBodyRecursiveRes = injFmtWrapper(rewrittenBodyBeforeImport, {}, {
-			"IMPORT": rewrittenBodyBeforeImport,
-		});
+		const rewrittenBodyRecursiveRes = injFmtWrapper(
+			rewrittenBodyBeforeImport,
+			{},
+			{
+				IMPORT: rewrittenBodyBeforeImport
+			}
+		);
 		if (rewrittenBodyRecursiveRes.isErr()) {
-			return fmtNeverthrowErr("Failed to format HTML recursively", rewrittenBodyRecursiveRes.error);
+			return fmtNeverthrowErr(
+				"Failed to format HTML recursively",
+				rewrittenBodyRecursiveRes.error
+			);
 		}
 		rewrittenBody = rewrittenBodyRecursiveRes.value;
 		// Finally, apply the original body untouched
@@ -162,6 +189,7 @@ export default async function rewriteResp(
 
 		rewrittenBody = `${mainInjFmtXSLT}\n${body}`;
 	} else if (REWRITER_JS && isScript) {
+		/*
 		const script = await originalResp.text();
 
 		let rewriteOptionsShared = {};
@@ -173,7 +201,7 @@ export default async function rewriteResp(
 		if (INTEGRITY_EMULATION) {
 			rewrittenBody = jsRewriter.wrapScript(script, {
 				isModule: isMod,
-				insertCode: /* js\ */ `
+				insertCode: /* js\ *\/ `
 {
 	const bak = decodeURIComponent(escape(atob(\`${escapeJS(script)}\`)));
 	${integrityMainCheck(isMod)}
@@ -188,14 +216,15 @@ export default async function rewriteResp(
 				...rewriteOptionsShared,
 			});
 		}
+		*/
 	} else if (REWRITER_CACHE_MANIFEST && reqDestination === "manifest") {
 		const body = await originalResp.text();
 
 		// Safari exclusive
 		if (SUPPORT_LEGACY && type?.includes("text/cache-manifest")) {
-			const isFirefox = rewrittenReqHeaders.get("user-agent")?.includes(
-				"Firefox",
-			) || false;
+			const isFirefox =
+				rewrittenReqHeaders.get("user-agent")?.includes("Firefox") ||
+				false;
 
 			rewrittenBody = rewriteCacheManifest(body, isFirefox);
 		} else rewrittenBody = rewriteManifest(body, proxyUrl);
@@ -231,6 +260,6 @@ export default async function rewriteResp(
 	return okAsync({
 		rewrittenBody,
 		rewrittenRespHeaders,
-		rewrittenStatus,
+		rewrittenStatus
 	});
 }

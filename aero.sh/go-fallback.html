@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Loading...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: "Google Sans", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        /* Define key Material Design color variables used by iframeUtils */
+        /* These are simplified defaults; the main app uses a dynamic theme */
+        --md-sys-color-surface: #FEF7FF;
+        --md-sys-color-surface-container-lowest: #FFFFFF; 
+        --md-sys-color-surface-container-low: #F7F2FA; 
+        --md-sys-color-on-surface: #1D1B20; 
+        --md-sys-color-on-surface-variant: #49454F; 
+
+        background-color: var(--md-sys-color-surface-container-lowest);
+        color: var(--md-sys-color-on-surface);
+        text-align: center;
+      }
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      md-circular-progress {
+        --md-circular-progress-size: 48px;
+      }
+    </style>
+    <script src="/aero/defaultConfig.js"></script>
+    <script src="/aero/config.js"></script> 
+</head>
+<body>
+    <div class="loading-container">
+        <md-circular-progress indeterminate></md-circular-progress>
+    </div>
+    <script type="module" src="/src/go-fallback-init.ts"></script>
+</body>
+</html> 

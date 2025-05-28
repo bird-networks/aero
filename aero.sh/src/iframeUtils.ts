@@ -5,55 +5,51 @@
 import { showErrorModal } from "./errorModal.js";
 
 /** Check if the Aero service worker is registered and active */
-export const checkAeroServiceWorker = async (): Promise<boolean> => {
+export async function checkAeroServiceWorker(): Promise<boolean> {
 	try {
-		if (!("serviceWorker" in navigator)) {
-			return false;
-		}
+		if (!("serviceWorker" in navigator)) return false;
 
 		const registrations = await navigator.serviceWorker.getRegistrations();
-		for (const registration of registrations) {
+		for (const registration of registrations)
 			if (
 				registration.active &&
 				// @ts-ignore
 				registration.scope.includes(self.aeroConfig.prefix)
-			) {
+			)
 				return true;
-			}
-		}
 
 		return false;
 	} catch (error) {
 		console.error("[IframeUtils] Error checking service worker:", error);
 		return false;
 	}
-};
+}
 
 /** Global state for iframe functionality */
 let isShowingIframe = false;
 let currentIframeContainer: HTMLElement | null = null;
 
 /** Show service worker error dialog */
-const showServiceWorkerError = () => {
+function showServiceWorkerError(): void {
 	showErrorModal({
 		title: "Unable to proceed",
 		message:
 			"The aero service worker failed to register! Please refresh the page and try again, if this still doesn't work, please report this in the Discord server.",
 	});
-};
+}
 
 /** Close the iframe and clean up */
-export const closeIframe = () => {
+export function closeIframe(): void {
 	if (currentIframeContainer) {
 		document.body.removeChild(currentIframeContainer);
 		currentIframeContainer = null;
 	}
 	isShowingIframe = false;
 	document.body.classList.remove("iframe-active");
-};
+}
 
 /** Open a URL in the aero iframe */
-export const openInAeroIframe = async (url: string): Promise<boolean> => {
+export async function openInAeroIframe(url: string): Promise<boolean> {
 	console.debug("[IframeUtils] Opening URL in aero iframe:", url);
 
 	// Check if service worker is available
@@ -154,7 +150,7 @@ export const openInAeroIframe = async (url: string): Promise<boolean> => {
 
 	console.debug("[IframeUtils] Successfully created iframe with src:", url);
 	return true;
-};
+}
 
 // Add global styles for iframe functionality
 const iframeStyles = document.createElement("style");
@@ -166,8 +162,8 @@ iframeStyles.textContent = `
 document.head.appendChild(iframeStyles);
 
 // Handle Escape key to close iframe
-document.addEventListener("keydown", (e) => {
-	if (e.key === "Escape" && isShowingIframe) {
+document.addEventListener("keydown", (event) => {
+	if (event.key === "Escape" && isShowingIframe) {
 		closeIframe();
 	}
 });

@@ -2,7 +2,7 @@
  * @module
  */
 
-import type { FeatureFlags } from "./build/featureFlags";
+import type { FeatureFlags } from "./featureFlags";
 
 import rspack from "@rspack/core";
 
@@ -20,7 +20,9 @@ const replacementSnakeCaseToUnderscoreCase = "$1_$2";
  * @param featureFlagsRaw The feature flags to pass to `featureFlagsBuilderRaw`
  * @returns The Rspack plugin
  */
-export default function featureFlagsBuilder(featureFlagsRaw: FeatureFlags): object {
+export default function featureFlagsBuilder(
+	featureFlagsRaw: FeatureFlags,
+): object {
 	return new rspack.DefinePlugin(featureFlagsBuilderRaw(featureFlagsRaw));
 }
 
@@ -30,7 +32,9 @@ export default function featureFlagsBuilder(featureFlagsRaw: FeatureFlags): obje
  * @param featureFlagsRaw The feature flags to convert into the constant case format
  * @returns The feature flags in the constant case format
  */
-export function featureFlagsBuilderRaw(featureFlagsRaw: FeatureFlags): { [key: string]: string } {
+export function featureFlagsBuilderRaw(featureFlagsRaw: FeatureFlags): {
+	[key: string]: string;
+} {
 	const featureFlags: { [key: string]: string } = {};
 	for (const [key, val] of Object.entries(featureFlagsRaw)) {
 		const camelCaseToFeatureFlagFmtKey = key
@@ -39,7 +43,7 @@ export function featureFlagsBuilderRaw(featureFlagsRaw: FeatureFlags): { [key: s
 		featureFlags[camelCaseToFeatureFlagFmtKey] = JSON.stringify(
 			typeof val === "boolean"
 				? `($aero.config.featureFlags === "all" || $aero.config.featureFlags["${key}"] && ${val})`
-				: val
+				: val,
 		);
 	}
 	Object.freeze(featureFlags);

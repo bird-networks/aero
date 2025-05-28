@@ -17,6 +17,9 @@
 
 /** A Custom iframe element that automatically proxies all src URLs through aero */
 class AeroIframe extends HTMLIFrameElement {
+	/** A flag to prevent recursion in attributeChangedCallback */
+	private isInternallySettingSrc = false;
+
 	constructor() {
 		super();
 		console.log("[AeroIframe] Constructor called - element created!");
@@ -34,10 +37,29 @@ class AeroIframe extends HTMLIFrameElement {
 		console.log("[AeroIframe] Connected callback - element added to DOM");
 		const originalSrc = this.getAttribute("src");
 		if (originalSrc) {
-			console.log(`[AeroIframe] Processing src: ${originalSrc}`);
-			const proxiedSrc = this.buildAeroSrc(originalSrc);
-			console.log(`[AeroIframe] Setting proxied src: ${proxiedSrc}`);
-			super.src = proxiedSrc;
+			if (!this.isAlreadyProxied(originalSrc)) {
+				console.log(
+					`[AeroIframe] Processing src attribute: ${originalSrc} (not proxied)`,
+				);
+				const proxiedSrc = this.buildAeroSrc(originalSrc);
+				console.log(`[AeroIframe] Setting super.src to proxied: ${proxiedSrc}`);
+				this.isInternallySettingSrc = true;
+				super.src = proxiedSrc;
+				this.isInternallySettingSrc = false;
+			} else {
+				// Src attribute is already proxied. Ensure super.src (the actual iframe src property) matches.
+				console.debug(
+					`[AeroIframe] Src attribute is already proxied: ${originalSrc}`,
+				);
+				if (super.src !== originalSrc) {
+					console.debug(
+						`[AeroIframe] Syncing super.src to already proxied attribute: ${originalSrc}`,
+					);
+					this.isInternallySettingSrc = true;
+					super.src = originalSrc;
+					this.isInternallySettingSrc = false;
+				}
+			}
 		}
 	}
 
@@ -50,11 +72,73 @@ class AeroIframe extends HTMLIFrameElement {
 		_oldValue: string | null,
 		newValue: string | null,
 	): void {
+		if (this.isInternallySettingSrc) return;
+
 		if (name === "src" && newValue && this.isConnected) {
+			if (this.isAlreadyProxied(newValue)) {
+				console.debug(
+					`[AeroIframe] Src attribute changed to an already proxied URL: ${newValue}`,
+				);
+				// Ensure super.src matches newValue if it's already proxied and different
+				// This can happen if the attribute was set directly to a proxied URL
+				if (super.src !== newValue) {
+					this.isInternallySettingSrc = true;
+					super.src = newValue;
+					this.isInternallySettingSrc = false;
+				}
+				return;
+			}
 			const proxiedSrc = this.buildAeroSrc(newValue);
 			console.debug(`[AeroIframe] Updating src to: ${proxiedSrc}`);
+			this.isInternallySettingSrc = true;
 			super.src = proxiedSrc;
+			this.isInternallySettingSrc = false;
 		}
+	}
+
+	/**
+	 * Checks if a URL is already proxied by Aero
+	 * @param url The URL to check
+	 * @returns True if the URL is already proxied, false otherwise
+	 */
+	private isAlreadyProxied(url: string): boolean {
+		// @ts-ignore
+		const config = self.aeroConfig;
+		if (
+			!config?.prefix ||
+			typeof config.prefix !== "string" ||
+			config.prefix === ""
+		) {
+			// console.warn("[AeroIframe] aeroConfig.prefix is not suitable for isAlreadyProxied check");
+			return false; // If no config or invalid prefix, assume not proxied
+		}
+
+		const prefix = config.prefix as string; // e.g., "/go/"
+
+		// Try to parse the URL. If 'url' is already absolute, 'base' is ignored.
+		// If 'url' is relative, it's resolved against window.location.origin.
+		try {
+			const parsedUrl = new URL(url, window.location.origin);
+			// Check if the pathname starts with the prefix.
+			// e.g. if prefix is "/go/", parsedUrl.pathname "/go/foo" should match.
+			if (parsedUrl.pathname.startsWith(prefix)) {
+				return true;
+			}
+		} catch (e) {
+			// Fallback for malformed URLs or special schemes (e.g. "javascript:") that `new URL` might reject,
+			// or very simple relative paths that might not parse well standalone but are valid for startsWith.
+			// This maintains behavior for simple relative src attributes like src="/go/..."
+			// if `new URL` failed for some reason.
+		}
+
+		// Fallback check for relative URLs or if parsing failed:
+		// If prefix is "/go/", then "/go/foo".startsWith("/go/") is true.
+		// This was the original primary check and is still useful for relative paths or as a final check.
+		if (url.startsWith(prefix)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**

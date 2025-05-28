@@ -4,19 +4,27 @@
 
 // Better type-safe handling
 /// For runtime type validation
-import { is } from "ts-runtime-checks";
-import typia from "typia";
+
 /// Neverthrow
 import type { ResultAsync, Result } from "neverthrow";
-import { okAsync as nOkAsync, errAsync as nErrAsync, ok as nOk, err as nErr } from "neverthrow";
+import {
+	okAsync as nOkAsync,
+	errAsync as nErrAsync,
+	ok as nOk,
+	err as nErr
+} from "neverthrow";
 import { fmtNeverthrowErr } from "$shared/fmtErr";
 /// BareMux
 import BareMux from "@mercuryworkshop/bare-mux";
 
-import type { rewrittenParamsOriginalsType } from "$types/commonPassthrough"
+import type { rewrittenParamsOriginalsType } from "$types/commonPassthrough";
+import type CacheManager from "$fetchHandlers/isolation/CacheManager";
 
 // Sanity checkers
-import troubleshoot, { troubleshootJustConfigs, troubleshootingStrs } from "./fetchHelpers/troubleshoot";
+import troubleshoot, {
+	troubleshootJustConfigs,
+	troubleshootingStrs
+} from "./fetchHelpers/troubleshoot";
 import validateResp from "$aero/aeroSW/src/fetchHandlers/validateResp";
 
 import type { Sec } from "$types/index";
@@ -43,12 +51,15 @@ import initSandboxListeners from "./util/initSandboxListeners";
 self.logger = new AeroLogger(Boolean(DEBUG));
 self.storedValsForSandbox = {
 	/** proxy url, data */
-	"resp-cached-archive": new Map<string, {
-		transferSize: number;
-		encBody: boolean;
-		bodySize: number;
-	}>()
-}
+	"resp-cached-archive": new Map<
+		string,
+		{
+			transferSize: number;
+			encBody: boolean;
+			bodySize: number;
+		}
+	>()
+};
 initSandboxListeners();
 
 /**
@@ -57,46 +68,33 @@ initSandboxListeners();
  * @param event The passthrough Fetch event
  * @returns The proxified response
  */
-export default async function handleSW(event: FetchEvent): Promise<ResultAsync<Response, Error>> {
-	// Sanity check: Ensure the handler is being ran in a SW
-	if (!is<FetchEvent>(event))
-		return nErrAsync(new Error(troubleshootingStrs.noFetchEventMsg));
-
+export default async function handleSW(
+	event: FetchEvent
+): Promise<ResultAsync<Response, Error>> {
 	// Give troubleshooting instructions if a sanity check occurs at the fault of how the proxy site developer set up the main SW where they didn't initialize things properly
 	const troubleshootRes = troubleshoot();
 	if (troubleshootRes.isErr())
 		// Propogate the error result up the chain (`troubleshoot` is already meant to handle errors itself)
-		// @ts-ignore: This is a neverthrow error, so we are fine
-		return troubleshootRes;
-
-	// Detect feature flag mismatches
-	if (CORS_EMULATION && SERVER_ONLY)
-		return nErrAsync(new Error("CORS Emulation is not supported in server-only mode (I am working on query passthrough as an alternative to client IDs for this)"));
-
-	if (SERVER_ONLY && !("getReqDest" in self))
-		return nErrAsync(new Error("You can't run aero's SW in server-only mode without the `getReqDest` function being defined in the global scope. This method is what is used to determine the request destination, since environments like Cloudflare Workers don't have access to `Request.destination`."));
-	if (SERVER_ONLY && !("serverFetch" in self))
-		return nErrAsync(new Error("You can't run aero's SW in server-only mode without the `serverFetch` function being defined in the global scope. This method is what is used to fetch the proxied request instead of BareMuxe, since environments like Cloudflare Workers to define their native fetch method."));
+		return nErrAsync(troubleshootRes.error);
 
 	// Develop a context
 	const req = event.request;
 	const reqUrl = new URL(req.url);
 	const reqParams = reqUrl.searchParams;
-	const reqDest = SERVER_ONLY ? self.getReqDest(req.destination, reqParams) : req.destination;
+	const reqDest = req.destination;
 	/** Used to determine if the request was made to load the homepage; this is needed so that the proxy will know when to rewrite the html files. For example, you wouldn't want it to rewrite a fetch request. */
 	const isNavigate =
-		req.mode === "navigate" &&
-		["document", "iframe"].includes(reqDest);
+		req.mode === "navigate" && ["document", "iframe"].includes(reqDest);
 	/** If the client is an iframe. This is used for determining the request url. */
 	const isiFrame = reqDest === "iframe";
 	/** If the request is intended for a script, and the script is intended to be a module (recieved through request URL passthrough) */
-	let isMod: boolean = false;
+	let isMod = false;
 	/** If the request is intended for a script */
 	const isScript = reqDest === "script";
 	if (isScript) {
 		const isModParamStatus = getPassthroughParam(reqParams, "isMod");
 		if (isModParamStatus.passthroughParamExists)
-			isMod = isModParamStatus.passthroughParamExists && isModParamStatus.param === "true";
+			isMod = isModParamStatus.param === "true";
 	}
 
 	const accessControlRuleMap = new Map<string, string>();
@@ -107,20 +105,21 @@ export default async function handleSW(event: FetchEvent): Promise<ResultAsync<R
 	const rewrittenParamsOriginals: rewrittenParamsOriginalsType = {};
 
 	// Get the clientUrl through catch-all interception
-	const catchAllClientsValid = REQ_INTERCEPTION_CATCH_ALL === "clients" && event.clientId !== "";
-	// Detect feature flag mismatches
-	if (catchAllClientsValid && SERVER_ONLY)
-		return nErrAsync(new Error(`${troubleshootingStrs.devErrTag}Feature Flags Mismatch: The Feature Flag "REQ_INTERCEPTION_CATCH_ALL" can't be set to "clients" when "SERVER_ONLY" is enabled.`));
+	const catchAllClientsValid =
+		REQ_INTERCEPTION_CATCH_ALL === "clients" && event.clientId !== "";
 	const clientUrlRes = await getClientURLAeroWrapper({
 		reqUrl,
 		reqHeaders: req.headers,
 		clientId: event.clientId,
 		catchAllClientsValid,
 		isNavigate,
-		rewrittenParamsOriginals,
-	})
+		rewrittenParamsOriginals
+	});
 	if (clientUrlRes.isErr())
-		return fmtNeverthrowErr(`${troubleshootingStrs.userErrTag}Failed to get the client URL. You have probably made a typo.`, clientUrlRes.error);
+		return fmtNeverthrowErr(
+			`${troubleshootingStrs.userErrTag}Failed to get the client URL. You have probably made a typo.`,
+			clientUrlRes.error
+		) as ResultAsync<Response, Error>;
 	/** This client URL is used when forming the proxy URL and in various uses for emulation */
 	const clientUrl = clientUrlRes.value;
 	if (clientUrl === "skip") {
@@ -133,46 +132,64 @@ export default async function handleSW(event: FetchEvent): Promise<ResultAsync<R
 		req,
 		reqUrl,
 		clientId: event.clientId,
-		aeroPathFilter: (reqPath: string) => reqPath.includes("aero"),
+		aeroPathFilter: (reqPath: string): boolean => reqPath.includes("aero"),
 		bundlesPath: "/bundles",
 		reqDestination: reqDest,
 		isNavigate,
 		isiFrame,
 		sec,
 		cache: {} as Cache,
-		rewrittenParamsOriginals,
+		rewrittenParamsOriginals
 	});
 	if (rewrittenReqValsRes.isErr())
-		return fmtNeverthrowErr("Failed to rewrite the request", rewrittenReqValsRes.error);
+		return fmtNeverthrowErr(
+			"Failed to rewrite the request",
+			rewrittenReqValsRes.error
+		) as ResultAsync<Response, Error>;
+
 	const rewrittenReqVals = rewrittenReqValsRes.value;
 	if ("finalRespEarly" in rewrittenReqVals) {
 		if (rewrittenReqVals.finalRespEarly)
 			return nOkAsync(rewrittenReqVals.finalRespEarly);
-		else
-			return nErrAsync(new Error("Final response early was undefined"));
+		return nErrAsync(new Error("Final response early was undefined"));
 	}
-	// At this point we know it's the success case
-	const successReqVals = rewrittenReqVals as { cacheMan: any; rewrittenReqOpts: RequestInit; proxyUrl: string; };
-	const { rewrittenReqOpts, proxyUrl, cacheMan } = successReqVals;
+
+	const successReqVals = rewrittenReqVals as {
+		cacheMan: CacheManager | undefined;
+		rewrittenReqOpts: RequestInit;
+		proxyUrl: string;
+	};
+	const { rewrittenReqOpts, proxyUrl } = successReqVals;
+	// TODO: Use `Nullable` from `option-t`
+	const cacheMan = successReqVals.cacheMan ?? null;
 
 	// @ts-ignore
 	if (typeof electronWebViewControls !== "undefined") {
-		if ("httpReferrer" in electronWebViewControls && electronWebViewControls.httpReferrer)
-			(rewrittenReqOpts.headers as Headers).set("Referer", electronWebViewControls.httpReferrer);
-		if ("useragent" in electronWebViewControls && electronWebViewControls.useragent)
-			(rewrittenReqOpts.headers as Headers).set("User-Agent", electronWebViewControls.useragent);
+		if (
+			"httpReferrer" in electronWebViewControls &&
+			electronWebViewControls.httpReferrer
+		)
+			(rewrittenReqOpts.headers as Headers).set(
+				"Referer",
+				electronWebViewControls.httpReferrer as string
+			);
+		if (
+			"useragent" in electronWebViewControls &&
+			electronWebViewControls.useragent
+		)
+			(rewrittenReqOpts.headers as Headers).set(
+				"User-Agent",
+				electronWebViewControls.useragent as string
+			);
 	}
 
 	// Make the request to the proxy
-	const proxyResp = await (SERVER_ONLY ?
-		self.serverFetch(proxyUrl, rewrittenReqOpts) :
-		(new BareMux()).fetch(proxyUrl, rewrittenReqOpts));
+	const proxyResp = await new BareMux().fetch(proxyUrl, rewrittenReqOpts);
 	// Sanity checks for if the response is invalid
 	const validateRespRes = await validateResp(proxyResp);
 	if (validateRespRes.isErr())
 		// Propogate the error result up the chain (`validateResp` is already meant to handle errors itself)
-		// @ts-ignore
-		return validateRespRes;
+		return nErrAsync(validateRespRes.error);
 
 	const rewriteRespPass = {
 		originalResp: proxyResp,
@@ -184,60 +201,79 @@ export default async function handleSW(event: FetchEvent): Promise<ResultAsync<R
 		isNavigate,
 		isMod,
 		sec,
-		rewrittenParamsOriginals,
+		rewrittenParamsOriginals
 	};
 	// @ts-ignore
 	if (typeof electronWebViewControls !== "undefined")
 		// @ts-ignore
 		rewriteRespPass.electronWebViewControls = electronWebViewControls;
 	// Rewrite the response
-	const rewrittenRespRes = await rewriteResp(rewriteRespPass, accessControlRuleMap);
+	const rewrittenRespRes = await rewriteResp(
+		rewriteRespPass,
+		accessControlRuleMap
+	);
 	if (rewrittenRespRes.isErr())
-		return fmtNeverthrowErr("Failed to rewrite the response", rewrittenRespRes.error);
-	const { rewrittenBody, rewrittenRespHeaders, rewrittenStatus } = rewrittenRespRes.value;
+		return fmtNeverthrowErr(
+			"Failed to rewrite the response",
+			rewrittenRespRes.error
+		) as ResultAsync<Response, Error>;
+	const { rewrittenBody, rewrittenRespHeaders, rewrittenStatus } =
+		rewrittenRespRes.value;
 
 	// Perform encoded body emulation
-	if (ENC_BODY_EMULATION && (typeof rewrittenBody === "string" || rewrittenBody instanceof ArrayBuffer))
+	if (
+		ENC_BODY_EMULATION &&
+		(typeof rewrittenBody === "string" ||
+			rewrittenBody instanceof ArrayBuffer)
+	)
 		// This will modify the resp headers
 		await perfEncBodyEmu(rewrittenBody, rewrittenRespHeaders);
 
 	/** The rewritten response */
-	const rewrittenResp = new Response(rewrittenStatus === 204 ? null : rewrittenBody, {
-		headers: rewrittenRespHeaders,
-		status: rewrittenStatus
-	});
+	const rewrittenResp = new Response(
+		rewrittenStatus === 204 ? null : rewrittenBody,
+		{
+			headers: rewrittenRespHeaders,
+			status: rewrittenStatus
+		}
+	);
 
 	/*/
 	// TODO: Save this for use in Nested SWs later
 	*/
-	const clientsWithSameProxyOrigin = {} as any; // Temporary placeholder
-	const cache = cacheMan; // Use cacheMan as cache
-	/*
-	for (const client of await clients.matchAll()) {
-		if (isNavigate) {
-			let proxyClientOrigin: string
-			try {
-				proxyClientOrigin = new URL(afterPrefix(client.url, self.config.prefix, self.logger)).origin;
-			} catch (err) {
-				return fmtNeverthrowErr(`Failed to get the proxified version of the client URL (from ${client.url})`, err);
+	const clientsWithSameProxyOrigin: Client[] = [];
+	if (cacheMan !== null) {
+		// const cache = cacheMan; // Use cacheMan as cache
+		/*
+		for (const client of await clients.matchAll()) {
+			if (isNavigate) {
+				let proxyClientOrigin: string
+				try {
+					proxyClientOrigin = new URL(afterPrefix(client.url, aeroConfig.prefix, self.logger)).origin;
+				} catch (err) {
+					return fmtNeverthrowErr(`Failed to get the proxified version of the client URL (from ${client.url})`, err);
+				}
+				if (proxyClientOrigin === proxyUrl.origin)
+					clientsWithSameProxyOrigin.push(client);
 			}
-			if (proxyClientOrigin === proxyUrl.origin)
-				clientsWithSameProxyOrigin.push(client);
 		}
-	}
-	*/
+		*/
 
-	// Perform Cache Emulation
-	if (CACHES_EMULATION) {
-		const perfCacheSettingRes = await perfCacheSetting({
-			reqUrlHref: reqUrl.href,
-			rewrittenResp,
-			// @ts-ignore: This is created under an if statement of `FEATURES_CACHE_EMULATION`, so we are fine
-			cacheMan,
-			clientId: event.clientId
-		})
-		if (perfCacheSettingRes.isErr())
-			return fmtNeverthrowErr("Failed to cache the response", perfCacheSettingRes.error);
+		// Perform Cache Emulation
+		if (CACHES_EMULATION) {
+			const perfCacheSettingRes = await perfCacheSetting({
+				reqUrlHref: reqUrl.href,
+				rewrittenResp,
+				// @ts-ignore: This is created under an if statement of `CACHES_EMULATION`, so we are fine
+				cacheMan,
+				clientId: event.clientId
+			});
+			if (perfCacheSettingRes.isErr())
+				return fmtNeverthrowErr(
+					"Failed to cache the response",
+					perfCacheSettingRes.error
+				) as ResultAsync<Response, Error>;
+		}
 	}
 
 	// Return the response
@@ -245,24 +281,24 @@ export default async function handleSW(event: FetchEvent): Promise<ResultAsync<R
 }
 
 /**
- * Aero's main handler; this is what you call in your SW when aero should be routed. Ideally, you would determine when it should be routed with `routeAero`. This also internally wraps `handleAssertReturning` to add on detail to the errors from `https://github.com/GoogleFeud/ts-runtime-checks`.
+ * Aero's main handler; this is what you call in your SW when aero should be routed. Ideally, you would determine when it should be routed with `routeAero`
  */
 self.aeroHandle = handleSW;
+
 /**
  * Check if the current path should route to aero using the prefix you set in the config
- * @param event 
+ * @param event
  * @returns Whether `aeroHandle` should be called
  */
 self.routeAero = (event: FetchEvent): Result<boolean, Error> => {
-	// Sanity check: Ensure the handler is being ran in a SW
-	if (!is<FetchEvent>(event))
-		return nErr(new Error(troubleshootingStrs.noFetchEventMsg));
-
 	// Give troubleshooting instructions if a sanity check occurs at the fault of how the proxy site developer set up the main SW where they didn't initialize things properly
 	const troubleshootJustConfigsRes = troubleshootJustConfigs();
 	if (troubleshootJustConfigsRes.isErr())
 		// Propogate the error result up the chain (`troubleshootJustConfigs` is already meant to handle errors itself)
+		// TODO: Use `fmtNeverthrowErr`
 		return nErr(new Error("Troubleshooting configuration check failed"));
 
-	return nOk(event.request.url.startsWith(location.origin + aeroConfig.prefix));
-}
+	return nOk(
+		event.request.url.startsWith(location.origin + aeroConfig.prefix)
+	);
+};

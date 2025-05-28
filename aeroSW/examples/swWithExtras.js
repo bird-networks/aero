@@ -14,7 +14,7 @@ importScripts(`${dirToAero}config.js`);
 importScripts(aeroConfig.bundles["bare-mux"]);
 // aero handlers
 importScripts(aeroConfig.bundles.handle);
-importScripts(aeroConfig.bundles.logger);
+//importScripts(aeroConfig.bundles.logger);
 
 importScripts(pathToPatchedAerohandler);
 
@@ -22,7 +22,7 @@ const aeroHandlerWithExtras = patchAeroHandler(aeroHandle);
 
 addEventListener("install", skipWaiting);
 
-addEventListener(
-  "fetch",
-  (event) => event.respondWith(aeroHandlerWithExtras(event)),
-);
+addEventListener("fetch", (event) => {
+  console.debug("[aero Extras] Fetching");
+  return event.respondWith(aeroHandlerWithExtras(event));
+});

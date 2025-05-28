@@ -1,11 +1,11 @@
 import { defineConfig } from "vite";
 import { dreamlandPlugin } from "vite-plugin-dreamland";
-import type { Plugin } from "vite";
+import type { IndexHtmlTransformResult, Plugin } from "vite";
 
 import { resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { watch } from "chokidar";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
@@ -32,14 +32,14 @@ const port = Number.parseInt(process.env.PORT || "2525", 10);
  */
 const debounceDelay = (() => {
 	const envValue = process.env.DEBOUNCE_DELAY;
-	if (!envValue) return 30000; // Default: 30 seconds
+	if (!envValue) return 15000; // Default: 15 seconds
 
 	const parsed = Number.parseInt(envValue, 10);
 	if (Number.isNaN(parsed) || parsed < 0) {
 		console.warn(
-			`Invalid DEBOUNCE_DELAY value: ${envValue}. Using default 30 seconds.`,
+			`Invalid DEBOUNCE_DELAY value: ${envValue}. Using default 15 seconds.`
 		);
-		return 30000;
+		return 15000;
 	}
 
 	// Convert seconds to milliseconds
@@ -48,39 +48,86 @@ const debounceDelay = (() => {
 
 const __dirname = import.meta.dirname;
 
+// Define the regex at the module scope
+const dotFilesAndFoldersRegex = /(^|[\\/\\\\])\\../;
+
 const aeroSWPath = resolve(__dirname, "../", "aeroSW");
+const extrasPath = resolve(aeroSWPath, "extras");
 const aeroSandboxPath = resolve(
 	__dirname,
 	"../",
 	"AeroSandbox",
 	"dist",
-	debug ? "debug" : "prod",
+	debug ? "debug" : "prod"
 );
 const aeroPath = resolve(aeroSWPath, "dist", debug ? "debug" : "prod");
+
+/**
+ * Custom Vite plugin to serve a fallback HTML page for /go/* routes
+ * if the service worker hasn't intercepted the request.
+ */
+function viteGoFallbackPlugin(): Plugin {
+	const fallbackHtmlPath = resolve(__dirname, "go-fallback.html");
+	let fallbackHtmlContent: string | null = null;
+
+	return {
+		name: "vite-go-fallback",
+		configureServer(server): void {
+			// Pre-read the fallback HTML content
+			try {
+				fallbackHtmlContent = readFileSync(fallbackHtmlPath, "utf-8");
+			} catch (error) {
+				console.error(
+					`[GoFallback] Failed to read go-fallback.html: ${error}`
+				);
+			}
+
+			server.middlewares.use(async (req, res, next) => {
+				if (req.url?.startsWith("/go/")) {
+					if (fallbackHtmlContent) {
+						console.log(
+							`[GoFallback] Serving fallback HTML for ${req.url}`
+						);
+						res.setHeader("Content-Type", "text/html");
+						res.end(fallbackHtmlContent);
+						return;
+					}
+					// If fallback HTML isn't available, let Vite handle it (might 404 or other plugins might act)
+					console.warn(
+						`[GoFallback] /go/ request for ${req.url} but fallback HTML not loaded.`
+					);
+				}
+				next();
+			});
+		}
+	};
+}
 
 /** Custom plugin for Vite to serve the wisp server */
 function viteWispPlugin(): Plugin {
 	return {
 		name: "vite-wisp-server",
-		configureServer(server) {
+		configureServer(server): void {
 			server.httpServer?.on("upgrade", (req, socket, head) => {
 				console.log("wisp upgrade", req.url);
-				if (req.url.startsWith("/wisp")) wisp.routeRequest(req, socket, head);
+				if (req.url.startsWith("/wisp"))
+					wisp.routeRequest(req, socket, head);
 			});
-		},
+		}
 	};
 }
 
+/** 30 minute interval for auto-update */
+const AUTO_UPDATE_INTERVAL = 30 * 60 * 1000;
 /**
- * Custom plugin to watch source directories and trigger builds automatically
- * Automatically builds missing `dist` files on startup and watches for source changes with debouncing
- * Only active in debug mode
+ * Custom plugin to watch source directories and trigger builds automatically.
+ * Automatically builds missing `dist` files on startup and watches for source changes with debouncing.
+ * Only works in debug mode.
  */
 function viteBuildWatchPlugin(): Plugin {
 	const buildQueue = new Set<string>();
 	let isBuilding = false;
 	const buildTimeouts = new Map<string, NodeJS.Timeout>();
-	const AUTO_UPDATE_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
 	/**
 	 * Check if a directory exists and has files
@@ -101,17 +148,17 @@ function viteBuildWatchPlugin(): Plugin {
 	 * Execute git pull in the repository root
 	 * Automatically updates the repository from the remote
 	 */
-	async function runGitPull() {
+	async function runGitPull(): Promise<void> {
 		console.info("🔄 Running automatic git pull...");
 
 		try {
 			const gitProcess = spawn("git", ["pull"], {
 				cwd: resolve(__dirname, "../"),
-				stdio: "inherit",
+				stdio: "inherit"
 			});
 
 			await new Promise((resolve, reject) => {
-				gitProcess.on("close", (code) => {
+				gitProcess.on("close", code => {
 					if (code === 0) {
 						console.info("✅ Git pull completed successfully");
 						resolve(void 0);
@@ -132,11 +179,14 @@ function viteBuildWatchPlugin(): Plugin {
 	 * @param projectPath - Absolute path to the project directory
 	 * @param projectName - Human-readable name of the project for logging
 	 */
-	async function runBuild(projectPath: string, projectName: string) {
+	async function runBuild(
+		projectPath: string,
+		projectName: string
+	): Promise<void> {
 		if (isBuilding) {
 			buildQueue.add(projectPath);
 			console.info(
-				`📋 ${projectName} build queued (another build in progress)`,
+				`📋 ${projectName} build queued (another build in progress)`
 			);
 			return;
 		}
@@ -159,24 +209,24 @@ function viteBuildWatchPlugin(): Plugin {
 				cwd: projectPath,
 				// Monitor output for completion signals
 				stdio: "pipe",
-				env: buildEnv,
+				env: buildEnv
 			});
 
 			// Pipe output to console while monitoring for completion
 			let buildOutput = "";
-			buildProcess.stdout?.on("data", (data) => {
+			buildProcess.stdout?.on("data", data => {
 				const chunk = data.toString();
 				buildOutput += chunk;
 				process.stdout.write(chunk);
 			});
-			buildProcess.stderr?.on("data", (data) => {
+			buildProcess.stderr?.on("data", data => {
 				process.stderr.write(data);
 			});
 
 			await new Promise((resolve, reject) => {
 				let completed = false;
 
-				function complete(success: boolean, message: string) {
+				function complete(success: boolean, message: string): void {
 					if (completed) return;
 					completed = true;
 
@@ -190,7 +240,7 @@ function viteBuildWatchPlugin(): Plugin {
 				}
 
 				// Monitor output for completion signals
-				buildProcess.stdout?.on("data", (data) => {
+				buildProcess.stdout?.on("data", data => {
 					const output = data.toString();
 					if (
 						output.includes("compiled successfully") ||
@@ -200,24 +250,27 @@ function viteBuildWatchPlugin(): Plugin {
 						setTimeout(() => {
 							if (!completed) {
 								console.info(
-									`🎯 ${projectName} detected completion, forcing exit`,
+									`🎯 ${projectName} detected completion, forcing exit`
 								);
-								complete(true, "build completed (detected from output)");
+								complete(
+									true,
+									"build completed (detected from output)"
+								);
 							}
 						}, 1000);
 					}
 				});
 
-				buildProcess.on("close", (code) => {
+				buildProcess.on("close", code => {
 					complete(
 						code === 0,
 						code === 0
 							? "build completed successfully"
-							: `build failed with code ${code}`,
+							: `build failed with code ${code}`
 					);
 				});
 
-				buildProcess.on("error", (err) => {
+				buildProcess.on("error", err => {
 					complete(false, `build process error: ${err.message}`);
 				});
 
@@ -226,19 +279,22 @@ function viteBuildWatchPlugin(): Plugin {
 					() => {
 						if (!completed) {
 							console.warn(
-								`⏰ ${projectName} build timed out after 2 minutes, terminating...`,
+								`⏰ ${projectName} build timed out after 2 minutes, terminating...`
 							);
 							buildProcess.kill("SIGTERM");
 							setTimeout(() => {
 								if (!completed) {
 									buildProcess.kill("SIGKILL");
-									complete(false, "build timed out and was killed");
+									complete(
+										false,
+										"build timed out and was killed"
+									);
 								}
 							}, 5000);
 						}
 					},
 					// 2 minutes
-					2 * 60 * 1000,
+					2 * 60 * 1000
 				);
 
 				// Clean up timeout when process completes
@@ -248,7 +304,7 @@ function viteBuildWatchPlugin(): Plugin {
 			});
 
 			console.info(
-				`🎉 ${projectName} build process completed, checking for queued builds...`,
+				`🎉 ${projectName} build process completed, checking for queued builds...`
 			);
 		} catch (err) {
 			console.warn(`Failed to build ${projectName}:`, err);
@@ -262,10 +318,14 @@ function viteBuildWatchPlugin(): Plugin {
 				const nextProjectName = nextBuild.includes("AeroSandbox")
 					? "AeroSandbox"
 					: "aeroSW";
-				console.info(`🔄 Processing queued build for ${nextProjectName}`);
+				console.info(
+					`🔄 Processing queued build for ${nextProjectName}`
+				);
 				setTimeout(() => runBuild(nextBuild, nextProjectName), 100);
 			} else {
-				console.info("✨ All builds completed, no queued builds remaining");
+				console.info(
+					"✨ All builds completed, no queued builds remaining"
+				);
 			}
 		}
 	}
@@ -276,7 +336,7 @@ function viteBuildWatchPlugin(): Plugin {
 	 * @param projectPath - Absolute path to the project directory
 	 * @param projectName - Human-readable name of the project for logging
 	 */
-	function debouncedBuild(projectPath: string, projectName: string) {
+	function debouncedBuild(projectPath: string, projectName: string): void {
 		// Clear existing timeout for this project
 		const existingTimeout = buildTimeouts.get(projectName);
 		if (existingTimeout) {
@@ -284,7 +344,7 @@ function viteBuildWatchPlugin(): Plugin {
 		}
 
 		console.info(
-			`⏱️ ${projectName} file changed, waiting ${debounceDelay}ms for more changes...`,
+			`⏱️  ${projectName} file changed, waiting ${debounceDelay}ms for more changes...`
 		);
 
 		// Set new timeout
@@ -298,7 +358,7 @@ function viteBuildWatchPlugin(): Plugin {
 
 	return {
 		name: "vite-build-watch",
-		async configureServer() {
+		async configureServer(): Promise<void> {
 			// Only activate file watching in debug mode
 			if (!debug) {
 				console.info("📴 Build watching disabled (not in debug mode)");
@@ -310,7 +370,7 @@ function viteBuildWatchPlugin(): Plugin {
 				__dirname,
 				"../",
 				"AeroSandbox",
-				"src",
+				"src"
 			);
 
 			// Check if builds are needed and trigger them
@@ -320,16 +380,20 @@ function viteBuildWatchPlugin(): Plugin {
 			const needsAeroSandboxBuild = !hasFiles(aeroSandboxPath);
 
 			if (needsAeroSWBuild || needsAeroSandboxBuild) {
-				console.info("📦 Missing dist files detected, triggering builds...");
+				console.info(
+					"📦 Missing dist files detected, triggering builds..."
+				);
 
 				// Build AeroSandbox first since aeroSW might depend on it
 				if (needsAeroSandboxBuild) {
 					console.info("🚀 AeroSandbox dist not found, building...");
 					await runBuild(
 						resolve(__dirname, "../", "AeroSandbox"),
-						"AeroSandbox",
+						"AeroSandbox"
 					);
-					console.info("🔄 AeroSandbox build completed, checking aeroSW...");
+					console.info(
+						"🔄 AeroSandbox build completed, checking aeroSW..."
+					);
 				}
 
 				if (needsAeroSWBuild) {
@@ -344,35 +408,43 @@ function viteBuildWatchPlugin(): Plugin {
 			}
 
 			// Set up file watchers for source changes
-			console.info("🔍 Setting up file watchers for source directories...");
+			console.info(
+				"🔍 Setting up file watchers for source directories..."
+			);
 
 			// Watch aeroSW `src` directory
-			watch(aeroSWSourcePath, { ignored: /(^|[\/\\])\../ }).on(
-				"change",
-				(path) => {
-					console.info(`📁 aeroSW source changed: ${path}`);
-					debouncedBuild(aeroSWPath, "aeroSW");
-				},
-			);
+			watch(aeroSWSourcePath, {
+				ignored: dotFilesAndFoldersRegex,
+				awaitWriteFinish: {
+					stabilityThreshold: 2000,
+					pollInterval: 100
+				}
+			}).on("change", path => {
+				console.info(`📁 aeroSW source changed: ${path}`);
+				debouncedBuild(aeroSWPath, "aeroSW");
+			});
 
 			// Watch AeroSandbox `src` directory
-			watch(aeroSandboxSourcePath, { ignored: /(^|[\/\\])\../ }).on(
-				"change",
-				(path) => {
-					console.info(`📁 AeroSandbox source changed: ${path}`);
-					debouncedBuild(
-						resolve(__dirname, "../", "AeroSandbox"),
-						"AeroSandbox",
-					);
-				},
-			);
+			watch(aeroSandboxSourcePath, {
+				ignored: dotFilesAndFoldersRegex,
+				awaitWriteFinish: {
+					stabilityThreshold: 2000,
+					pollInterval: 100
+				}
+			}).on("change", path => {
+				console.info(`📁 AeroSandbox source changed: ${path}`);
+				debouncedBuild(
+					resolve(__dirname, "../", "AeroSandbox"),
+					"AeroSandbox"
+				);
+			});
 
 			console.info("👀 File watching active");
 
 			// Set up automatic `git pull` if enabled
 			if (autoUpdate) {
 				console.info(
-					`🔄 Auto-update enabled: git pull every ${AUTO_UPDATE_INTERVAL / 60000} minutes`,
+					`🔄 Auto-update enabled: git pull every ${AUTO_UPDATE_INTERVAL / 60000} minutes`
 				);
 
 				// Run initial git pull
@@ -384,10 +456,10 @@ function viteBuildWatchPlugin(): Plugin {
 				}, AUTO_UPDATE_INTERVAL);
 			} else {
 				console.info(
-					"📴 Auto-update disabled (set AUTO_UPDATE=true to enable)",
+					"📴 Auto-update disabled (set AUTO_UPDATE=true to enable)"
 				);
 			}
-		},
+		}
 	};
 }
 
@@ -395,7 +467,7 @@ function viteBuildWatchPlugin(): Plugin {
 function viteOpenGraphPlugin(): Plugin {
 	return {
 		name: "vite-opengraph-inject",
-		transformIndexHtml(html) {
+		transformIndexHtml(html): IndexHtmlTransformResult {
 			// Extract metadata from package.json
 			const { description, homepage } = packageJson;
 			const name = "aero proxy";
@@ -413,12 +485,12 @@ function viteOpenGraphPlugin(): Plugin {
 				`<meta name="twitter:card" content="summary_large_image" />`,
 				`<meta name="twitter:title" content="${name} demo" />`,
 				`<meta name="twitter:description" content="${description}" />`,
-				`<meta name="twitter:image" content="${logoPath}" />`,
+				`<meta name="twitter:image" content="${logoPath}" />`
 			].join("\n    ");
 
 			// Inject the meta tags before the closing </head> tag
 			return html.replace("</head>", `    ${ogTags}\n  </head>`);
-		},
+		}
 	};
 }
 
@@ -426,8 +498,20 @@ export default defineConfig({
 	server: {
 		port,
 		allowedHosts: true,
+		watch: {
+			ignored: [
+				`${aeroSandboxPath}/**`,
+				`${aeroPath}/**`,
+				// Rsdoctor Output is causing loops
+				`${aeroSandboxPath}/.rsdoctor/**`,
+				`${aeroPath}/.rsdoctor/**`,
+				`${aeroSWPath}/dist/debug/sw/.rsdoctor/**`,
+				`${aeroSWPath}/dist/prod/sw/.rsdoctor/**`
+			]
+		}
 	},
 	plugins: [
+		//viteGoFallbackPlugin(),
 		[
 			dreamlandPlugin(),
 			viteWispPlugin(),
@@ -439,44 +523,58 @@ export default defineConfig({
 						src: `${aeroSWPath}/examples/swWithExtras.js`,
 						dest: ".",
 						rename: "sw.js",
-						overwrite: false,
+						overwrite: false
+					},
+					{
+						src: `${extrasPath}/**/*`,
+						dest: "aero/extras",
+						overwrite: false
 					},
 					{
 						src: `${aeroSWPath}/examples/config.js`,
 						dest: "aero",
 						rename: "config.js",
-						overwrite: false,
+						overwrite: false
 					},
 					{
 						src: `${baremuxPath}/**/*`,
 						dest: "baremux",
-						overwrite: false,
+						overwrite: false
 					},
 					{
 						src: `${resolve(__dirname, "../", "AeroSandbox", "dist", debug ? "debug" : "prod")}/**/*`,
 						dest: "aero/AeroSandbox",
-						overwrite: false,
+						overwrite: false
 					},
 					{
 						src: `${resolve(aeroSWPath, "dist", debug ? "debug" : "prod")}/**/*`,
 						dest: "aero",
-						overwrite: false,
+						overwrite: false
 					},
 					{
 						src: `${epoxyPath}/**/*`,
 						dest: "epoxy",
-						overwrite: false,
+						overwrite: false
 					},
 					{
 						src: `${libcurlPath}/**/*`,
 						dest: "libcurl",
-						overwrite: false,
-					},
+						overwrite: false
+					}
 				],
 				watch: {
 					reloadPageOnChange: true,
-				},
-			}),
-		],
-	],
+					options: {
+						ignored: [
+							// Rsdoctor Output is causing loops
+							`${aeroSandboxPath}/.rsdoctor/**`,
+							`${aeroPath}/.rsdoctor/**`,
+							`${aeroSWPath}/dist/debug/sw/.rsdoctor/**`,
+							`${aeroSWPath}/dist/prod/sw/.rsdoctor/**`
+						]
+					}
+				}
+			})
+		]
+	]
 });

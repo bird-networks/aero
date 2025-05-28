@@ -1,9 +1,13 @@
-import type { ResultAsync } from "neverthrow";
+import type { ResultAsync, Err } from "neverthrow";
 import { errAsync as nErrAsync, okAsync } from "neverthrow";
 import { fmtNeverthrowErr } from "$shared/fmtErr";
 
+import { afterPrefix } from "$util/getProxyURL";
+
 // Utility
-import getClientUrlThroughClient, { getClientUrlThroughForcedReferrer } from "./getClientURL";
+import getClientUrlThroughClient, {
+	getClientUrlThroughForcedReferrer
+} from "./getClientURL";
 
 import type { rewrittenParamsOriginalsType } from "$types/commonPassthrough";
 
@@ -40,7 +44,7 @@ export interface GetClientURLAeroWrapperArgs {
  * }
  */
 export default async function getClientURLAeroWrapper(
-	pass: GetClientURLAeroWrapperArgs,
+	pass: GetClientURLAeroWrapperArgs
 ): Promise<ResultAsync<string, Error>> {
 	const {
 		reqUrl,
@@ -48,64 +52,90 @@ export default async function getClientURLAeroWrapper(
 		clientId,
 		catchAllClientsValid,
 		isNavigate,
-		rewrittenParamsOriginals,
+		rewrittenParamsOriginals
 	} = pass;
 
 	/** The URL from the client's window */
 	let clientUrl: URL | undefined;
 
 	if (isNavigate) {
-		// TODO: clientUrl = new URL(afterPrefix(reqUrl));
-	} else if (REQ_INTERCEPTION_CATCH_ALL === "clients" && isNavigate) {
-		logger.debug("Attempting catch-all interception through clients");
-		if (!catchAllClientsValid) {
-			return nErrAsync(
-				new Error("Missing the client ID required to get the client URL"),
-			);
-		}
-		const clientUrlRes = await getClientUrlThroughClient(clientId);
-		if (clientUrlRes.isErr()) {
-			const err = clientUrlRes.error;
-			return nErrAsync(logger.fatalErr(err.message));
-		}
-		clientUrl = clientUrlRes.value;
-	} else if (REQ_INTERCEPTION_CATCH_ALL === "referrer") {
-		logger.debug("Attempting catch-all interception through forced referrers");
-		if (!reqHeaders.has("referer-policy")) {
-			return nErrAsync(
-				new Error(
-					"Somewhere along the line the force referrer policy enforcement never happened, since this is not a navigation request and there is no referrer policy on the Request object",
-				),
-			);
-		}
-		const clientUrlRes = await getClientUrlThroughForcedReferrer({
-			params: reqUrl.searchParams,
-			referrerPolicyParamName: aeroConfig.searchParamOptions?.referrerPolicy || "x-aero-referrer-policy-override",
-			referrerPolicy: reqHeaders.get("referrer-policy") || "no-referrer",
-			rewrittenParamsOriginals,
-		});
-		if (clientUrlRes.isErr()) {
-			return fmtNeverthrowErr(
-				"Failed to get the client URL through the forced referrer policy",
-				clientUrlRes.error,
-			);
-		}
-		clientUrl = clientUrlRes.value;
-	} else {
-		return fmtNeverthrowErr(
-			"No catch-all interception types found and rewrite-url is currently unsupported",
-			new Error("Unsupported request interception backend")
+		clientUrl = new URL(
+			afterPrefix(reqUrl.href, self.aeroConfig?.prefix, self.logger)
 		);
+	} else {
+		// This block handles non-navigation requests (!isNavigate)
+		if (REQ_INTERCEPTION_CATCH_ALL === "clients") {
+			logger.debug(
+				"Attempting catch-all interception through clients for non-navigation request"
+			);
+			// catchAllClientsValid ensures clientId is present when REQ_INTERCEPTION_CATCH_ALL === "clients"
+			if (!catchAllClientsValid) {
+				return nErrAsync(
+					new Error(
+						"Client ID is missing or invalid; required for 'clients' interception method for non-navigation requests."
+					)
+				);
+			}
+			const clientUrlRes = await getClientUrlThroughClient(clientId);
+			if (clientUrlRes.isErr()) {
+				// fmtNeverthrowErr is called with async = false (default), so it returns Err<unknown, Error>
+				const formattedErrResult: Err<unknown, Error> =
+					fmtNeverthrowErr(
+						"Failed to get client URL via 'clients' method",
+						clientUrlRes.error
+					) as Err<unknown, Error>;
+				return nErrAsync(formattedErrResult.error);
+			}
+			clientUrl = clientUrlRes.value;
+		} else if (REQ_INTERCEPTION_CATCH_ALL === "referrer") {
+			logger.debug(
+				"Attempting catch-all interception through forced referrers for non-navigation request"
+			);
+			// Note: getClientUrlThroughForcedReferrer is currently not implemented and will return an error.
+			const clientUrlRes = await getClientUrlThroughForcedReferrer({
+				params: reqUrl.searchParams,
+				referrerPolicyParamName:
+					aeroConfig.searchParamOptions?.referrerPolicy ||
+					"x-aero-referrer-policy-override",
+				// Getting the passed-through actual referrer policy
+				referrerPolicy: reqHeaders.get("referer") || "no-referrer",
+				rewrittenParamsOriginals
+			});
+			if (clientUrlRes.isErr()) {
+				const formattedErrResult: import("neverthrow").Err<
+					unknown,
+					Error
+				> = fmtNeverthrowErr(
+					"Failed to get the client URL through the forced referrer policy",
+					clientUrlRes.error
+				) as import("neverthrow").Err<unknown, Error>;
+				return nErrAsync(formattedErrResult.error);
+			}
+			clientUrl = clientUrlRes.value;
+		} else {
+			// This is the fallback error if REQ_INTERCEPTION_CATCH_ALL is not "clients" or "referrer" for a non-navigation request
+			const formattedErrResult: import("neverthrow").Err<unknown, Error> =
+				fmtNeverthrowErr(
+					"No catch-all interception types found for non-navigation request, and rewrite-url is currently unsupported. Ensure REQ_INTERCEPTION_CATCH_ALL is correctly configured.",
+					new Error(
+						"Unsupported request interception backend for non-navigation request."
+					)
+				) as import("neverthrow").Err<unknown, Error>;
+			return nErrAsync(formattedErrResult.error);
+		}
 	}
 
-	// Sanity check
-	if (!isNavigate && !clientUrl) {
-		// TODO: Make a custom fatalErr for SWs that doesn't modify the DOM but returns the error simply instead of overwriting the site with an error site
-		return nErrAsync(
-			new Error(
-				"No clientUrl found on a request to a resource! This means your windows are not accessible to us.",
-			),
-		);
+	// Sanity checks for clientUrl
+	if (!clientUrl) {
+		let errorMessage = "Client URL could not be determined.";
+		if (isNavigate) {
+			errorMessage +=
+				" For navigation requests, this may be due to the relevant TODO not being implemented.";
+		} else {
+			errorMessage +=
+				" For non-navigation requests, ensure REQ_INTERCEPTION_CATCH_ALL is correctly set to 'clients' (and a client ID is available) or 'referrer' (though 'referrer' method is not yet implemented).";
+		}
+		return nErrAsync(new Error(errorMessage));
 	}
 
 	if (clientUrl) {
@@ -124,15 +154,13 @@ export default async function getClientURLAeroWrapper(
 			// TODO: Support custom protocols (web+...)
 			return nErrAsync(
 				new Error(
-					`Unknown protocol used: ${clientUrl.protocol}. Full URL: ${clientUrl.href}.`,
-				),
+					`Unknown protocol used: ${clientUrl.protocol}. Full URL: ${clientUrl.href}.`
+				)
 			);
 		}
 	} else {
 		// TODO: Define this error earlier and import it here
-		return nErrAsync(new Error(
-			"Your browser doesn't support 'client.url"
-		));
+		return nErrAsync(new Error("Your browser doesn't support 'client.url"));
 	}
 
 	// Return the client URL if we have one

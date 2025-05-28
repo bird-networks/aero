@@ -23,5 +23,5 @@
 		"jsxFragmentFactory": "Fragment",
 		"types": ["dreamland"]
 	},
-	"include": ["src"]
+	"include": ["src", "types"]
 }

@@ -5,29 +5,15 @@ import { fmtNeverthrowErr } from "$shared/fmtErr";
 // Note: aeroLoggerType not needed as logger is global
 import createGenericTroubleshootingStrs from "$shared/createGenericTroubleshootingStrs";
 
-// For runtime type validation
-import typia from "typia";
-
-// For runtime type validation  
-import BareMux from "@mercuryworkshop/bare-mux";
-import type { AeroLogger } from "$shared/Loggers";
-// Note: Config and aeroConfig are globals
-
-const baremuxValidation = typia.validate<BareMux>(BareMux);
-const loggerValidation = typia.validate<AeroLogger>(logger);
-const configValidation = typia.validate<any>(aeroConfig);
-
 /** Shared strings used across aero for error messages **/
 // TODO: Make something like this for AeroSandbox
 const genericStrs = createGenericTroubleshootingStrs(ERR_LOG_AFTER_COLON);
 
 export const troubleshootingStrs = {
 	...genericStrs,
-	noFetchEventMsg:
-		`${genericStrs.devErrTag}Can't validate the fetch event argument passed inside of aero's SW handler. This probably means you are using aero's SW handler outside of the SW, which is improper use. Perhaps you should look at the server-only docs for aero if you want to run it on the server?`,
+	noFetchEventMsg: `${genericStrs.devErrTag}Can't validate the fetch event argument passed inside of aero's SW handler. This probably means you are using aero's SW handler outside of the SW, which is improper use. Perhaps you should look at the server-only docs for aero if you want to run it on the server?`,
 	/** A message for when the user fails to import a bundle properly or not at all */
-	tryImportingItMsg:
-		`. Try importing the bundle. Perhaps you ordered the bundles wrong (with importScripts)?
+	tryImportingItMsg: `. Try importing the bundle. Perhaps you ordered the bundles wrong (with importScripts)?
 Ensure the bundles are in this order:
 	1. BareMux
 	2. aero loggers (logger.js)
@@ -64,22 +50,6 @@ export default function troubleshoot(): Result<void, Error> {
 		// Propogate the error result up the chain (`troubleshootJustConfigs` is already meant to handle errors itself)
 		return troubleshootJustConfigsRes;
 	}
-	/// Runtime type validations
-	if (!baremuxValidation.success) {
-		return nErr(
-			new Error(`${troubleshootingStrs.devErrTag}The BareMux bundle you provided is invalid! You may have imported a bare client that doesn't fully support the BareMux 2.0 specification. This could happen if you are using the classic bare client from TompHTTP and not the new one from Mercury Workshop or if you haven't updated the one from Mercury Workshop to 2.0+. Errors: ${baremuxValidation.errors.map(e => e.path).join(", ")}`),
-		);
-	}
-	if (!loggerValidation.success) {
-		return nErr(
-			new Error(`${troubleshootingStrs.devErrTag}The logger bundle ${troubleshootingStrs.validationTarget} provided is invalid! Errors: ${loggerValidation.errors.map(e => e.path).join(", ")}`),
-		);
-	}
-	if (!configValidation.success) {
-		return nErr(
-			new Error(`${troubleshootingStrs.devErrTag}The config ${troubleshootingStrs.validationTarget} provided is invalid! Errors: ${configValidation.errors.map(e => e.path).join(", ")}`),
-		);
-	}
 	return nOk(undefined);
 }
 
@@ -88,7 +58,7 @@ export function troubleshootJustConfigs(): Result<void, Error> {
 		if ("defaultConfig" in self) {
 			return nErr(
 				new Error(
-					`${troubleshootingStrs.devErrTag}There is no default config provided! You need to create one other than the default `,
+					`${troubleshootingStrs.devErrTag}There is no default config provided! You need to create one other than the default.`,
 				),
 			);
 		}

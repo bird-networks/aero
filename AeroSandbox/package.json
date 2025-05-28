@@ -68,7 +68,6 @@
 		"neverthrow": "^8.0.0",
 		"node-polyfill-webpack-plugin": "^4.1.0",
 		"ts-node": "^10.9.2",
-		"ts-runtime-checks": "^0.6.2",
 		"tsx": "^4.19.4",
 		"typescript": "^5.6.3",
 		"val-loader": "^6.0.0"

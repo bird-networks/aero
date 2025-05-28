@@ -19,7 +19,7 @@ import type { AeroLogger, AeroSandboxLogger } from "$shared/Loggers";
 
 // Abstracted req abstractions
 import getProxyURL from "$fetchHandlers/subsystems/getProxyURL";
-import getCORSStatus from "$fetchHandlers/subsystems/getCorsStatus";
+import getCORSStatus from "$fetchHandlers/subsystems/getCORSStatus";
 import formRequestOpts from "$fetchHandlers/subsystems/formRequestOpts";
 import getClientURLAeroWrapper from "../fetchHelpers/getClientURLAeroWrapper";
 
@@ -30,48 +30,48 @@ type eitherLogger = AeroLogger | AeroSandboxLogger;
 const securityPolicyMaps: {
 	readonly accessControl: Map<string, string>;
 } = {
-	accessControl: new Map<string, string>(),
+	accessControl: new Map<string, string>()
 };
 
-export default async function rewriteReq(
-	{
-		logger: _logger,
-		req,
-		reqUrl,
-		clientId,
-		aeroPathFilter,
-		reqDestination,
-		isNavigate,
-		isiFrame,
-		sec,
-		cache,
-		rewrittenParamsOriginals,
-	}: Readonly<{
-		logger: AeroLogger;
-		req: Request;
-		reqUrl: URL;
-		clientId: string;
-		aeroPathFilter: (reqPath: string) => boolean;
-		bundlesPath: string;
-		reqDestination: string;
-		isNavigate: boolean;
-		isiFrame: boolean;
-		sec: Sec;
-		/** This is so that you can include a polyfill for when this is being ran in sync XHR (not in a SW context) */
-		cache: Cache;
-		/** This is mainly intended so that `appendSearchParam()`, whenever it is called, can help the response header rewriter with `No-Vary-Search` header rewriting later */
-		rewrittenParamsOriginals: rewrittenParamsOriginalsType;
-	}>,
-): Promise<
+export default async function rewriteReq({
+	logger,
+	req,
+	reqUrl,
+	clientId,
+	aeroPathFilter,
+	reqDestination,
+	isNavigate,
+	isiFrame,
+	sec,
+	cache,
+	rewrittenParamsOriginals
+}: Readonly<{
+	logger: AeroLogger;
+	req: Request;
+	reqUrl: URL;
+	clientId: string;
+	aeroPathFilter: (reqPath: string) => boolean;
+	bundlesPath: string;
+	reqDestination: string;
+	isNavigate: boolean;
+	isiFrame: boolean;
+	sec: Sec;
+	/** This is so that you can include a polyfill for when this is being ran in sync XHR (not in a SW context) */
+	cache: Cache;
+	/** This is mainly intended so that `appendSearchParam()`, whenever it is called, can help the response header rewriter with `No-Vary-Search` header rewriting later */
+	rewrittenParamsOriginals: rewrittenParamsOriginalsType;
+}>): Promise<
 	ResultAsync<
-		{
-			/** You should return the Response in the fetch handler if that is what is returned */
-			finalRespEarly?: Response;
-		} | {
-			cacheMan: CacheManager;
-			rewrittenReqOpts: RequestInit;
-			proxyUrl: string;
-		},
+		| {
+				/** You should return the Response in the fetch handler if that is what is returned */
+				finalRespEarly?: Response;
+		  }
+		| {
+				/** It should only return `undefined` cache emulation is disabled */
+				cacheMan: CacheManager | undefined;
+				rewrittenReqOpts: RequestInit;
+				proxyUrl: string;
+		  },
 		Error
 	>
 > {
@@ -81,24 +81,26 @@ export default async function rewriteReq(
 		if (!DEBUG) {
 			// Cached to lower the paint time
 			reqOpts.headers = {
-				"cache-control": "private",
+				"cache-control": "private"
 			};
 		}
-		_logger.debug("aero bundle found! Not rewriting (will proceed normally)");
+		logger.debug(
+			"aero bundle found! Not rewriting (will proceed normally)"
+		);
 		return okAsync({
-			finalRespEarly: await fetch(reqUrl.href),
+			finalRespEarly: await fetch(reqUrl.href)
 		});
 	}
 
 	// Get the clientUrl through catch-all interception
-	const catchAllClientsValid = REQ_INTERCEPTION_CATCH_ALL === "clients" &&
-		clientId !== "";
+	const catchAllClientsValid =
+		REQ_INTERCEPTION_CATCH_ALL === "clients" && clientId !== "";
 	// Detect feature flag mismatches
 	if (catchAllClientsValid && SERVER_ONLY) {
 		return nErrAsync(
 			new Error(
-				'Feature Flags Mismatch: The Feature Flag "REQ_INTERCEPTION_CATCH_ALL" can\'t be set to "clients" when "SERVER_ONLY" is enabled!',
-			),
+				'Feature Flags Mismatch: The Feature Flag "REQ_INTERCEPTION_CATCH_ALL" can\'t be set to "clients" when "SERVER_ONLY" is enabled!'
+			)
 		);
 	}
 
@@ -109,18 +111,23 @@ export default async function rewriteReq(
 		clientId,
 		catchAllClientsValid,
 		isNavigate,
-		rewrittenParamsOriginals,
+		rewrittenParamsOriginals
 	});
 
 	if (clientUrlRes.isErr()) {
-		return fmtNeverthrowErr("Failed to get the client URL", clientUrlRes.error);
+		// fmtNeverthrowErr returns Err<unknown, Error> here
+		const errResult = fmtNeverthrowErr(
+			"Failed to get the client URL",
+			clientUrlRes.error
+		) as import("neverthrow").Err<unknown, Error>; // Cast to Err
+		return nErrAsync(errResult.error);
 	}
 	/** This client URL is used when forming the proxy URL and in various uses for emulation */
 	const clientUrl = clientUrlRes.value;
 	if (clientUrl === "skip") {
-		_logger.debug("Skipping the request");
+		logger.debug("Skipping the request");
 		return okAsync({
-			finalRespEarly: await fetch(req.url),
+			finalRespEarly: await fetch(req.url)
 		});
 	}
 	// Get the proxy URL
@@ -128,26 +135,31 @@ export default async function rewriteReq(
 		reqUrl,
 		clientUrl,
 		isNavigate,
-		isiFrame,
+		isiFrame
 	});
 	if (getProxyURLRes.isErr()) {
 		return fmtNeverthrowErr(
 			"Failed to get the proxy URL",
-			getProxyURLRes.error,
+			getProxyURLRes.error
 		);
 	}
 	/** The proxy URL used for fetching the site under the proxy */
 	const proxyUrl = getProxyURLRes.value;
 	// Log the request
-	_logger.debug(
+	logger.debug(
 		req.destination === ""
 			? `${req.method} ${proxyUrl.href}`
-			: `${req.method} ${proxyUrl.href} (${req.destination})`,
+			: `${req.method} ${proxyUrl.href} (${req.destination})`
 	);
 
 	// Emulate security policies
-	if (securityPolicyMaps.accessControl.has(clientId)) {
-		const policies = securityPolicyMaps.accessControl.get(clientId)?.split(" ");
+	if (
+		SECURITY_POLICY_EMULATION &&
+		securityPolicyMaps.accessControl.has(clientId)
+	) {
+		const policies = securityPolicyMaps.accessControl
+			.get(clientId)
+			?.split(" ");
 		if (policies) {
 			let pass = false;
 			for (const policy of policies) {
@@ -161,7 +173,7 @@ export default async function rewriteReq(
 			}
 			if (!pass) {
 				throw new Error(
-					"The request was blocked by Access-Control-Allow-Origin!",
+					"The request was blocked by Access-Control-Allow-Origin!"
 				);
 			}
 		}
@@ -169,32 +181,55 @@ export default async function rewriteReq(
 
 	// This will apply all of the necessary rewriting to the headers for cors emulation, so it will modify the request headers
 	// Performs CORS Emulation and it might return the cached response if one exists in Cache Emulation
-	const corsStatusRes = await getCORSStatus(
-		{
-			reqUrl,
-			reqHeaders: req.headers,
-			proxyUrl,
-		},
-		// @ts-ignore: The types are compatible
-		sec,
-	);
-	if (corsStatusRes.isErr()) {
-		return fmtNeverthrowErr(
-			"Failed to perform CORS emulation/testing",
-			corsStatusRes.error,
+
+	// Declare corsStatusValue here to make it accessible for CACHES_EMULATION block
+	// It will hold the Ok value of the getCORSStatus call
+	let corsStatus:
+		| { cachedResponse?: Response; cacheMan?: CacheManager }
+		| undefined;
+
+	if (CORS_EMULATION) {
+		logger.log(
+			"[CORS Emulation] Checking if the request would be blocked by CORS"
 		);
+		const corsStatusRes = await getCORSStatus(
+			{
+				reqUrl,
+				reqHeaders: req.headers,
+				proxyUrl
+			},
+			// @ts-ignore: The types are compatible
+			sec
+		);
+		if (corsStatusRes.isErr()) {
+			return fmtNeverthrowErr(
+				"Failed to perform CORS emulation/testing",
+				corsStatusRes.error
+			);
+		}
+		corsStatus = corsStatusRes.value as {
+			cachedResponse?: Response;
+			cacheMan?: CacheManager;
+		};
+
+		if (corsStatus?.cachedResponse) {
+			logger.debug(
+				"Returning cached response found through Cache Emulation"
+			);
+			return okAsync({
+				finalRespEarly: corsStatus.cachedResponse
+			});
+		}
 	}
-	const corsStatus = corsStatusRes.value;
-	if ("cachedResponse" in corsStatus) {
-		_logger.debug("Returning cached response found through Cache Emulation");
-		return okAsync({
-			finalRespEarly: corsStatus.cachedResponse,
-		});
+
+	const useCaches = CORS_EMULATION && CACHES_EMULATION;
+	if (useCaches) {
+		logger.debug("[CACHE EMULATION] Cache Emulation is enabled");
 	}
 
 	/** The manager used for getting and setting emulated caches for Cache Emulation */
 	let cacheMan: CacheManager | undefined;
-	if (FEATURES_CACHE_EMULATION && "cacheMan" in corsStatus) {
+	if (useCaches && corsStatus && corsStatus.cacheMan) {
 		cacheMan = corsStatus.cacheMan;
 	}
 
@@ -203,25 +238,29 @@ export default async function rewriteReq(
 		req,
 		clientUrl,
 		proxyUrl,
-		bc: new BareMux(),
+		bc: new BareMux()
 	});
 	if (rewrittenReqOptsRes.isErr()) {
 		return fmtNeverthrowErr(
 			"Failed to create the the request options",
-			rewrittenReqOptsRes.error,
+			rewrittenReqOptsRes.error
 		);
 	}
 	/** The request options that will be used to fetch the site under the proxy*/
 	const rewrittenReqOpts = rewrittenReqOptsRes.value;
 
 	// Ensure cacheMan is assigned when needed
-	if (!cacheMan) {
-		return nErrAsync(new Error("CacheManager not available but required for this request"));
+	if (useCaches && !cacheMan) {
+		return nErrAsync(
+			new Error(
+				"CacheManager not available but required for this request"
+			)
+		);
 	}
 
 	return okAsync({
 		cacheMan,
 		rewrittenReqOpts,
-		proxyUrl: proxyUrl.href,
+		proxyUrl: proxyUrl.href
 	});
 }

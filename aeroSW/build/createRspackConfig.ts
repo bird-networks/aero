@@ -15,8 +15,8 @@ import featureFlagsBuilder from "../../AeroSandbox/build/featureFlagsBuilder";
 
 const liveBuildMode = "LIVE_BUILD" in process.env;
 /** This var is enabled by default */
-const verboseMode = !("VERBOSE" in process.env) ||
-	process.env.VERBOSE !== "false";
+const verboseMode =
+	!("VERBOSE" in process.env) || process.env.VERBOSE !== "false";
 const debugMode = liveBuildMode || "DEBUG" in process.env;
 
 // Scripts
@@ -44,7 +44,7 @@ export default function createRspackConfig(
 		);
 	}
 
-	const featureFlags = createDefaultFeatureFlags({
+	const rawFeatureFlags = createDefaultFeatureFlags({
 		...featureFlagOverrides,
 		debugMode,
 	});
@@ -53,33 +53,39 @@ export default function createRspackConfig(
 	// but acknowledge the original logic (serverMode = true) makes those string checks dead code.
 	const serverMode: string | boolean = process.env.AERO_SERVER_MODE || true;
 
-	if (serverMode === true || typeof serverMode === "string") { // Ensure this block runs if serverMode is true or a string
+	if (serverMode === true || typeof serverMode === "string") {
+		// Ensure this block runs if serverMode is true or a string
 		// @ts-ignore
-		featureFlags.reqInterceptionCatchAll = JSON.stringify("referrer");
+		rawFeatureFlags.reqInterceptionCatchAll = JSON.stringify("referrer");
 		if (serverMode === "winterjs") {
 			// @ts-ignore
-			featureFlags.serverOnly = JSON.stringify("winterjs");
-		} else if (serverMode === "cf-workers") { // Note: JSON.stringify("cf-workers") was likely an error before
+			rawFeatureFlags.serverOnly = JSON.stringify("winterjs");
+		} else if (serverMode === "cf-workers") {
+			// Note: JSON.stringify("cf-workers") was likely an error before
 			// @ts-ignore
-			featureFlags.serverOnly = JSON.stringify("cf-workers");
+			rawFeatureFlags.serverOnly = JSON.stringify("cf-workers");
 		}
 		// @ts-ignore
-	} else { // This case implies serverMode is boolean false
+	} else {
+		// This case implies serverMode is boolean false
 		// @ts-ignore
-		featureFlags.reqInterceptionCatchAll = JSON.stringify("clients");
+		rawFeatureFlags.reqInterceptionCatchAll = JSON.stringify("clients");
 		// @ts-ignore
-		featureFlags.serverOnly = JSON.stringify(false);
+		rawFeatureFlags.serverOnly = JSON.stringify(false);
 	}
 
 	const logger = new Logger(verboseMode);
 
-	logger.log("The chosen feature flags are:"); // Changed from debug to log
-	logger.log(featureFlags); // Changed from debug to log
+	logger.log("The chosen feature flags are:");
+	logger.log(rawFeatureFlags);
+
+	const featureFlags = featureFlagsBuilder(rawFeatureFlags);
+	console.log(featureFlags);
 
 	// biome-ignore lint/suspicious/noExplicitAny: I don't know the exact type to use for this at the moment
 	const plugins: any = [
 		// @ts-ignore
-		new rspack.DefinePlugin(featureFlagsBuilder(featureFlags)),
+		featureFlags,
 	];
 
 	if (debugMode) {
@@ -102,11 +108,19 @@ export default function createRspackConfig(
 			}),
 		);
 
-		logger.log(`🔬 Rsdoctor will be available at http://localhost:${port} for bundle analysis`);
+		logger.log(
+			`🔬 Rsdoctor will be available at http://localhost:${port} for bundle analysis`,
+		);
 	}
 
 	const properDirType = debugMode ? "debug" : "prod";
-	const properDir = path.resolve(__dirname, "..", "dist", properDirType, distName);
+	const properDir = path.resolve(
+		__dirname,
+		"..",
+		"dist",
+		properDirType,
+		distName,
+	);
 
 	plugins.push(
 		new rspack.CopyRspackPlugin({
@@ -122,7 +136,8 @@ export default function createRspackConfig(
 	logger.log(`Building in ${properDirType} mode`); // Changed from debug to log
 	if (liveBuildMode) logger.log("Building in live build mode"); // Changed from debug to log
 
-	const config: import("@rspack/core").Configuration = { // Explicitly type config
+	const config: import("@rspack/core").Configuration = {
+		// Explicitly type config
 		mode: debugMode ? "development" : "production",
 		devtool: debugMode ? "eval-source-map" : "source-map",
 		entry: {
@@ -132,49 +147,103 @@ export default function createRspackConfig(
 		plugins,
 		externals: {
 			"ts-node": "globalThis",
-			"typescript": "globalThis",
+			typescript: "globalThis",
 			"@minify-html/node": "globalThis",
 			"@minify-html/node-darwin-arm64": "globalThis",
 		},
 		resolve: {
 			extensions: [".ts", ".js"],
 			alias: {
-				"$aero": path.resolve(__dirname, "..", ".."),
-				"$jsrewriter": path.resolve(__dirname, "..", "..", "JSRewriter"),
-				"$proxyparse": path.resolve(__dirname, "..", "..", "ProxyParse", "src"),
-				"$sandbox": path.resolve(__dirname, "..", "..", "AeroSandbox", "src"),
-				"$internal": path.resolve(__dirname, "..", "..", "AeroSandbox", "internal"),
-				"$util": path.resolve(__dirname, "..", "..", "AeroSandbox", "src", "interceptors", "util"),
-				"$interceptorUtil": path.resolve(__dirname, "..", "..", "AeroSandbox", "src", "interceptors", "util"),
-				"$swUtil": path.resolve(__dirname, "..", "src", "fetchHandlers", "util"),
-				"$shared": path.resolve(__dirname, "..", "..", "AeroSandbox", "src", "shared"),
-				"$fetchHandlers": path.resolve(__dirname, "..", "src", "fetchHandlers"),
-				"$fetchHandlers/subsystems": path.resolve(__dirname, "..", "src", "fetchHandlers", "subsystems"),
-				"$fetchHandlers/isolation": path.resolve(__dirname, "..", "src", "fetchHandlers", "isolation"),
-				"$isolation": path.resolve(__dirname, "..", "..", "AeroSandbox", "src", "isolation"),
-				"$src": path.resolve(__dirname, "..", "src"),
-				"$sw": path.resolve(__dirname, "..", "src"),
-				"$alt_backends": path.resolve(__dirname, "..", "src", "altBackends"),
-				"$rewriters": path.resolve(__dirname, "..", "src", "fetchHandlers", "rewriters"),
-				"$nested_sws": path.resolve(__dirname, "..", "src", "nestedSWs"),
-				"$embeds": path.resolve(__dirname, "..", "src", "preprocessors"),
-				"$handlers": path.resolve(__dirname, "..", "src", "handlers"),
-				"$types": path.resolve(__dirname, "..", "types"),
-				"$preprocessors": path.resolve(__dirname, "..", "src", "preprocessors"),
+				$aero: path.resolve(__dirname, "..", ".."),
+				$jsrewriter: path.resolve(__dirname, "..", "..", "JSRewriter"),
+				$proxyparse: path.resolve(__dirname, "..", "..", "ProxyParse", "src"),
+				$sandbox: path.resolve(__dirname, "..", "..", "AeroSandbox", "src"),
+				$internal: path.resolve(
+					__dirname,
+					"..",
+					"..",
+					"AeroSandbox",
+					"internal",
+				),
+				$util: path.resolve(
+					__dirname,
+					"..",
+					"..",
+					"AeroSandbox",
+					"src",
+					"interceptors",
+					"util",
+				),
+				$interceptorUtil: path.resolve(
+					__dirname,
+					"..",
+					"..",
+					"AeroSandbox",
+					"src",
+					"interceptors",
+					"util",
+				),
+				$swUtil: path.resolve(__dirname, "..", "src", "fetchHandlers", "util"),
+				$shared: path.resolve(
+					__dirname,
+					"..",
+					"..",
+					"AeroSandbox",
+					"src",
+					"shared",
+				),
+				$fetchHandlers: path.resolve(__dirname, "..", "src", "fetchHandlers"),
+				"$fetchHandlers/subsystems": path.resolve(
+					__dirname,
+					"..",
+					"src",
+					"fetchHandlers",
+					"subsystems",
+				),
+				"$fetchHandlers/isolation": path.resolve(
+					__dirname,
+					"..",
+					"src",
+					"fetchHandlers",
+					"isolation",
+				),
+				$isolation: path.resolve(
+					__dirname,
+					"..",
+					"..",
+					"AeroSandbox",
+					"src",
+					"isolation",
+				),
+				$src: path.resolve(__dirname, "..", "src"),
+				$sw: path.resolve(__dirname, "..", "src"),
+				$alt_backends: path.resolve(__dirname, "..", "src", "altBackends"),
+				$rewriters: path.resolve(
+					__dirname,
+					"..",
+					"src",
+					"fetchHandlers",
+					"rewriters",
+				),
+				$nested_sws: path.resolve(__dirname, "..", "src", "nestedSWs"),
+				$embeds: path.resolve(__dirname, "..", "src", "preprocessors"),
+				$handlers: path.resolve(__dirname, "..", "src", "handlers"),
+				$types: path.resolve(__dirname, "..", "types"),
+				$preprocessors: path.resolve(__dirname, "..", "src", "preprocessors"),
 			},
 			fallback: {
-				"fs": false,
-				"path": false,
-				"url": false,
-				"util": false,
-				"module": false,
-				"crypto": false,
-				"os": false,
-				"vm": false,
-				"assert": false,
-				"console": false,
-				"repl": false,
-				"esm": false,
+				fs: false,
+				path: false,
+				url: false,
+				util: false,
+				module: false,
+				crypto: false,
+				os: false,
+				vm: false,
+				assert: false,
+				console: false,
+				repl: false,
+				esm: false,
 				"tsconfig-paths": false,
 			},
 		},

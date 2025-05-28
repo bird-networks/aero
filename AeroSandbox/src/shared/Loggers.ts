@@ -2,7 +2,7 @@
  * @module
  * This module contains the loggers for *aero* and *AeroSandbox*
  * The types are located in `types/logger.d.ts` (in *AeroSandbox*)
-*/
+ */
 
 import type { LoggerOptions } from "../../types/loggers";
 
@@ -11,7 +11,7 @@ const aeroBubbleStyle = genBubbleStyle("#0badfb");
 /** The bubbling style (for `fatal` error branding) in the logger */
 const fatalErrBubbleStyle = genBubbleStyle("#db3631");
 
-/** 
+/**
  * A generic class meant to be extended that provides methods to create a logger in an aero-related project. There is little reason to use this directly unless you don't want aero to be the branding of the proxy.
  * Typically, you would want to extend `fatalErr` with a crash screen if you are extending the class for a Logger meant for a Sandbox if you are in debug mode.
  */
@@ -35,7 +35,8 @@ export default class GenericLogger {
 		if (!Array.isArray(msgs)) msgs = [msgs];
 
 		// Log all of the messages
-		for (const msg in msgs) console.log(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
+		for (const msg of msgs)
+			console.log(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
 	}
 	/**
 	 * A method that wraps `console.warn` with custom branding using bubbles
@@ -46,7 +47,8 @@ export default class GenericLogger {
 		if (!Array.isArray(msgs)) msgs = [msgs];
 
 		// Log all of the messages
-		for (const msg in msgs) console.warn(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
+		for (const msg of msgs)
+			console.warn(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
 	}
 	/**
 	 * A method that wraps `console.debug` with custom branding using bubbles only if debug mode is enabled.
@@ -58,8 +60,12 @@ export default class GenericLogger {
 			if (!Array.isArray(msgs)) msgs = [msgs];
 
 			// Log all of the messages
-			for (const msg in msgs)
-				console.debug(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
+			for (const msg of msgs)
+				console.debug(
+					`%c${branding}%c ${msg}`,
+					`${aeroBubbleStyle}`,
+					""
+				);
 		}
 	}
 	/**
@@ -72,7 +78,8 @@ export default class GenericLogger {
 		if (!Array.isArray(msgs)) msgs = [msgs];
 
 		// Log all of the messages
-		for (const msg in msgs) console.error(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
+		for (const msg of msgs)
+			console.error(`%c${branding}%c ${msg}`, `${aeroBubbleStyle}`, "");
 	}
 	/**
 	 * Log an error with the fatal bubble attached in addition to the branded bubble
@@ -84,7 +91,7 @@ export default class GenericLogger {
 		if (!Array.isArray(msgs)) msgs = [msgs];
 
 		// Log all of the messages
-		for (const msg in msgs)
+		for (const msg of msgs)
 			console.error(
 				`%c${branding}%c %cfatal%c ${msg}`,
 				`${aeroBubbleStyle}`,
@@ -102,9 +109,9 @@ export class AeroLogger extends GenericLogger {
 	options?: LoggerOptions;
 
 	/**
-	  * @param debugMode Log to the console when `this.debug(...)` is called
-	  * @param options The options to configure the logger's behavior
-	  */
+	 * @param debugMode Log to the console when `this.debug(...)` is called
+	 * @param options The options to configure the logger's behavior
+	 */
 	constructor(debugMode: boolean, options?: LoggerOptions) {
 		super(debugMode);
 		this.options = options;
@@ -129,7 +136,7 @@ export class AeroLogger extends GenericLogger {
 	 * @param msgs The messages you want to log
 	 */
 	debug(msgs: string | string[]): void {
-		super.warn("aero SW", msgs);
+		super.debug("aero SW", msgs);
 	}
 	/**
 	 * A method that wraps `console.error` with custom branding using bubbles.
@@ -142,7 +149,9 @@ export class AeroLogger extends GenericLogger {
 	}
 	fatalErr(msgs: string | string[]): /* Response */ Error {
 		super.fatalErr("aero SW", msgs);
-		return new Error(`Caught Fatal Error: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`);
+		return new Error(
+			`Caught Fatal Error: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`
+		);
 		/*
 		TODO: Only show the crash string when the proxy is in DEBUG mode
 		TODO: Unify the crash screen on the SW handler with extras and this one
@@ -152,7 +161,7 @@ export class AeroLogger extends GenericLogger {
 			this.options && "htmlTemplatingCallback" in this.options
 				? `Fatal error:	 ${msgs}`
 				: this.options.htmlTemplatingCallback(msgs),
-				*\/
+			*\/
 			msg,
 			{
 				status: 500,
@@ -190,7 +199,9 @@ export class AeroSandboxLogger extends GenericLogger {
 		super.fatalErr("aero sandbox", msgs);
 
 		if (this.options.htmlTemplatingCallback !== undefined)
-			this.options.htmlTemplatingCallback(Array.isArray(msgs) ? msgs.join(", ") : msgs);
+			this.options.htmlTemplatingCallback(
+				Array.isArray(msgs) ? msgs.join(", ") : msgs
+			);
 	}
 }
 

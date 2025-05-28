@@ -50,11 +50,12 @@ async function registerAeroServiceWorker(): Promise<void> {
 	if ("serviceWorker" in navigator) {
 		try {
 			const registration = await navigator.serviceWorker.register("/sw.js", {
-				scope: "/",
+				// @ts-ignore
+				scope: aeroConfig.prefix,
 			});
 			console.debug("aero's SW registered with scope", registration.scope);
-		} catch (error) {
-			console.error("aero's SW registration failed", error);
+		} catch (err) {
+			console.error("aero's SW registration failed", err);
 			showErrorModal({
 				title: "aero Initialization Failed",
 				message:

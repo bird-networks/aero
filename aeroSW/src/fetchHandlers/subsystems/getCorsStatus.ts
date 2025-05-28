@@ -19,28 +19,41 @@ import redir from "$swUtil/redir";
 
 /**
  * This method also modifies the `sec` object you pass in accordingly
- * @param pass 
+ * @param pass
  * @returns An object containing every thing that is needed to continue, including the rewritten request and the client URL for later processing in `response.ts`
  */
-export default async function getCORSStatus({
-	reqUrl,
-	reqHeaders,
-	proxyUrl,
-}: {
-	/** The headers from the original request */
-	reqHeaders: Headers;
-	reqUrl: URL;
-	proxyUrl: URL;
-}, sec: Sec): Promise<ResultAsync<{
-	cachedResponse: Response
-} | {
-	cacheMan: CacheManager
-} | {}, Error>> {
+export default async function getCORSStatus(
+	{
+		reqUrl,
+		reqHeaders,
+		proxyUrl
+	}: {
+		/** The headers from the original request */
+		reqHeaders: Headers;
+		reqUrl: URL;
+		proxyUrl: URL;
+	},
+	sec: Sec
+): Promise<
+	ResultAsync<
+		| {
+				cachedResponse: Response;
+		  }
+		| {
+				cacheMan: CacheManager;
+		  }
+		| {},
+		Error
+	>
+> {
 	// Ensure the request isn't blocked by CORS
-	if (FEATURES_CACHE_EMULATION) {
+	if (CACHES_EMULATION) {
 		const reqBlockedRes = await block(proxyUrl.href);
 		if (reqBlockedRes.isErr())
-			return fmtNeverthrowErr("Failed to deterine if the request should be blocked due to a would've been CORS violation", reqBlockedRes.error);
+			return fmtNeverthrowErr(
+				"Failed to deterine if the request should be blocked due to a would've been CORS violation",
+				reqBlockedRes.error
+			);
 		// TODO: Print the context
 		logger.debug("Request blocked by CORS");
 		return okAsync({
@@ -52,7 +65,7 @@ export default async function getCORSStatus({
 	}
 
 	// Rewrite the request headers
-	if (FEATURES_CACHE_EMULATION) {
+	if (CACHES_EMULATION) {
 		if (proxyUrl.protocol === "http:") {
 			const hstsHeader = reqHeaders.get("strict-transport-security");
 			const hstsCacheEmulator = new HSTSCacheEmulation(
@@ -62,7 +75,10 @@ export default async function getCORSStatus({
 
 			const redirectRes = await hstsCacheEmulator.redirect();
 			if (redirectRes.isErr())
-				return fmtNeverthrowErr("Failed to determine if the client should redirect when using the cache emulator", redirectRes.error);
+				return fmtNeverthrowErr(
+					"Failed to determine if the client should redirect when using the cache emulator",
+					redirectRes.error
+				);
 			const redirUrl = proxyUrl;
 			redirUrl.protocol = "https:";
 			return okAsync(redir(redirUrl.href));
@@ -91,7 +107,7 @@ export default async function getCORSStatus({
 
 	/** The manager for storing information needed for Cache Emulation */
 	let cacheMan: CacheManager | undefined;
-	if (FEATURES_CACHE_EMULATION) {
+	if (CACHES_EMULATION) {
 		cacheMan = new CacheManager(reqHeaders);
 
 		const cacheControlHeader = reqHeaders.get("cache-control");
@@ -111,13 +127,14 @@ export default async function getCORSStatus({
 
 		if (typeof cacheAge === "number") {
 			const cachedResponse = await cacheMan.get(reqUrl.href, cacheAge);
-			if (cachedResponse)
-				return okAsync({ cachedResponse });
+			if (cachedResponse) return okAsync({ cachedResponse });
 		}
 
 		// If the request mode is "only-if-cached" and no cached response was found, return an error
 		if (cacheMan.mode === "only-if-cached")
-			return nErrAsync(new Error("Can't find an emulated cached response"));
+			return nErrAsync(
+				new Error("Can't find an emulated cached response")
+			);
 
 		const cacheKey = reqHeaders.get("x-aero-cache-key");
 		// Handle the Cache-Key header if present
@@ -127,7 +144,6 @@ export default async function getCORSStatus({
 		}
 	}
 
-	if (cacheMan)
-		return okAsync({ cacheMan });
+	if (cacheMan) return okAsync({ cacheMan });
 	return okAsync({});
 }

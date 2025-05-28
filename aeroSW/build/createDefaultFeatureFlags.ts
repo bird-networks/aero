@@ -11,6 +11,7 @@ export default (ctx: CtxType) =>
 		encBodyEmulation: false,
 		cachesEmulation: false,
 		clearEmulation: false,
+		securityPolicyEmulation: false,
 		supportSpeculation: false,
 		rewriterHtml: true,
 		rewriterXslt: false,
@@ -25,5 +26,5 @@ export default (ctx: CtxType) =>
 		githubRepo: "https://github.com/browser-ports/aero",
 		// Debug
 		errLogAfterColon: JSON.stringify("\\n\\t"),
-		debug: JSON.stringify(ctx.debugMode),
+		debug: JSON.stringify(ctx.debugMode)
 	}) as FeatureFlagsRspack;

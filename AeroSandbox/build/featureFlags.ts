@@ -1,8 +1,7 @@
-import createDefaultFeatureFlags from "../createDefaultFeatureFlags";
+import createDefaultFeatureFlags from "./createDefaultFeatureFlags";
 import type { htmlRewriterMode } from "../types/rewriters/html";
 
 export type fetchPublicSuffixPriorityType = "compile-time" | "run-time";
-
 export interface FeatureFlags {
 	/** @warning `custom_elements` is currently unsupported and untested */
 	supportedHtmlRewriterModes: htmlRewriterMode[];
