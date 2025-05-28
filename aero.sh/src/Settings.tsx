@@ -9,11 +9,15 @@ import "@material/web/select/outlined-select.js";
 import "@material/web/select/select-option.js";
 import "@material/web/divider/divider.js";
 
+// Import search engine store and configurations
+import { searchEngineStore, AVAILABLE_SEARCH_ENGINES } from "./searchEngineStore.js";
+
 /** Available settings pages */
 const SETTINGS_PAGES = [
 	{ id: "proxy", label: "Proxy", icon: "language" },
 	{ id: "baremux", label: "BareMux Transports", icon: "swap_horiz" },
 	{ id: "middleware", label: "Proxy Middleware", icon: "layers" },
+	{ id: "site", label: "Site Settings", icon: "tune" },
 ] as const;
 
 type SettingsPageId = typeof SETTINGS_PAGES[number]["id"];
@@ -472,6 +476,40 @@ const Settings: Component<{}, {
 							<p class="settings-content-description">
 								Configure proxy middleware
 							</p>
+						</div>
+					</div>
+				);
+
+			case "site":
+				return (
+					<div>
+						<div class="settings-content-header">
+							<h2 class="settings-content-title">Site Settings</h2>
+							<p class="settings-content-description">
+								Configure general site behavior and preferences
+							</p>
+						</div>
+						<div class="settings-content-body">
+							<div class="settings-section">
+								<h3 class="settings-section-title">Search Engine</h3>
+								<div class="settings-form-field">
+									<md-outlined-select 
+										class="settings-select" 
+										label="Default Search Engine"
+										value={use(searchEngineStore.currentEngineId)}
+										on:change={(e: Event) => {
+											const select = e.target as HTMLSelectElement;
+											searchEngineStore.currentEngineId = select.value;
+										}}
+									>
+										{AVAILABLE_SEARCH_ENGINES.map(engine => (
+											<md-select-option value={engine.id}>
+												<div slot="headline">{engine.name}</div>
+											</md-select-option>
+										))}
+									</md-outlined-select>
+								</div>
+							</div>
 						</div>
 					</div>
 				);

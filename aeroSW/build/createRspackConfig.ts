@@ -108,6 +108,17 @@ export default function createRspackConfig(
 	const properDirType = debugMode ? "debug" : "prod";
 	const properDir = path.resolve(__dirname, "..", "dist", properDirType, distName);
 
+	plugins.push(
+		new rspack.CopyRspackPlugin({
+			patterns: [
+				{
+					from: path.resolve(__dirname, "..", "src", "defaultConfig.js"),
+					to: path.resolve(properDir, "defaultConfig.js"),
+				},
+			],
+		}),
+	);
+
 	logger.log(`Building in ${properDirType} mode`); // Changed from debug to log
 	if (liveBuildMode) logger.log("Building in live build mode"); // Changed from debug to log
 
@@ -190,7 +201,6 @@ export default function createRspackConfig(
 		{
 			dist: path.resolve(__dirname, "..", "dist"),
 			proper: properDir,
-			// sw: path.resolve(__dirname, "..", "dist", properDirType, "sw") // Removed sw property
 		},
 		properDirType,
 		verboseMode,

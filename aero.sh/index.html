@@ -20,9 +20,9 @@
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
-        font-family: "Roboto", sans-serif; 
-        background-color: #f0f2f5;
-        color: #333;
+        font-family: "Google Sans", sans-serif; 
+        background-color: var(--md-sys-color-surface-container-lowest, #f0f2f5);
+        color: var(--md-sys-color-on-surface, #333);
         min-height: 100vh;
         height: auto;
       }
@@ -47,6 +47,8 @@
   </head>
   <body>
     <div id="app"></div>
+    <script src="/aero/defaultConfig.js"></script>
+    <script src="/aero/config.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

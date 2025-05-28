@@ -3,6 +3,12 @@
 // Dreamland
 import "dreamland/dev";
 
+// BareMux and Service Worker Initialization
+import "./init.js";
+
+// Custom Elements
+import "./AeroIframe.js";
+
 // Theme
 import { applyAeroTheme } from "./theme.js";
 
@@ -16,36 +22,36 @@ import { FooterBadges } from "./badges";
 import SearchBar from "./Omnibox.tsx";
 import Settings, { openSettings } from "./Settings.tsx";
 
-import packageJSON from "../../aeroSW/package.json" with { type: "json" };
+import packageJson from "../../aeroSW/package.json" with { type: "json" };
 
 // Add global style for settings overlay and background hiding
 const globalSettingsStyle = document.createElement("style");
 globalSettingsStyle.textContent = `
-  body.settings-active {
-    overflow: hidden !important;
-  }
-  body.settings-active > :not(.settings-overlay):not(script):not(style) {
-    display: none !important;
-  }
-  .settings-overlay {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    background-color: var(--md-sys-color-surface-dim) !important;
-    z-index: 2147483647 !important;
-    display: none !important;
-    flex-direction: row;
-    opacity: 0;
-    transition: opacity 0.3s cubic-bezier(0.2,0,0,1);
-    pointer-events: none !important;
-  }
-  .settings-overlay.open {
-    display: flex !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-  }
+	body.settings-active {
+		overflow: hidden !important;
+	}
+	body.settings-active > :not(.settings-overlay):not(script):not(style) {
+		display: none !important;
+	}
+	.settings-overlay {
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		width: 100vw !important;
+		height: 100vh !important;
+		background-color: var(--md-sys-color-surface-dim) !important;
+		z-index: 2147483647 !important;
+		display: none !important;
+		flex-direction: row;
+		opacity: 0;
+		transition: opacity 0.3s cubic-bezier(0.2,0,0,1);
+		pointer-events: none !important;
+	}
+	.settings-overlay.open {
+		display: flex !important;
+		opacity: 1 !important;
+		pointer-events: auto !important;
+	}
 `;
 document.head.appendChild(globalSettingsStyle);
 
@@ -229,194 +235,152 @@ const App: Component<
     }
     
     .fab-menu-items {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      margin-bottom: 16px;
-      gap: 12px;
+      	display: flex;
+      	flex-direction: column;
+      	align-items: flex-end;
+      	margin-bottom: 16px;
+      	gap: 12px;
     }
     
     .fab-menu-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transform: translateY(20px) scale(0.8);
-      opacity: 0;
-      transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-      pointer-events: none;
+     	display: flex;
+    	align-items: center;
+     	gap: 12px;
+      	transform: translateY(20px) scale(0.8);
+      	opacity: 0;
+      	transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+      	pointer-events: none;
     }
     
     .fab-menu-item.visible {
-      transform: translateY(0) scale(1);
-      opacity: 1;
-      pointer-events: auto;
+      	transform: translateY(0) scale(1);
+      	opacity: 1;
+      	pointer-events: auto;
     }
     
     .fab-menu-item-label {
-      background: var(--md-sys-color-surface-container-high);
-      color: var(--md-sys-color-on-surface);
-      padding: 8px 16px;
-      border-radius: 16px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      white-space: nowrap;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      transform: translateX(10px);
-      opacity: 0;
-      transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+      	background: var(--md-sys-color-surface-container-high);
+      	color: var(--md-sys-color-on-surface);
+      	padding: 8px 16px;
+      	border-radius: 16px;
+      	font-size: 0.875rem;
+      	font-weight: 500;
+      	white-space: nowrap;
+      	box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      	transform: translateX(10px);
+      	opacity: 0;
+      	transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
     }
     
     .fab-menu-item.visible .fab-menu-item-label {
-      transform: translateX(0);
-      opacity: 1;
+        transform: translateX(0);
+        opacity: 1;
     }
     
     .fab-menu-item-fab {
-      --md-fab-container-color: var(--md-sys-color-surface-container-high);
-      --md-fab-icon-color: var(--md-sys-color-on-surface);
+        --md-fab-container-color: var(--md-sys-color-surface-container-high);
+        --md-fab-icon-color: var(--md-sys-color-on-surface);
     }
     
     .fab-menu-item-fab:hover {
-      --md-fab-container-color: var(--md-sys-color-primary-container);
-      --md-fab-icon-color: var(--md-sys-color-on-primary-container);
+        --md-fab-container-color: var(--md-sys-color-primary-container);
+        --md-fab-icon-color: var(--md-sys-color-on-primary-container);
     }
     
     .fab-menu-toggle {
-      --md-fab-container-color: var(--md-sys-color-primary-container);
-      --md-fab-icon-color: var(--md-sys-color-on-primary-container);
-      transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+        --md-fab-container-color: var(--md-sys-color-primary-container);
+        --md-fab-icon-color: var(--md-sys-color-on-primary-container);
+        transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
     }
     
     .fab-menu-toggle.open {
-      transform: rotate(45deg);
+        transform: rotate(45deg);
     }
     
     .fab-menu-toggle:hover {
-      --md-fab-container-color: var(--md-sys-color-primary);
-      --md-fab-icon-color: var(--md-sys-color-on-primary);
+        --md-fab-container-color: var(--md-sys-color-primary);
+        --md-fab-icon-color: var(--md-sys-color-on-primary);
     }
 
     .dark-mode-fab {
-      position: fixed; 
-      bottom: 24px; 
-      left: 24px; 
-      z-index: 1000; 
-      --md-fab-container-color: var(--md-sys-color-secondary-container);
-      --md-fab-icon-color: var(--md-sys-color-on-secondary-container);
+        position: fixed; 
+        bottom: 24px; 
+        left: 24px; 
+        z-index: 1000; 
+        --md-fab-container-color: var(--md-sys-color-secondary-container);
+        --md-fab-icon-color: var(--md-sys-color-on-secondary-container);
     }
 
     .footer-links {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      margin-top: -1rem;
-      margin-bottom: 1.5rem;
-    }
-    .github-logo-link {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--md-sys-color-primary);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: box-shadow 0.2s, background 0.2s;
-      text-decoration: none;
-    }
-    .github-logo-link:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.16);
-      background: var(--md-sys-color-primary);
-    }
-    .github-logo-svg {
-      width: 28px;
-      height: 28px;
-      display: block;
-      fill: #fff;
-    }
-    .dreamland-badge {
-      display: flex;
-      align-items: center;
-      background: var(--md-sys-color-primary);
-      height: 40px;
-      width: auto;
-      margin-left: 0;
-      padding: 0 4px;
-      justify-content: center;
-    }
-    .dreamland-badge-img {
-      height: 32px;
-      width: auto;
-      display: block;
-      margin: 0;
-      vertical-align: middle;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: -1rem;
+        margin-bottom: 1.5rem;
     }
 
     @media screen and (max-width: 768px) {
-      html {
-        padding-top: 0; 
-        margin-top: 0; 
-        min-height: 100vh; 
-        height: auto; 
-      }
+        html {
+            padding-top: 0; 
+            margin-top: 0; 
+            min-height: 100vh; 
+            height: auto; 
+        }
 
-      body {
-        display: flex; 
-        align-items: center; 
-        padding-top: 0; 
-        margin-top: 0; 
-        min-height: 100vh; 
-        height: auto; 
-      }
+        body {
+            display: flex; 
+            align-items: center; 
+            padding-top: 0; 
+            margin-top: 0; 
+            min-height: 100vh; 
+            height: auto; 
+         }
 
-      #app {
-        justify-content: flex-start; 
-        padding-top: 0; 
-        margin-top: 0; 
-        height: auto; 
-      }
+        #app {
+            justify-content: flex-start; 
+            padding-top: 0; 
+            margin-top: 0; 
+            height: auto; 
+        }
 
-      .app-container {
-        max-width: 100%; 
-        justify-content: flex-start; 
-      }
+        .app-container {
+            max-width: 100%; 
+            justify-content: flex-start; 
+        }
 
-      .content-block {
-        margin-bottom: 0.75rem; 
-      }
+        .content-block {
+            margin-bottom: 0.75rem; 
+        }
 
-      .logo-container.content-block {
-        margin-top: 6em;
-        margin-bottom: 0.75rem; 
-      }
-
-      .logo-img {
-        max-width: 16em;
-      }
-
-      .footer-credits.content-block {
-        margin-top: 1.5rem;
-      }
-
-      .footer-links {
-        margin-top: 0.5rem;
-        margin-bottom: 0.5rem;
-      }
+        .logo-container.content-block {
+            margin-top: 6em;
+            margin-bottom: 0.75rem; 
+        }
+		.logo-img {
+			max-width: 16em;
+		}
+      	.footer-credits.content-block {
+        	margin-top: 1.5rem;
+      	}
+      	.footer-links {
+        	margin-top: 0.5rem;
+        	margin-bottom: 0.5rem;
+      	}
     }
 
     @media screen and (min-width: 769px) {
-      body {
-        justify-content: center; /* Center content on larger screens */
-      }
+      	body {
+        	justify-content: center; /* Center content on larger screens */
+      	}
     }
   `;
 
 	return (
 		<div class="app-container">
 			<meta property="og:title" content="aero proxy demo"/>
-			<meta property="og:description" content={packageJSON.description} />
+			<meta property="og:description" content={packageJson.description} />
 			<meta property="og:image" content="/imgs/aero.webp" />
 			<div class="logo-container content-block">
 				<img src="/imgs/aero.webp" alt="Aero Proxy Logo" class="logo-img" />
@@ -424,8 +388,8 @@ const App: Component<
 			<SearchBar />
 			<div class="footer-credits content-block">
 				<p style="margin: 0; padding: 0;">
-					Made with ❤️ by <b><a href="https://ryanwilson.space" style="color: blue">Ryan Wilson</a></b><br/>
-          For the <b><a href="https://browserports.dev" style="color: blue">Browser Ports</a></b> project
+					Made with ❤️ by <b><a href="https://ryanwilson.space" style="color: var(--md-sys-color-primary)">Ryan Wilson</a></b><br/>
+          For the <b><a href="https://browserports.dev" style="color: var(--md-sys-color-primary)">Browser Ports</a></b> project
 				</p>
 			</div>
 			<FooterBadges />
