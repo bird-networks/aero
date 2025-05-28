@@ -22,6 +22,7 @@
 		"@mercuryworkshop/bare-mux": "^2.1.7",
 		"@mercuryworkshop/epoxy-transport": "^2.1.27",
 		"@mercuryworkshop/libcurl-transport": "^1.5.0",
+		"chokidar": "^4.0.0",
 		"dreamland": "latest",
 		"vite-plugin-static-copy": "^3.0.0",
 		"wisp-server-node": "^1.1.7"

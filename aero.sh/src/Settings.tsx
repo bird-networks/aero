@@ -20,7 +20,6 @@ import {
 // Import wisp backend store
 import {
 	wispBackendStore,
-	getCurrentWispUrl,
 	getDefaultWispUrlForDisplay,
 } from "./wispBackendStore.js";
 
