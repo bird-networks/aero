@@ -1,99 +1,99 @@
 {
-  "name": "proxy",
-  "version": "0.0.1",
-  "description": "A safe, developer-friendly, innovative interception web proxy with many features with a powerful web sandboxing library to bypass and overcome browser limitations in a secure sandbox that respects security features",
-  "homepage": "https://aero.sh",
-  "main": "extras/node/aeroPath.js",
-  "exports": {
-    ".": {
-      "node": {
-        "import": "./extras/node/aeroPath.js",
-        "require": "./extras/node/aeroPath.cjs"
-      }
-    },
-    "./configTypes": "./types/config.d.ts"
-  },
-  "files": [
-    "dist/**/*.js",
-    "dist/**/*.map",
-    "dist/logo.webp",
-    "extras/**/*.js",
-    "extras/**/*.cjs",
-    "types/*.d.ts"
-  ],
-  "scripts": {
-    "push": "npm run lint && npm run format && git push",
-    "lint": "biome lint --write .",
-    "format": "biome format --write .",
-    "test": "npm run tests/index.js",
-    "testsNode": "npm run tests/node/index.js",
-    "testsBrowser": "echo 'Unsupported at the moment'",
-    "build": "npm run init-globals:ts && npx tsx node_modules/@rspack/cli/bin/rspack.js build -c rspack.config.ts",
-    "debugBuild": "tsc --noEmit && DEBUG=true npm run init-globals:ts && DEBUG=true npx tsx node_modules/@rspack/cli/bin/rspack.js build -c rspack.config.ts --watch",
-    "typecheck": "tsc --noEmit",
-    "typecheck:fast": "tsgo --noEmit",
-    "typecheck:watch": "tsgo --noEmit --watch",
-    "typecheck:stats": "tsgo --noEmit --extendedDiagnostics",
-    "debugBuild:fast": "tsgo --noEmit && DEBUG=true npm run init-globals:ts && DEBUG=true npx tsx node_modules/@rspack/cli/bin/rspack.js build -c rspack.config.ts --watch",
-    "start": "pm2 start ecosystem.config.cjs --only \"aero-dev-server,aero-build-watch,aero-sandbox-build-watch\"",
-    "syncPackageJson": "node --no-warnings --experimental-strip-types -- ./scripts/syncPackageJson.ts",
-    "init-globals:ts": "cd scripts && tsx initGlobalsTs.ts",
-    "prepare": "ts-patch install && typia patch"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vortexdl/aero.git"
-  },
-  "keywords": [
-    "emulation",
-    "emulator",
-    "frontend",
-    "hackathon",
-    "intercept-calls",
-    "intercept-requests",
-    "interception",
-    "interceptor",
-    "proxy",
-    "sandbox",
-    "sandboxing",
-    "service-worker",
-    "unblocker",
-    "userscripts",
-    "vpn"
-  ],
-  "author": "Ryan Wilson",
-  "license": "AGPL-3.0-or-later",
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "@biomejs/js-api": "^0.7.1",
-    "@rsdoctor/cli": "^0.4.7",
-    "@rsdoctor/rspack-plugin": "^0.4.7",
-    "@rspack/cli": "^1.0.13",
-    "@rspack/core": "^1.3.12",
-    "@types/serviceworker": "^0.0.100",
-    "@types/web-app-manifest": "^1.0.8",
-    "@typescript/native-preview": "^7.0.0-dev.20250525.1",
-    "@typhonjs-typedoc/ts-lib-docs": "^2024.9.18",
-    "@typhonjs-typedoc/typedoc-theme-dmt": "^0.2.3",
-    "clean-webpack-plugin": "^4.0.0",
-    "envsafe": "^2.0.3",
-    "flags": "^0.2.2",
-    "import-sync": "^2.2.2",
-    "neverthrow": "^8.2.0",
-    "octokit": "^4.0.2",
-    "option-t": "^50.0.0",
-    "playwright": "^1.48.1",
-    "ts-node": "^10.9.2",
-    "ts-patch": "^3.2.1",
-    "ts-runtime-checks": "^0.6.2",
-    "tsx": "^4.19.4",
-    "typescript": "^5.6.3"
-  },
-  "dependencies": {
-    "@biomejs/wasm-nodejs": "^1.9.4",
-    "@mercuryworkshop/bare-mux": "^2.1.4",
-    "tree-sitter": "^0.22.1",
-    "tree-sitter-python": "^0.23.5",
-    "typia": "^6.12.0"
-  }
+	"name": "proxy",
+	"version": "0.0.1",
+	"description": "A safe, developer-friendly, innovative interception web proxy with many features with a powerful web sandboxing library to bypass and overcome browser limitations in a secure sandbox that respects security features",
+	"homepage": "https://aero.sh",
+	"main": "extras/node/aeroPath.js",
+	"exports": {
+		".": {
+			"node": {
+				"import": "./extras/node/aeroPath.js",
+				"require": "./extras/node/aeroPath.cjs"
+			}
+		},
+		"./configTypes": "./types/config.d.ts"
+	},
+	"files": [
+		"dist/**/*.js",
+		"dist/**/*.map",
+		"dist/logo.webp",
+		"extras/**/*.js",
+		"extras/**/*.cjs",
+		"types/*.d.ts"
+	],
+	"scripts": {
+		"push": "npm run lint && npm run format && git push",
+		"lint": "biome lint --write .",
+		"format": "biome format --write .",
+		"test": "npm run tests/index.js",
+		"testsNode": "npm run tests/node/index.js",
+		"testsBrowser": "echo 'Unsupported at the moment'",
+		"build": "npm run init-globals:ts && npx tsx node_modules/@rspack/cli/bin/rspack.js build -c rspack.config.ts",
+		"debugBuild": "tsc --noEmit && DEBUG=true npm run init-globals:ts && DEBUG=true npx tsx node_modules/@rspack/cli/bin/rspack.js build -c rspack.config.ts --watch",
+		"typecheck": "tsc --noEmit",
+		"typecheck:fast": "tsgo --noEmit",
+		"typecheck:watch": "tsgo --noEmit --watch",
+		"typecheck:stats": "tsgo --noEmit --extendedDiagnostics",
+		"debugBuild:fast": "tsgo --noEmit && DEBUG=true npm run init-globals:ts && DEBUG=true npx tsx node_modules/@rspack/cli/bin/rspack.js build -c rspack.config.ts --watch",
+		"start": "pm2 start ecosystem.config.cjs --only \"aero-dev-server,aero-build-watch,aero-sandbox-build-watch\"",
+		"syncPackageJson": "node --no-warnings --experimental-strip-types -- ./scripts/syncPackageJson.ts",
+		"init-globals:ts": "cd scripts && tsx initGlobalsTs.ts",
+		"prepare": "ts-patch install && typia patch"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/vortexdl/aero.git"
+	},
+	"keywords": [
+		"emulation",
+		"emulator",
+		"frontend",
+		"hackathon",
+		"intercept-calls",
+		"intercept-requests",
+		"interception",
+		"interceptor",
+		"proxy",
+		"sandbox",
+		"sandboxing",
+		"service-worker",
+		"unblocker",
+		"userscripts",
+		"vpn"
+	],
+	"author": "Ryan Wilson",
+	"license": "AGPL-3.0-or-later",
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@biomejs/js-api": "^0.7.1",
+		"@rsdoctor/cli": "^0.4.7",
+		"@rsdoctor/rspack-plugin": "^0.4.7",
+		"@rspack/cli": "^1.0.13",
+		"@rspack/core": "^1.3.12",
+		"@types/serviceworker": "^0.0.100",
+		"@types/web-app-manifest": "^1.0.8",
+		"@typescript/native-preview": "^7.0.0-dev.20250525.1",
+		"@typhonjs-typedoc/ts-lib-docs": "^2024.9.18",
+		"@typhonjs-typedoc/typedoc-theme-dmt": "^0.2.3",
+		"clean-webpack-plugin": "^4.0.0",
+		"envsafe": "^2.0.3",
+		"flags": "^0.2.2",
+		"import-sync": "^2.2.2",
+		"neverthrow": "^8.2.0",
+		"octokit": "^4.0.2",
+		"option-t": "^50.0.0",
+		"playwright": "^1.48.1",
+		"ts-node": "^10.9.2",
+		"ts-patch": "^3.2.1",
+		"ts-runtime-checks": "^0.6.2",
+		"tsx": "^4.19.4",
+		"typescript": "^5.6.3"
+	},
+	"dependencies": {
+		"@biomejs/wasm-nodejs": "^1.9.4",
+		"@mercuryworkshop/bare-mux": "^2.1.4",
+		"tree-sitter": "^0.22.1",
+		"tree-sitter-python": "^0.23.5",
+		"typia": "^6.12.0"
+	}
 }

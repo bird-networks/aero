@@ -140,7 +140,6 @@ function viteBuildWatchPlugin(): Plugin {
 		isBuilding = true;
 		console.info(`🔨 Building ${projectName}...`);
 
-		console.log(debug);
 		try {
 			// Create environment variables - AeroSandbox checks if DEBUG key exists, not its value
 			let buildEnv = debug
@@ -234,8 +233,9 @@ function viteBuildWatchPlugin(): Plugin {
 							}, 5000);
 						}
 					},
+					// 2 minutes
 					2 * 60 * 1000,
-				); // 2 minutes
+				);
 
 				// Clean up timeout when process completes
 				buildProcess.on("close", () => {
@@ -280,7 +280,7 @@ function viteBuildWatchPlugin(): Plugin {
 		}
 
 		console.info(
-			`⏱️  ${projectName} file changed, waiting ${debounceDelay}ms for more changes...`,
+			`⏱️ ${projectName} file changed, waiting ${debounceDelay}ms for more changes...`,
 		);
 
 		// Set new timeout
