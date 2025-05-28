@@ -9,6 +9,9 @@ import { existsSync, readdirSync } from "node:fs";
 
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
+// Import package.json for OpenGraph metadata
+import packageJson from "../aeroSW/package.json" with { type: "json" };
+
 import wisp from "wisp-server-node";
 // @ts-ignore: r58 is an idiot
 import { epoxyPath } from "@mercuryworkshop/epoxy-transport";
@@ -388,6 +391,37 @@ function viteBuildWatchPlugin(): Plugin {
 	};
 }
 
+/** Custom plugin to inject OpenGraph meta tags with information from aero's SW package.json */
+function viteOpenGraphPlugin(): Plugin {
+	return {
+		name: "vite-opengraph-inject",
+		transformIndexHtml(html) {
+			// Extract metadata from package.json
+			const { description, homepage } = packageJson;
+			const name = "aero proxy";
+			const logoPath = "/imgs/aero.webp";
+			const themeColor = "#00aaff";
+
+			// Create OpenGraph meta tags
+			const ogTags = [
+				`<meta property="og:title" content="${name} demo" />`,
+				`<meta property="og:description" content="${description}" />`,
+				`<meta property="og:url" content="${homepage}" />`,
+				`<meta property="og:type" content="website" />`,
+				`<meta property="og:image" content="${logoPath}" />`,
+				`<meta name="theme-color" content="${themeColor}" />`,
+				`<meta name="twitter:card" content="summary_large_image" />`,
+				`<meta name="twitter:title" content="${name} demo" />`,
+				`<meta name="twitter:description" content="${description}" />`,
+				`<meta name="twitter:image" content="${logoPath}" />`,
+			].join("\n    ");
+
+			// Inject the meta tags before the closing </head> tag
+			return html.replace("</head>", `    ${ogTags}\n  </head>`);
+		},
+	};
+}
+
 export default defineConfig({
 	server: {
 		port,
@@ -398,6 +432,7 @@ export default defineConfig({
 			dreamlandPlugin(),
 			viteWispPlugin(),
 			viteBuildWatchPlugin(),
+			viteOpenGraphPlugin(),
 			viteStaticCopy({
 				targets: [
 					{

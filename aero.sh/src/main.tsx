@@ -22,8 +22,6 @@ import { FooterBadges } from "./badges.tsx";
 import SearchBar from "./Omnibox.tsx";
 import Settings, { openSettings } from "./Settings.tsx";
 
-import packageJson from "../../aeroSW/package.json" with { type: "json" };
-
 // Add global style for settings overlay and background hiding
 const globalSettingsStyle = document.createElement("style");
 globalSettingsStyle.textContent = `
@@ -379,9 +377,6 @@ const App: Component<
 
 	return (
 		<div class="app-container">
-			<meta property="og:title" content="aero proxy demo" />
-			<meta property="og:description" content={packageJson.description} />
-			<meta property="og:image" content="/imgs/aero.webp" />
 			<div class="logo-container content-block">
 				<img src="/imgs/aero.webp" alt="Aero Proxy Logo" class="logo-img" />
 			</div>
