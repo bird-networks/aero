@@ -8,9 +8,21 @@ import "@material/web/icon/icon.js";
 import "@material/web/select/outlined-select.js";
 import "@material/web/select/select-option.js";
 import "@material/web/divider/divider.js";
+import "@material/web/textfield/outlined-text-field.js";
+import "@material/web/switch/switch.js";
 
 // Import search engine store and configurations
-import { searchEngineStore, AVAILABLE_SEARCH_ENGINES } from "./searchEngineStore.js";
+import {
+	searchEngineStore,
+	AVAILABLE_SEARCH_ENGINES,
+} from "./searchEngineStore.js";
+
+// Import wisp backend store
+import {
+	wispBackendStore,
+	getCurrentWispUrl,
+	getDefaultWispUrlForDisplay,
+} from "./wispBackendStore.js";
 
 /** Available settings pages */
 const SETTINGS_PAGES = [
@@ -20,17 +32,17 @@ const SETTINGS_PAGES = [
 	{ id: "site", label: "Site Settings", icon: "tune" },
 ] as const;
 
-type SettingsPageId = typeof SETTINGS_PAGES[number]["id"];
+type SettingsPageId = (typeof SETTINGS_PAGES)[number]["id"];
 
 // Global store for settings state
 const settingsStore = $store(
 	{ isOpen: false },
-	{ ident: "aero-settings-state", backing: "localstorage", autosave: "auto" }
+	{ ident: "aero-settings-state", backing: "localstorage", autosave: "auto" },
 );
 
 // Ensure settings start closed and clear any cached state
-settingsStore.isOpen = false
-document.body.classList.remove("settings-active")
+settingsStore.isOpen = false;
+document.body.classList.remove("settings-active");
 
 /** Global function to open settings */
 export const openSettings = () => {
@@ -45,19 +57,22 @@ export const closeSettings = () => {
 };
 
 // Initialize settings state on load to clear any leftover open state
-settingsStore.isOpen = false
-document.body.classList.remove("settings-active")
+settingsStore.isOpen = false;
+document.body.classList.remove("settings-active");
 
 /**
  * Settings component with sidebar navigation following Material UI guidelines
  * Provides access to proxy configuration, BareMux transports, and middleware settings
  */
-const Settings: Component<{}, {
-	/** Currently active settings page */
-	activePage: SettingsPageId;
-	/** Whether the navigation rail is in its collapsed (icon-only) state */
-	isRailCollapsed: boolean;
-}> = function () {
+const Settings: Component<
+	Record<string, never>,
+	{
+		/** Currently active settings page */
+		activePage: SettingsPageId;
+		/** Whether the navigation rail is in its collapsed (icon-only) state */
+		isRailCollapsed: boolean;
+	}
+> = function () {
 	this.activePage = "proxy";
 	this.isRailCollapsed = true;
 
@@ -67,6 +82,15 @@ const Settings: Component<{}, {
 
 	const toggleRailCollapse = () => {
 		this.isRailCollapsed = !this.isRailCollapsed;
+	};
+
+	const handleWispUrlChange = (e: Event) => {
+		const target = e.target as HTMLInputElement;
+		wispBackendStore.customWispUrl = target.value;
+	};
+
+	const toggleCustomWispUrl = () => {
+		wispBackendStore.useCustomUrl = !wispBackendStore.useCustomUrl;
 	};
 
 	// Handle escape key to close settings
@@ -80,7 +104,7 @@ const Settings: Component<{}, {
 		return () => document.removeEventListener("keydown", handleKeydown);
 	};
 
-	this.css = /* css */`
+	this.css = /* css */ `
 		.settings-sidebar {
 			width: 280px; /* Expanded width */
 			background-color: var(--md-sys-color-surface-container);
@@ -320,6 +344,43 @@ const Settings: Component<{}, {
 			--md-outlined-select-text-field-input-text-color: var(--md-sys-color-on-surface);
 		}
 
+		.settings-text-field {
+			width: 100%;
+			max-width: 480px;
+			--md-outlined-text-field-container-shape: 16px;
+			--md-outlined-text-field-focus-outline-color: var(--md-sys-color-primary);
+			--md-outlined-text-field-hover-outline-color: var(--md-sys-color-on-surface-variant);
+			--md-outlined-text-field-outline-color: var(--md-sys-color-outline);
+			--md-outlined-text-field-supporting-text-color: var(--md-sys-color-on-surface-variant);
+			--md-outlined-text-field-label-text-color: var(--md-sys-color-on-surface-variant);
+			--md-outlined-text-field-input-text-color: var(--md-sys-color-on-surface);
+		}
+
+		.settings-switch-row {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			gap: 16px;
+			margin-bottom: 16px;
+		}
+
+		.settings-switch-label {
+			font-size: 0.875rem;
+			font-weight: 500;
+			color: var(--md-sys-color-on-surface);
+			font-family: "Google Sans", sans-serif;
+		}
+
+		.default-url-display {
+			font-size: 0.75rem;
+			color: var(--md-sys-color-on-surface-variant);
+			font-family: "Google Sans", monospace;
+			background-color: var(--md-sys-color-surface-container);
+			padding: 8px 12px;
+			border-radius: 8px;
+			margin-top: 8px;
+		}
+
 		/* Mobile responsive */
 		@media screen and (max-width: 768px) {
 			.settings-overlay {
@@ -437,6 +498,35 @@ const Settings: Component<{}, {
 							</p>
 						</div>
 						<div class="settings-content-body">
+							<div class="settings-section">
+								<h3 class="settings-section-title">Wisp Backend</h3>
+								<div class="settings-switch-row">
+									<span class="settings-switch-label">Use custom Wisp URL</span>
+									<md-switch
+										selected={use(wispBackendStore.useCustomUrl)}
+										on:change={toggleCustomWispUrl}
+										aria-label="Toggle custom Wisp URL"
+									/>
+								</div>
+								{use(wispBackendStore.useCustomUrl, (useCustom) =>
+									useCustom ? (
+										<div class="settings-form-field">
+											<md-outlined-text-field
+												class="settings-text-field"
+												label="Custom Wisp URL"
+												value={use(wispBackendStore.customWispUrl)}
+												on:input={handleWispUrlChange}
+												supporting-text="Enter a custom Wisp WebSocket URL (e.g., wss://example.com/wisp/)"
+												placeholder="wss://example.com/wisp/"
+											/>
+										</div>
+									) : (
+										<div class="default-url-display">
+											Default: {getDefaultWispUrlForDisplay()}
+										</div>
+									),
+								)}
+							</div>
 						</div>
 					</div>
 				);
@@ -454,7 +544,10 @@ const Settings: Component<{}, {
 							<div class="settings-section">
 								<h3 class="settings-section-title">Transport Configuration</h3>
 								<div class="settings-form-field">
-									<md-outlined-select class="settings-select" label="Transport Type">
+									<md-outlined-select
+										class="settings-select"
+										label="Transport Type"
+									>
 										<md-select-option value="epoxy-tls">
 											<div slot="headline">Epoxy-TLS</div>
 										</md-select-option>
@@ -493,8 +586,8 @@ const Settings: Component<{}, {
 							<div class="settings-section">
 								<h3 class="settings-section-title">Search Engine</h3>
 								<div class="settings-form-field">
-									<md-outlined-select 
-										class="settings-select" 
+									<md-outlined-select
+										class="settings-select"
 										label="Default Search Engine"
 										value={use(searchEngineStore.currentEngineId)}
 										on:change={(e: Event) => {
@@ -502,8 +595,8 @@ const Settings: Component<{}, {
 											searchEngineStore.currentEngineId = select.value;
 										}}
 									>
-										{AVAILABLE_SEARCH_ENGINES.map(engine => (
-											<md-select-option value={engine.id}>
+										{AVAILABLE_SEARCH_ENGINES.map((engine) => (
+											<md-select-option key={engine.id} value={engine.id}>
 												<div slot="headline">{engine.name}</div>
 											</md-select-option>
 										))}
@@ -521,24 +614,44 @@ const Settings: Component<{}, {
 
 	return (
 		<div class="settings-overlay" class:open={use(settingsStore.isOpen)}>
-			<div class={use(this.isRailCollapsed, (collapsed) => 
-				`settings-sidebar ${collapsed ? "rail-collapsed" : ""}`
-			)}>
+			<div
+				class={use(
+					this.isRailCollapsed,
+					(collapsed) =>
+						`settings-sidebar ${collapsed ? "rail-collapsed" : ""}`,
+				)}
+			>
 				<div class="settings-header">
-					<md-icon-button class="rail-toggle-btn" on:click={toggleRailCollapse} aria-label="Toggle navigation rail">
+					<md-icon-button
+						class="rail-toggle-btn"
+						on:click={toggleRailCollapse}
+						aria-label="Toggle navigation rail"
+					>
 						{/* Icon shows action: if collapsed, shows icon to expand; if expanded, shows icon to collapse */}
-						<md-icon>{use(this.isRailCollapsed, (collapsed) => collapsed ? "menu" : "menu_open")}</md-icon>
+						<md-icon>
+							{use(this.isRailCollapsed, (collapsed) =>
+								collapsed ? "menu" : "menu_open",
+							)}
+						</md-icon>
 					</md-icon-button>
 					<h1 class="settings-title">Settings</h1>
-					<md-icon-button class="settings-close-btn" on:click={closeSettings} aria-label="Close settings">
+					<md-icon-button
+						class="settings-close-btn"
+						on:click={closeSettings}
+						aria-label="Close settings"
+					>
 						<md-icon>close</md-icon>
 					</md-icon-button>
 				</div>
 				<nav class="settings-nav">
 					{SETTINGS_PAGES.map((page) => (
 						<button
-							class={use(this.activePage, (active) => 
-								`settings-nav-item ${active === page.id ? "active" : ""}`
+							key={page.id}
+							type="button"
+							class={use(
+								this.activePage,
+								(active) =>
+									`settings-nav-item ${active === page.id ? "active" : ""}`,
 							)}
 							on:click={() => selectPage(page.id)}
 							aria-label={`Go to ${page.label} settings`}

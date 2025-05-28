@@ -18,7 +18,7 @@ import "@material/web/icon/icon.js";
 import "@material/web/iconbutton/icon-button.js";
 import "@material/web/fab/fab.js";
 
-import { FooterBadges } from "./badges";
+import { FooterBadges } from "./badges.tsx";
 import SearchBar from "./Omnibox.tsx";
 import Settings, { openSettings } from "./Settings.tsx";
 
@@ -88,6 +88,7 @@ const themeStore = $store(
 
 /** Main application component */
 const App: Component<
+	// biome-ignore lint/complexity/noBannedTypes: This is normal dreamland usage
 	{},
 	{
 		fabMenuOpen: boolean;
@@ -133,253 +134,252 @@ const App: Component<
 	};
 
 	this.css = `
-    html,
-    * {
-        box-sizing: border-box;
-    }
-
-    a {
-        text-decoration: none;
-        color: inherit;
-    }
-    a:visited {
-        /* Ensures visited links don't turn purple */
-        color: inherit;
-    }
-
-    html,
-    body {
-      	height: 100%;
-      	margin: 0;
-      	padding: 0;
-    }
-
-    body {
-      	background-color: var(--md-sys-color-surface-container-lowest, #fff);
-      	color: var(--md-sys-color-on-surface, #000);
-      	font-family: "Google Sans", sans-serif;
-      	display: flex;
-      	flex-direction: column;
-      	justify-content: flex-start;
-      	align-items: center;
-        min-height: 100vh; 
-        height: auto; 
-    }
-
-    #app {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-
-    @font-face {
-        font-family: "Google Sans";
-        src: url("/fonts/GoogleSans-Regular.woff2") format("woff2");
-        font-weight: normal;
-        font-style: normal;
-    }
-    
-    .app-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        max-width: 800px; 
-        padding: 20px;
-    }
-
-    .content-block { 
-        width: 100%;
-        max-width: 700px;
-        margin-bottom: 1.5rem; 
-        display: flex;
-        justify-content: center;
-    }
-
-    .content-block:last-of-type { 
-      	margin-bottom: 0;
-    }
-
-    .logo-container { 
-	      /** Bring the logo closer to the search bar */
-      	margin-bottom: 1rem;
-    }
-
-    .logo-img { 
-      	max-width: 20em;
-      	height: auto;  
-    }
-    
-    .search-container-block { 
-    }
-
-    .footer-credits { 
-      	font-style: italic;
-      	color: var(--md-sys-color-on-surface-variant, #777);
-      	font-family: "Google Sans", sans-serif;
-      	text-align: center;
-      	margin-top: 1.5rem; 
-    }
-    
-    /* FAB Menu Styles */
-    .fab-menu {
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        z-index: 1000;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-    }
-    
-    .fab-menu-items {
-      	display: flex;
-      	flex-direction: column;
-      	align-items: flex-end;
-      	margin-bottom: 16px;
-      	gap: 12px;
-    }
-    
-    .fab-menu-item {
-     	display: flex;
-    	align-items: center;
-     	gap: 12px;
-      	transform: translateY(20px) scale(0.8);
-      	opacity: 0;
-      	transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-      	pointer-events: none;
-    }
-    
-    .fab-menu-item.visible {
-      	transform: translateY(0) scale(1);
-      	opacity: 1;
-      	pointer-events: auto;
-    }
-    
-    .fab-menu-item-label {
-      	background: var(--md-sys-color-surface-container-high);
-      	color: var(--md-sys-color-on-surface);
-      	padding: 8px 16px;
-      	border-radius: 16px;
-      	font-size: 0.875rem;
-      	font-weight: 500;
-      	white-space: nowrap;
-      	box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      	transform: translateX(10px);
-      	opacity: 0;
-      	transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-    }
-    
-    .fab-menu-item.visible .fab-menu-item-label {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    
-    .fab-menu-item-fab {
-        --md-fab-container-color: var(--md-sys-color-surface-container-high);
-        --md-fab-icon-color: var(--md-sys-color-on-surface);
-    }
-    
-    .fab-menu-item-fab:hover {
-        --md-fab-container-color: var(--md-sys-color-primary-container);
-        --md-fab-icon-color: var(--md-sys-color-on-primary-container);
-    }
-    
-    .fab-menu-toggle {
-        --md-fab-container-color: var(--md-sys-color-primary-container);
-        --md-fab-icon-color: var(--md-sys-color-on-primary-container);
-        transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
-    }
-    
-    .fab-menu-toggle.open {
-        transform: rotate(45deg);
-    }
-    
-    .fab-menu-toggle:hover {
-        --md-fab-container-color: var(--md-sys-color-primary);
-        --md-fab-icon-color: var(--md-sys-color-on-primary);
-    }
-
-    .dark-mode-fab {
-        position: fixed; 
-        bottom: 24px; 
-        left: 24px; 
-        z-index: 1000; 
-        --md-fab-container-color: var(--md-sys-color-secondary-container);
-        --md-fab-icon-color: var(--md-sys-color-on-secondary-container);
-    }
-
-    .footer-links {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-top: -1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    @media screen and (max-width: 768px) {
-        html {
-            padding-top: 0; 
-            margin-top: 0; 
-            min-height: 100vh; 
-            height: auto; 
-        }
-
-        body {
-            display: flex; 
-            align-items: center; 
-            padding-top: 0; 
-            margin-top: 0; 
-            min-height: 100vh; 
-            height: auto; 
-         }
-
-        #app {
-            justify-content: flex-start; 
-            padding-top: 0; 
-            margin-top: 0; 
-            height: auto; 
-        }
-
-        .app-container {
-            max-width: 100%; 
-            justify-content: flex-start; 
-        }
-
-        .content-block {
-            margin-bottom: 0.75rem; 
-        }
-
-        .logo-container.content-block {
-            margin-top: 6em;
-            margin-bottom: 0.75rem; 
-        }
-		.logo-img {
-			max-width: 16em;
+		html,
+		* {
+			box-sizing: border-box;
 		}
-      	.footer-credits.content-block {
-        	margin-top: 1.5rem;
-      	}
-      	.footer-links {
-        	margin-top: 0.5rem;
-        	margin-bottom: 0.5rem;
-      	}
-    }
 
-    @media screen and (min-width: 769px) {
-      	body {
-        	justify-content: center; /* Center content on larger screens */
-      	}
-    }
-  `;
+		a {
+			text-decoration: none;
+			color: inherit;
+		}
+		a:visited {
+			/* Ensures visited links don't turn purple */
+			color: inherit;
+		}
+
+		html,
+		body {
+			height: 100%;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			background-color: var(--md-sys-color-surface-container-lowest, #fff);
+			color: var(--md-sys-color-on-surface, #000);
+			font-family: "Google Sans", sans-serif;
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-start;
+			align-items: center;
+			min-height: 100vh; 
+			height: auto; 
+		}
+
+		#app {
+			width: 100%;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+		}
+
+		@font-face {
+			font-family: "Google Sans";
+			src: url("/fonts/GoogleSans-Regular.woff2") format("woff2");
+			font-weight: normal;
+			font-style: normal;
+		}
+		
+		.app-container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			width: 100%;
+			max-width: 800px; 
+			padding: 20px;
+		}
+
+		.content-block { 
+			width: 100%;
+			max-width: 700px;
+			margin-bottom: 1.5rem; 
+			display: flex;
+			justify-content: center;
+		}
+
+		.content-block:last-of-type { 
+			margin-bottom: 0;
+		}
+
+		.logo-container { 
+			margin-bottom: 1rem;
+		}
+
+		.logo-img { 
+			max-width: 20em;
+			height: auto;  
+		}
+		
+		.search-container-block { 
+		}
+
+		.footer-credits { 
+			font-style: italic;
+			color: var(--md-sys-color-on-surface-variant, #777);
+			font-family: "Google Sans", sans-serif;
+			text-align: center;
+			margin-top: 1.5rem; 
+		}
+		
+		/* FAB Menu Styles */
+		.fab-menu {
+			position: fixed;
+			bottom: 24px;
+			right: 24px;
+			z-index: 1000;
+			display: flex;
+			flex-direction: column;
+			align-items: flex-end;
+		}
+		
+		.fab-menu-items {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-end;
+			margin-bottom: 16px;
+			gap: 12px;
+		}
+		
+		.fab-menu-item {
+		 	display: flex;
+			align-items: center;
+		 	gap: 12px;
+			transform: translateY(20px) scale(0.8);
+			opacity: 0;
+			transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+			pointer-events: none;
+		}
+		
+		.fab-menu-item.visible {
+			transform: translateY(0) scale(1);
+			opacity: 1;
+			pointer-events: auto;
+		}
+		
+		.fab-menu-item-label {
+			background: var(--md-sys-color-surface-container-high);
+			color: var(--md-sys-color-on-surface);
+			padding: 8px 16px;
+			border-radius: 16px;
+			font-size: 0.875rem;
+			font-weight: 500;
+			white-space: nowrap;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+			transform: translateX(10px);
+			opacity: 0;
+			transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+		}
+		
+		.fab-menu-item.visible .fab-menu-item-label {
+			transform: translateX(0);
+			opacity: 1;
+		}
+		
+		.fab-menu-item-fab {
+			--md-fab-container-color: var(--md-sys-color-surface-container-high);
+			--md-fab-icon-color: var(--md-sys-color-on-surface);
+		}
+		
+		.fab-menu-item-fab:hover {
+			--md-fab-container-color: var(--md-sys-color-primary-container);
+			--md-fab-icon-color: var(--md-sys-color-on-primary-container);
+		}
+		
+		.fab-menu-toggle {
+			--md-fab-container-color: var(--md-sys-color-primary-container);
+			--md-fab-icon-color: var(--md-sys-color-on-primary-container);
+			transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+		}
+		
+		.fab-menu-toggle.open {
+			transform: rotate(45deg);
+		}
+		
+		.fab-menu-toggle:hover {
+			--md-fab-container-color: var(--md-sys-color-primary);
+			--md-fab-icon-color: var(--md-sys-color-on-primary);
+		}
+
+		.dark-mode-fab {
+			position: fixed; 
+			bottom: 24px; 
+			left: 24px; 
+			z-index: 1000; 
+			--md-fab-container-color: var(--md-sys-color-secondary-container);
+			--md-fab-icon-color: var(--md-sys-color-on-secondary-container);
+		}
+
+		.footer-links {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+			margin-top: -1rem;
+			margin-bottom: 1.5rem;
+		}
+
+		@media screen and (max-width: 768px) {
+			html {
+				padding-top: 0; 
+				margin-top: 0; 
+				min-height: 100vh; 
+				height: auto; 
+			}
+
+			body {
+				display: flex; 
+				align-items: center; 
+				padding-top: 0; 
+				margin-top: 0; 
+				min-height: 100vh; 
+				height: auto; 
+			}
+
+			#app {
+				justify-content: flex-start; 
+				padding-top: 0; 
+				margin-top: 0; 
+				height: auto; 
+			}
+
+			.app-container {
+				max-width: 100%; 
+				justify-content: flex-start; 
+			}
+
+			.content-block {
+				margin-bottom: 0.75rem; 
+			}
+
+			.logo-container.content-block {
+				margin-top: 6em;
+				margin-bottom: 0.75rem; 
+			}
+			.logo-img {
+				max-width: 16em;
+			}
+			.footer-credits.content-block {
+				margin-top: 1.5rem;
+			}
+			.footer-links {
+				margin-top: 0.5rem;
+				margin-bottom: 0.5rem;
+			}
+		}
+
+		@media screen and (min-width: 769px) {
+			body {
+			justify-content: center; /* Center content on larger screens */
+			}
+		}
+	`;
 
 	return (
 		<div class="app-container">
-			<meta property="og:title" content="aero proxy demo"/>
+			<meta property="og:title" content="aero proxy demo" />
 			<meta property="og:description" content={packageJson.description} />
 			<meta property="og:image" content="/imgs/aero.webp" />
 			<div class="logo-container content-block">
@@ -388,8 +388,26 @@ const App: Component<
 			<SearchBar />
 			<div class="footer-credits content-block">
 				<p style="margin: 0; padding: 0;">
-					Made with ❤️ by <b><a href="https://ryanwilson.space" style="color: var(--md-sys-color-primary)">Ryan Wilson</a></b><br/>
-          For the <b><a href="https://browserports.dev" style="color: var(--md-sys-color-primary)">Browser Ports</a></b> project
+					Made with ❤️ by{" "}
+					<b>
+						<a
+							href="https://ryanwilson.space"
+							style="color: var(--md-sys-color-primary)"
+						>
+							Ryan Wilson
+						</a>
+					</b>
+					<br />
+					For the{" "}
+					<b>
+						<a
+							href="https://browserports.dev"
+							style="color: var(--md-sys-color-primary)"
+						>
+							Browser Ports
+						</a>
+					</b>{" "}
+					project
 				</p>
 			</div>
 			<FooterBadges />
@@ -399,6 +417,7 @@ const App: Component<
 				{/* Menu Items */}
 				<div class="fab-menu-items">
 					{THEME_FAB_ITEMS.map((item, index) => (
+						// biome-ignore lint/correctness/useJsxKeyInIterable: <explanation>
 						<div
 							class={use(
 								this.fabMenuOpen,
@@ -422,7 +441,12 @@ const App: Component<
 				</div>
 				{/* FAB Row: Settings and Theme Switcher */}
 				<div style="display: flex; flex-direction: row; align-items: center; gap: 12px;">
-					<md-fab class="settings-fab" size="medium" on:click={openSettings} aria-label="Settings">
+					<md-fab
+						class="settings-fab"
+						size="medium"
+						on:click={openSettings}
+						aria-label="Settings"
+					>
 						<md-icon slot="icon">settings</md-icon>
 					</md-fab>
 					<md-fab
@@ -459,7 +483,7 @@ const App: Component<
 
 // Mount once DOM ready
 window.addEventListener("load", () => {
-	const root = document.getElementById("app")!;
-	root.replaceWith(<App />);
+	const root = document.getElementById("app");
+	if (root) root.replaceWith(<App />);
 	document.body.appendChild(<Settings />);
 });

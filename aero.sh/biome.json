@@ -6,5 +6,23 @@
 		"indentStyle": "tab",
 		"indentWidth": 4,
 		"ignore": []
-	}
+	},
+  "javascript": {
+    "formatter": {
+      "indentStyle": "tab",
+      "indentWidth": 4
+    }
+  },
+  "typescript": {
+    "formatter": {
+      "indentStyle": "tab",
+      "indentWidth": 4
+    }
+  },
+  "tsx": {
+    "formatter": {
+      "indentStyle": "tab",
+      "indentWidth": 4
+    }
+  }
 }

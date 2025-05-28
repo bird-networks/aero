@@ -58,8 +58,6 @@ const Omnibox: Component<
 	// Get current search engine config
 	const currentEngine = getCurrentSearchEngine();
 
-
-
 	const fetchSuggestions = async (query: string) => {
 		if (!query.trim()) {
 			this.suggestions = [];
@@ -70,10 +68,14 @@ const Omnibox: Component<
 		const suggestUrl = currentEngine.suggestUrlBuilder(query);
 
 		try {
-			console.debug(`[Suggestions] Fetching suggestions with URL ${suggestUrl}`);
-			
+			console.debug(
+				`[Suggestions] Fetching suggestions with URL ${suggestUrl}`,
+			);
+
 			if (typeof bareMux.fetch !== "function") {
-				console.error("[Suggestions] BareMux connection not available or fetch method missing/not a function");
+				console.error(
+					"[Suggestions] BareMux connection not available or fetch method missing/not a function",
+				);
 				return;
 			}
 
@@ -82,19 +84,27 @@ const Omnibox: Component<
 			try {
 				resp = await bareMux.fetch(suggestUrl);
 			} catch (err) {
-				console.error(`[Suggestions] Failed to fetch suggestions with URL ${suggestUrl}`, err);
+				console.error(
+					`[Suggestions] Failed to fetch suggestions with URL ${suggestUrl}`,
+					err,
+				);
 				return;
 			}
 			if (!resp.ok) {
-				console.error(`Failed to get search suggestions (status ${resp.status}) from ${suggestUrl}`);
+				console.error(
+					`Failed to get search suggestions (status ${resp.status}) from ${suggestUrl}`,
+				);
 				return;
 			}
 			const data = await resp.json();
 			console.debug("[Suggestions] API response", data);
-			
+
 			const parsedSuggestions = currentEngine.suggestionParser(data);
-			this.suggestions = parsedSuggestions.map(s => ({ query: s, type: "query" }));
-			
+			this.suggestions = parsedSuggestions.map((s) => ({
+				query: s,
+				type: "query",
+			}));
+
 			console.debug("[Suggestions] Processed suggestions", this.suggestions);
 			this.showSuggestions = this.suggestions.length > 0;
 		} catch (error) {
@@ -106,12 +116,12 @@ const Omnibox: Component<
 		}
 	};
 
-		/**  
-		 * Checks if a string is a valid URL.
-		 * This is used to determine if the user has entered a URL or a search query.
-		 * @param string - The string to check.
-		 * @returns A boolean determining if the provided string is a valid URL
-		 */
+	/**
+	 * Checks if a string is a valid URL.
+	 * This is used to determine if the user has entered a URL or a search query.
+	 * @param string - The string to check.
+	 * @returns A boolean determining if the provided string is a valid URL
+	 */
 	const isValidURL = (string: string): boolean => {
 		try {
 			new URL(string);
@@ -123,7 +133,7 @@ const Omnibox: Component<
 
 	const handleSubmit = async () => {
 		this.showSuggestions = false;
-		let urlToLoad = omniboxStore.inputValue?.trim() || "";
+		const urlToLoad = omniboxStore.inputValue?.trim() || "";
 
 		if (!urlToLoad) return;
 
@@ -147,21 +157,21 @@ const Omnibox: Component<
 	const handleSuggestionClick = (suggestion: Suggestion) => {
 		omniboxStore.inputValue = suggestion.query;
 		this.showSuggestions = false;
-		handleSubmit(); 
+		handleSubmit();
 	};
 
 	const clearInput = () => {
 		omniboxStore.inputValue = "";
-		
+
 		if (this.inputElement) {
 			this.inputElement.value = "";
-			
-			this.inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-			this.inputElement.dispatchEvent(new Event('change', { bubbles: true }));
-			
+
+			this.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+			this.inputElement.dispatchEvent(new Event("change", { bubbles: true }));
+
 			this.inputElement.focus();
 		}
-		
+
 		this.suggestions = [];
 		this.showSuggestions = false;
 		this.isLoadingSuggestions = false;
@@ -189,7 +199,7 @@ const Omnibox: Component<
 
 		const handleClick = (e: MouseEvent) => {
 			const dropdown = document.querySelector(".suggestions-container");
-			
+
 			let clickedInsideOmniboxRelatedElements = false;
 			if (this.inputElement && this.inputElement.contains(e.target as Node)) {
 				clickedInsideOmniboxRelatedElements = true;
@@ -210,75 +220,75 @@ const Omnibox: Component<
 		};
 	};
 
-	this.css = /* css */`
+	this.css = /* css */ `
 		@font-face {
 			font-family: "Google Sans";
-				src: url("/fonts/GoogleSans-Regular.woff2") format("woff2");
-				font-weight: normal;
-				font-style: normal;
+			src: url("/fonts/GoogleSans-Regular.woff2") format("woff2");
+			font-weight: normal;
+			font-style: normal;
 		}
 		.omnibox-container {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				width: 100%;
-				margin-top: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			width: 100%;
+			margin-top: 0;
 		}
 		.omnibox-wrapper {
-				position: relative;
-				margin: 0 auto;
-				max-width: 584px;
-				width: 100%;
-				box-sizing: border-box;
+			position: relative;
+			margin: 0 auto;
+			max-width: 584px;
+			width: 100%;
+			box-sizing: border-box;
 		}
 		.omnibox-box {
-				display: flex;
-				align-items: center;
-				padding: 0 16px;
-				min-height: 50px;
-				height: auto;
-				width: 100%;
-				box-sizing: border-box;
-				border-radius: 26px;
-				background: #fff;
-				border: 1px solid #dadce0;
-				position: relative;
-				z-index: 3;
-				transition: border-radius 0.15s ease, box-shadow 0.15s ease;
-				background-color: var(--aero-omnibox-bg, #fff);
-				border: 1px solid var(--aero-omnibox-border, #dadce0);
-				box-shadow: var(--aero-omnibox-shadow, 0px 3px 10px 0px rgba(31, 31, 31, 0.08));
-				overflow: hidden;
+			display: flex;
+			align-items: center;
+			padding: 0 16px;
+			min-height: 50px;
+			height: auto;
+			width: 100%;
+			box-sizing: border-box;
+			border-radius: 26px;
+			background: #fff;
+			border: 1px solid #dadce0;
+			position: relative;
+			z-index: 3;
+			transition: border-radius 0.15s ease, box-shadow 0.15s ease;
+			background-color: var(--aero-omnibox-bg, #fff);
+			border: 1px solid var(--aero-omnibox-border, #dadce0);
+			box-shadow: var(--aero-omnibox-shadow, 0px 3px 10px 0px rgba(31, 31, 31, 0.08));
+			overflow: hidden;
 		}
 
 		.omnibox-box.has-suggestions {
-				border-bottom-left-radius: 0;
-				border-bottom-right-radius: 0;
-				box-shadow: var(--aero-omnibox-open-shadow, none);
+			border-bottom-left-radius: 0;
+			border-bottom-right-radius: 0;
+			box-shadow: var(--aero-omnibox-open-shadow, none);
 		}
 
 		.omnibox-box.has-suggestions::after {
-				display: block;
-				content: "";
-				position: absolute;
-				bottom: 0;
-				left: 16px;
-				right: 16px;
-				height: 1px;
-				background: var(--aero-hairline-color, #dfe1e5);
-				z-index: 3;
+			display: block;
+			content: "";
+			position: absolute;
+			bottom: 0;
+			left: 16px;
+			right: 16px;
+			height: 1px;
+			background: var(--aero-hairline-color, #dfe1e5);
+			z-index: 3;
 		}
 		.omnibox-input {
-				border: none;
-				outline: none;
-				font-size: 1.25rem;
-				background: transparent;
-				flex: 1;
-				height: 100%;
-				font-family: "Google Sans", Arial, sans-serif;
-				color: #202124;
-				padding: 0 8px 0 20px;
-				color: var(--aero-omnibox-text, #202124);
+			border: none;
+			outline: none;
+			font-size: 1.25rem;
+			background: transparent;
+			flex: 1;
+			height: 100%;
+			font-family: "Google Sans", Arial, sans-serif;
+			color: #202124;
+			padding: 0 8px 0 20px;
+			color: var(--aero-omnibox-text, #202124);
 		}
 
 		body.dark-theme .omnibox-input {
@@ -287,13 +297,13 @@ const Omnibox: Component<
 
 		.omnibox-input::-webkit-search-cancel-button,
 		.omnibox-input::-webkit-search-decoration {
-				-webkit-appearance: none;
-				appearance: none;
-				display: none;
+			-webkit-appearance: none;
+			appearance: none;
+			display: none;
 		}
 		.omnibox-icon {
-				color: #5f6368;
-				font-size: 1.5rem;
+			color: #5f6368;
+			font-size: 1.5rem;
 			width: 24px;
 			height: 24px;
 			display: flex;
@@ -335,32 +345,32 @@ const Omnibox: Component<
 			background: var(--md-sys-color-surface-container-high);
 		}
 		.suggestions-container {
-				display: flex;
-				flex-direction: column;
-				margin: 0;
-				overflow: hidden;
-				padding-bottom: 4px;
-				position: absolute;
-				top: 100%;
-				left: 0;
-				right: 0;
-				background: #fff;
-				border: var(--aero-suggestions-border-spec, 0);
-				border-top: 1px solid var(--aero-hairline-color, #dfe1e5);
-				padding-left: 1px;
-				padding-right: 1px;
-				border-radius: var(--aero-suggestions-radius, 0 0 24px 24px);
-				box-shadow: 0 4px 6px rgba(32, 33, 36, .28);
-				box-sizing: border-box;
-				z-index: 1;
-				max-height: 250px;
-				overflow-y: auto;
-				font-size: 1.25rem;
-				font-family: "Google Sans", Arial, sans-serif;
-				background-color: var(--aero-suggestions-bg, #fff);
-				border: var(--aero-suggestions-border-spec, 0);
-				border-radius: var(--aero-suggestions-radius, 0 0 24px 24px);
-				box-shadow: var(--aero-suggestions-shadow, 0 4px 6px rgba(32, 33, 36, .28));
+			display: flex;
+			flex-direction: column;
+			margin: 0;
+			overflow: hidden;
+			padding-bottom: 4px;
+			position: absolute;
+			top: 100%;
+			left: 0;
+			right: 0;
+			background: #fff;
+			border: var(--aero-suggestions-border-spec, 0);
+			border-top: 1px solid var(--aero-hairline-color, #dfe1e5);
+			padding-left: 1px;
+			padding-right: 1px;
+			border-radius: var(--aero-suggestions-radius, 0 0 24px 24px);
+			box-shadow: 0 4px 6px rgba(32, 33, 36, .28);
+			box-sizing: border-box;
+			z-index: 1;
+			max-height: 250px;
+			overflow-y: auto;
+			font-size: 1.25rem;
+			font-family: "Google Sans", Arial, sans-serif;
+			background-color: var(--aero-suggestions-bg, #fff);
+			border: var(--aero-suggestions-border-spec, 0);
+			border-radius: var(--aero-suggestions-radius, 0 0 24px 24px);
+			box-shadow: var(--aero-suggestions-shadow, 0 4px 6px rgba(32, 33, 36, .28));
 		}
 
 		body.dark-theme .suggestions-container {
@@ -425,7 +435,18 @@ const Omnibox: Component<
 		<div>
 			<div class="omnibox-container">
 				<div class="omnibox-wrapper">
-					<form class={use(this.showSuggestions, (show) => show && this.suggestions.length > 0 ? "omnibox-box has-suggestions" : "omnibox-box")} onSubmit={async (e: Event) => { e.preventDefault(); await handleSubmit(); }} autocomplete="off">
+					<form
+						class={use(this.showSuggestions, (show) =>
+							show && this.suggestions.length > 0
+								? "omnibox-box has-suggestions"
+								: "omnibox-box",
+						)}
+						onSubmit={async (e: Event) => {
+							e.preventDefault();
+							await handleSubmit();
+						}}
+						autocomplete="off"
+					>
 						<span class="omnibox-icon">
 							<md-icon>search</md-icon>
 						</span>
@@ -458,36 +479,59 @@ const Omnibox: Component<
 									this.isLoadingSuggestions = false;
 								}
 							}}
-							on:focus={() => omniboxStore.inputValue?.trim() && this.suggestions.length > 0 && (this.showSuggestions = true)}
+							on:focus={() =>
+								omniboxStore.inputValue?.trim() &&
+								this.suggestions.length > 0 &&
+								(this.showSuggestions = true)
+							}
 						/>
-						{use(omniboxStore.inputValue, (v) => v ? (
-							<div
-								class="omnibox-clear-btn"
-								aria-label="Clear search"
-								role="button"
-								tabindex="0"
-								on:click={clearInput}
-							>
-								<md-icon>close</md-icon>
-							</div>
-						) : null)}
-					</form>
-					{use(this.showSuggestions, (show) => show && this.suggestions.length > 0 ? (
-						<div class="suggestions-container">
-							{use(this.isLoadingSuggestions, (loading) => loading && omniboxStore.inputValue?.trim() ? (
-								<div class="loading-indicator">
-									<md-circular-progress indeterminate></md-circular-progress>
+						{use(omniboxStore.inputValue, (v) =>
+							v ? (
+								// biome-ignore lint/a11y/useFocusableInteractive: <explanation>
+								<div
+									class="omnibox-clear-btn"
+									aria-label="Clear search"
+									// biome-ignore lint/a11y/useSemanticElements: <explanation>
+									role="button"
+									tabindex="0"
+									on:click={clearInput}
+								>
+									<md-icon>close</md-icon>
 								</div>
-							) : (
-								use(this.suggestions, (sugs) => sugs.map((suggestion) => (
-									<div class="suggestion-item" on:click={() => handleSuggestionClick(suggestion)}>
-										<md-icon class="suggestion-icon">search</md-icon>
-										<span class="suggestion-text">{suggestion.query}</span>
-									</div>
-								)))
-							))}
-						</div>
-					) : null)}
+							) : null,
+						)}
+					</form>
+					{use(this.showSuggestions, (show) =>
+						show && this.suggestions.length > 0 ? (
+							<div class="suggestions-container">
+								{use(this.isLoadingSuggestions, (loading) =>
+									loading && omniboxStore.inputValue?.trim() ? (
+										<div class="loading-indicator">
+											{/* biome-ignore lint/style/useSelfClosingElements: <explanation> */}
+											<md-circular-progress
+												indeterminate
+											></md-circular-progress>
+										</div>
+									) : (
+										use(this.suggestions, (sugs) =>
+											sugs.map((suggestion) => (
+												// biome-ignore lint/correctness/useJsxKeyInIterable: <explanation>
+												<div
+													class="suggestion-item"
+													on:click={() => handleSuggestionClick(suggestion)}
+												>
+													<md-icon class="suggestion-icon">search</md-icon>
+													<span class="suggestion-text">
+														{suggestion.query}
+													</span>
+												</div>
+											)),
+										)
+									),
+								)}
+							</div>
+						) : null,
+					)}
 				</div>
 			</div>
 		</div>

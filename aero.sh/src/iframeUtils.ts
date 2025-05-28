@@ -7,24 +7,19 @@ import { showErrorModal } from "./errorModal.js";
 /** Check if the Aero service worker is registered and active */
 export const checkAeroServiceWorker = async (): Promise<boolean> => {
 	try {
-		if (!('serviceWorker' in navigator)) {
+		if (!("serviceWorker" in navigator)) {
 			return false;
 		}
 
 		const registrations = await navigator.serviceWorker.getRegistrations();
-
-		// Check if any registration covers the /go/ path (aero proxy path)
 		for (const registration of registrations) {
-			if (registration.active && registration.scope.includes('/go/')) {
+			if (
+				registration.active &&
+				// @ts-ignore
+				registration.scope.includes(self.aeroConfig.prefix)
+			) {
 				return true;
 			}
-		}
-
-		// Also check the main registration that should handle /go/ requests
-		const mainRegistration = await navigator.serviceWorker.getRegistration('/');
-		if (mainRegistration?.active) {
-			// Test if SW can handle aero requests by checking if it's the aero SW
-			return true; // For now, assume if SW is registered it's the aero SW
 		}
 
 		return false;
@@ -42,7 +37,8 @@ let currentIframeContainer: HTMLElement | null = null;
 const showServiceWorkerError = () => {
 	showErrorModal({
 		title: "Unable to proceed",
-		message: "The aero service worker failed to register! Please refresh the page and try again, if this still doesn't work, please report this in the Discord server."
+		message:
+			"The aero service worker failed to register! Please refresh the page and try again, if this still doesn't work, please report this in the Discord server.",
 	});
 };
 
@@ -70,20 +66,23 @@ export const openInAeroIframe = async (url: string): Promise<boolean> => {
 
 	// Wait for aero-iframe custom element to be defined
 	try {
-		await customElements.whenDefined('aero-iframe');
+		await customElements.whenDefined("aero-iframe");
 	} catch (error) {
-		console.error("[IframeUtils] Error waiting for aero-iframe definition:", error);
+		console.error(
+			"[IframeUtils] Error waiting for aero-iframe definition:",
+			error,
+		);
 		return false;
 	}
 
-	// Close existing iframe if any
+	// Close existing iframe if it exists
 	if (isShowingIframe) {
 		closeIframe();
 	}
 
 	// Create iframe container
-	const container = document.createElement('div');
-	container.className = 'iframe-container';
+	const container = document.createElement("div");
+	container.className = "iframe-container";
 	container.style.cssText = `
 		position: fixed;
 		top: 0;
@@ -97,8 +96,8 @@ export const openInAeroIframe = async (url: string): Promise<boolean> => {
 	`;
 
 	// Create controls
-	const controls = document.createElement('div');
-	controls.className = 'iframe-controls';
+	const controls = document.createElement("div");
+	controls.className = "iframe-controls";
 	controls.style.cssText = `
 		display: flex;
 		justify-content: flex-end;
@@ -106,19 +105,19 @@ export const openInAeroIframe = async (url: string): Promise<boolean> => {
 		background-color: var(--md-sys-color-surface-container-low, #eee);
 	`;
 
-	const closeButton = document.createElement('md-icon-button');
-	closeButton.setAttribute('aria-label', 'Close view');
+	const closeButton = document.createElement("md-icon-button");
+	closeButton.setAttribute("aria-label", "Close view");
 	closeButton.style.cssText = `
 		--md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
 	`;
-	closeButton.innerHTML = '<md-icon>close</md-icon>';
-	closeButton.addEventListener('click', closeIframe);
+	closeButton.innerHTML = "<md-icon>close</md-icon>";
+	closeButton.addEventListener("click", closeIframe);
 
 	controls.appendChild(closeButton);
 
 	// Create iframe content container
-	const iframeContentContainer = document.createElement('div');
-	iframeContentContainer.className = 'iframe-content-container';
+	const iframeContentContainer = document.createElement("div");
+	iframeContentContainer.className = "iframe-content-container";
 	iframeContentContainer.style.cssText = `
 		flex-grow: 1;
 		display: flex;
@@ -127,7 +126,9 @@ export const openInAeroIframe = async (url: string): Promise<boolean> => {
 	`;
 
 	// Create the aero iframe
-	const iframe = document.createElement("iframe", { is: "aero-iframe" }) as HTMLIFrameElement;
+	const iframe = document.createElement("iframe", {
+		is: "aero-iframe",
+	}) as HTMLIFrameElement;
 	iframe.className = "iframe-element";
 	iframe.src = url;
 	iframe.style.cssText = `
@@ -138,7 +139,7 @@ export const openInAeroIframe = async (url: string): Promise<boolean> => {
 		display: block;
 	`;
 
-	// Assemble everything
+	// Assemble the elements
 	iframeContentContainer.appendChild(iframe);
 	container.appendChild(controls);
 	container.appendChild(iframeContentContainer);
@@ -156,7 +157,7 @@ export const openInAeroIframe = async (url: string): Promise<boolean> => {
 };
 
 // Add global styles for iframe functionality
-const iframeStyles = document.createElement('style');
+const iframeStyles = document.createElement("style");
 iframeStyles.textContent = `
 	body.iframe-active > *:not(.iframe-container) {
 		display: none !important;
@@ -165,8 +166,8 @@ iframeStyles.textContent = `
 document.head.appendChild(iframeStyles);
 
 // Handle Escape key to close iframe
-document.addEventListener('keydown', (e) => {
-	if (e.key === 'Escape' && isShowingIframe) {
+document.addEventListener("keydown", (e) => {
+	if (e.key === "Escape" && isShowingIframe) {
 		closeIframe();
 	}
-}); 
+});
