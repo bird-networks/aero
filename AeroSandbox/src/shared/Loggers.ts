@@ -31,8 +31,8 @@ export default class GenericLogger {
 	 * @branding The name of the proxy and the text shown inside of the bubble
 	 * @msgs The messages you want to log
 	 */
-	log(branding: string, msgs: string | string[]): void {
-		if (!Array.isArray(msgs)) msgs = [msgs];
+	log(branding: string, initialMsgs: string | string[]): void {
+		const msgs = Array.isArray(initialMsgs) ? initialMsgs : [initialMsgs];
 
 		// Log all of the messages
 		for (const msg of msgs)
@@ -43,8 +43,8 @@ export default class GenericLogger {
 	 * @branding The name of the proxy and the text shown inside of the bubble
 	 * @msgs The messages you want to log
 	 */
-	warn(branding: string, msgs: string | string[]): void {
-		if (!Array.isArray(msgs)) msgs = [msgs];
+	warn(branding: string, initialMsgs: string | string[]): void {
+		const msgs = Array.isArray(initialMsgs) ? initialMsgs : [initialMsgs];
 
 		// Log all of the messages
 		for (const msg of msgs)
@@ -55,9 +55,11 @@ export default class GenericLogger {
 	 * @branding The name of the proxy and the text shown inside of the bubble
 	 * @msgs The messages you want to log
 	 */
-	debug(branding: string, msgs: string | string[]): void {
+	debug(branding: string, initialMsgs: string | string[]): void {
 		if (this.debugMode) {
-			if (!Array.isArray(msgs)) msgs = [msgs];
+			const msgs = Array.isArray(initialMsgs)
+				? initialMsgs
+				: [initialMsgs];
 
 			// Log all of the messages
 			for (const msg of msgs)
@@ -74,8 +76,8 @@ export default class GenericLogger {
 	 * @branding The name of the proxy and the text shown inside of the bubble
 	 * @msgs The messages you want to log
 	 */
-	error(branding: string, msgs: string | string[]): void {
-		if (!Array.isArray(msgs)) msgs = [msgs];
+	error(branding: string, initialMsgs: string | string[]): void {
+		const msgs = Array.isArray(initialMsgs) ? initialMsgs : [initialMsgs];
 
 		// Log all of the messages
 		for (const msg of msgs)
@@ -87,8 +89,8 @@ export default class GenericLogger {
 	 * @branding The name of the proxy and the text shown inside of the bubble
 	 * @msgs The messages you want to log
 	 */
-	fatalErr(branding: string, msgs: string | string[]): void {
-		if (!Array.isArray(msgs)) msgs = [msgs];
+	fatalErr(branding: string, initialMsgs: string | string[]): void {
+		const msgs = Array.isArray(initialMsgs) ? initialMsgs : [initialMsgs];
 
 		// Log all of the messages
 		for (const msg of msgs)

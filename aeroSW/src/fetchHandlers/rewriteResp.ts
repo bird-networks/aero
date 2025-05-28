@@ -75,9 +75,10 @@ export default async function rewriteResp(
 	} = pass;
 
 	// Rewrite the response headers
-	const rewrittenRespHeaders = { ...originalResp.headers };
+	const destructedRespHeaders = { ...originalResp.headers };
+	const reconstructedRespHeaders = new Headers(destructedRespHeaders);
 	const rewrittenRespHeadersRes = await rewriteRespHeaders(
-		rewrittenRespHeaders,
+		reconstructedRespHeaders,
 		rewrittenParamsOriginals,
 		accessControlRuleMap,
 		{
@@ -259,7 +260,7 @@ export default async function rewriteResp(
 
 	return okAsync({
 		rewrittenBody,
-		rewrittenRespHeaders,
+		rewrittenRespHeaders: destructedRespHeaders,
 		rewrittenStatus
 	});
 }

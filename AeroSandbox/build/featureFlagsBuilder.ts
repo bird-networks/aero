@@ -21,7 +21,7 @@ const replacementSnakeCaseToUnderscoreCase = "$1_$2";
  * @returns The Rspack plugin
  */
 export default function featureFlagsBuilder(
-	featureFlagsRaw: FeatureFlags,
+	featureFlagsRaw: FeatureFlags
 ): object {
 	return new rspack.DefinePlugin(featureFlagsBuilderRaw(featureFlagsRaw));
 }
@@ -40,10 +40,12 @@ export function featureFlagsBuilderRaw(featureFlagsRaw: FeatureFlags): {
 		const camelCaseToFeatureFlagFmtKey = key
 			.replaceAll(snakeCaseMatch, replacementSnakeCaseToUnderscoreCase)
 			.toUpperCase();
+		// FIXME: This has broken a lot
 		featureFlags[camelCaseToFeatureFlagFmtKey] = JSON.stringify(
+			/*
 			typeof val === "boolean"
 				? `($aero.config.featureFlags === "all" || $aero.config.featureFlags["${key}"] && ${val})`
-				: val,
+				: */ val
 		);
 	}
 	Object.freeze(featureFlags);

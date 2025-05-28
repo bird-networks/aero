@@ -13,7 +13,7 @@ export default (ctx: CtxType) =>
 		clearEmulation: false,
 		securityPolicyEmulation: false,
 		supportSpeculation: false,
-		rewriterHtml: true,
+		rewriterHtml: false,
 		rewriterXslt: false,
 		rewriterJs: false,
 		rewriterCacheManifest: false,

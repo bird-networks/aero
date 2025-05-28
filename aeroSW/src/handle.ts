@@ -25,7 +25,6 @@ import troubleshoot, {
 	troubleshootJustConfigs,
 	troubleshootingStrs
 } from "./fetchHelpers/troubleshoot";
-import validateResp from "$aero/aeroSW/src/fetchHandlers/validateResp";
 
 import type { Sec } from "$types/index";
 
@@ -185,11 +184,6 @@ export default async function handleSW(
 
 	// Make the request to the proxy
 	const proxyResp = await new BareMux().fetch(proxyUrl, rewrittenReqOpts);
-	// Sanity checks for if the response is invalid
-	const validateRespRes = await validateResp(proxyResp);
-	if (validateRespRes.isErr())
-		// Propogate the error result up the chain (`validateResp` is already meant to handle errors itself)
-		return nErrAsync(validateRespRes.error);
 
 	const rewriteRespPass = {
 		originalResp: proxyResp,

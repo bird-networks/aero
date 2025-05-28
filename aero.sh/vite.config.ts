@@ -366,11 +366,23 @@ function viteBuildWatchPlugin(): Plugin {
 			}
 
 			const aeroSWSourcePath = resolve(__dirname, "../", "aeroSW", "src");
+			const aeroSWBuildPath = resolve(
+				__dirname,
+				"../",
+				"aeroSW",
+				"build"
+			);
 			const aeroSandboxSourcePath = resolve(
 				__dirname,
 				"../",
 				"AeroSandbox",
 				"src"
+			);
+			const aeroSandboxBuildPath = resolve(
+				__dirname,
+				"../",
+				"AeroSandbox",
+				"build"
 			);
 
 			// Check if builds are needed and trigger them
@@ -424,6 +436,18 @@ function viteBuildWatchPlugin(): Plugin {
 				debouncedBuild(aeroSWPath, "aeroSW");
 			});
 
+			// Watch aeroSW `build` directory
+			watch(aeroSWBuildPath, {
+				ignored: dotFilesAndFoldersRegex,
+				awaitWriteFinish: {
+					stabilityThreshold: 2000,
+					pollInterval: 100
+				}
+			}).on("change", path => {
+				console.info(`📁 aeroSW build changed: ${path}`);
+				debouncedBuild(aeroSWPath, "aeroSW");
+			});
+
 			// Watch AeroSandbox `src` directory
 			watch(aeroSandboxSourcePath, {
 				ignored: dotFilesAndFoldersRegex,
@@ -433,6 +457,21 @@ function viteBuildWatchPlugin(): Plugin {
 				}
 			}).on("change", path => {
 				console.info(`📁 AeroSandbox source changed: ${path}`);
+				debouncedBuild(
+					resolve(__dirname, "../", "AeroSandbox"),
+					"AeroSandbox"
+				);
+			});
+
+			// Watch AeroSandbox `build` directory
+			watch(aeroSandboxBuildPath, {
+				ignored: dotFilesAndFoldersRegex,
+				awaitWriteFinish: {
+					stabilityThreshold: 2000,
+					pollInterval: 100
+				}
+			}).on("change", path => {
+				console.info(`📁 AeroSandbox build changed: ${path}`);
 				debouncedBuild(
 					resolve(__dirname, "../", "AeroSandbox"),
 					"AeroSandbox"

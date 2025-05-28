@@ -188,6 +188,7 @@ export default async function rewriteReq({
 		| { cachedResponse?: Response; cacheMan?: CacheManager }
 		| undefined;
 
+	console.log("CORS_EMULATION", CORS_EMULATION);
 	if (CORS_EMULATION) {
 		logger.log(
 			"[CORS Emulation] Checking if the request would be blocked by CORS"
