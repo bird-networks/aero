@@ -231,39 +231,38 @@ const Settings: Component<
 		}
 
 		.settings-sidebar.rail-collapsed .settings-close-btn {
-			order: -1; /* Place close button at the top */
+      /* Place close button at the top */
+			order: -1;
 		}
-
-		/* rail-toggle-btn will have default order 0, appearing after close */
 
 		.settings-sidebar.rail-collapsed .settings-title {
 			display: none;
 		}
 
 		.settings-sidebar.rail-collapsed .settings-nav {
-			padding: 12px 0; /* Padding for the list of items */
-			align-items: center; /* Center nav items */
+			padding: 12px 0;
+			align-items: center;
 		}
 		
 		.settings-sidebar.rail-collapsed .settings-nav-item {
-			flex-direction: column; /* Icon above, label (hidden) below */
-			justify-content: center; /* Center content vertically */
-			width: 72px; /* Wider touch target in collapsed rail */
+			flex-direction: column;
+			justify-content: center;
+			width: 72px;
 			height: 56px;
-			padding: 0; /* Icon is centered */
-			border-radius: 16px; /* M3 rail item shape */
+			padding: 0;
+			border-radius: 16px;
 		}
 
 		.settings-sidebar.rail-collapsed .settings-nav-icon {
+      /** Center icon */
 			margin-right: 0;
-			margin-bottom: 0; /* Icon fully centered */
+			margin-bottom: 0;
 		}
 
 		.settings-sidebar.rail-collapsed .settings-nav-label {
 			display: none;
 		}
 
-		/* --- CONTENT STYLES (Unchanged from before, but ensure they work with new sidebar) --- */
 		.settings-content {
 			flex: 1;
 			display: flex;
@@ -388,8 +387,7 @@ const Settings: Component<
 			}
 
 			.settings-sidebar:not(.rail-collapsed) {
-				/* Expanded mobile sidebar, might need full width or specific mobile drawer width */
-				width: 100%; /* Example: Full width for mobile expanded view */
+				width: 100%;
 			}
 
 			.settings-sidebar.rail-collapsed {
@@ -403,18 +401,12 @@ const Settings: Component<
 			.settings-sidebar.rail-collapsed .settings-header {
 				flex-direction: row;
 				margin-bottom: 0;
-				/* Ensure toggle and close are spaced correctly if title is also shown */
 			}
 
 			.settings-sidebar:not(.rail-collapsed) .settings-header {
-				/* Expanded mobile header, title might be shown */
 			}
 
 			.settings-title {
-				/* Ensure title is appropriately handled in both states on mobile */
-				/* For example, it might always be shown if there's space or hidden in collapsed */
-				/* The current CSS has it centered in expanded, hidden in collapsed (desktop) */
-				/* On mobile, it is shown for .rail-collapsed, let's ensure it's shown for expanded too if desired*/
 				display: block;
 				font-size: 1.125rem;
 				font-weight: 500;
@@ -424,8 +416,7 @@ const Settings: Component<
 			}
 
 			.settings-sidebar:not(.rail-collapsed) .settings-title {
-				/* Ensure title is visible and centered in expanded mobile view */
-				margin: 0 auto; /* Center between toggle and close */
+				margin: 0 auto;
 			}
 
 
@@ -445,28 +436,22 @@ const Settings: Component<
 			}
 
 			.settings-sidebar:not(.rail-collapsed) .settings-nav {
-				/* Expanded mobile nav items may need different padding/layout */
 				padding: 8px 16px;
 			}
 
 			.settings-sidebar.rail-collapsed .settings-nav-item {
-        /* Keep mobile size for collapsed items */
 				width: 48px; 
 				height: 48px;
 				padding: 0;
 			}
 
 			.settings-sidebar:not(.rail-collapsed) .settings-nav-item {
-				/* Expanded mobile nav items */
 				width: 100%;
-        /* Slightly less padding than desktop expanded */
 				padding: 0 12px;
-        /* Round the corners more on mobile */
 				border-radius: 24px;
 			}
 
 			.settings-sidebar:not(.rail-collapsed) .settings-nav-icon {
-        /* Less space on mobile */
 				margin-right: 12px;
 			}
 
