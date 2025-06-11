@@ -1,21 +1,21 @@
 # NPM
-/**/package-lock.json
-/**/node_modules/
-/**/aero-proxy-*.tgz
-/**/aero-sandbox-*.tgz
+package-lock.json
+node_modules/
+aero-proxy-*.tgz
+aero-sandbox-*.tgz
 ## For NixOS
 mutable_node_modules
 # Deno
-/**/deno.lock
+deno.lock
 
 .VSCodeCounter/
 
 # Swap
 ## VIM
-/**/*.swp
+*.swp
 
 # Builds
-/**/dist/
+dist/
 /AeroSandbox/types/webidlDist/
 /tests/aero
 
@@ -34,3 +34,5 @@ site/
 
 # MacOS
 /**/*.DS_Store
+aeroSW/pnpm-lock.yaml
+aeroSW/.pnp.cjs
