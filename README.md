@@ -2,76 +2,7 @@
 
 ![aero logo](aero.sh/public/imgs/aero.webp)
 
-Aero is a safe, declarative, developer-friendly, innovative interception web
-proxy with many features. Aero provides full site support without delay and has
-a clean, organized codebase. Aero is made to bypass filter restrictions, web
-restrictions, and bypasses web browser restrictions.
+## aero - DISCONTINUATION NOTICE
 
-You can refer to the [docs website](https://aero.sh/docs) if you are looking for
-instructions for how to get aero or how to work on aero
-
-## I just want to use aero
-
-Visit [here](https://aero.sh)
-
-If you want to run a live demo build on your own PC run `cd aero.sh && npm i && npm start`
-
-## How to build
-
-First, ensure you have at least NodeJS v21
-
-## AeroSandbox
-
-1. If you are on NodeJS v21+, run `npm i neverthrow --legacy-peer-deps`
-Run `cd AeroSandbox && npm i && npm run build`
-
-## aero's SW
-
-> Build AeroSandbox before you build aero's SW **or you will get an error guarenteed**
-
-1. If you are on NodeJS v21+, run `npm i neverthrow --legacy-peer-deps`
-2. Run `cd aeroSW && npm i && npm run build`
-
-
-## What is a web proxy?
-
-Web proxies are website libraries that work to emulate the functionality of the
-site that you want. They do this by intercepting API calls and rewriting
-documents to emulate as if it was under the proxied origin.
-
-Web Proxies can be used for:
-
-- Bypassing **any** browsing restrictions in a sandbox
-- Unblocking websites or **browser features** through emulation
-- Middleware
-
-## Subprojects
-
-### AeroSandbox
-
-AeroSandbox contains all of the Sandboxing code for aero and is entirely
-independent of the rest of aero's source (aero's SW depends on it), so you can
-use it outside of aero. Remember, AeroSandbox is not just for proxies.
-
-### ProxyParse
-
-A collection of parsing libraries that are specifically optimized for anything
-you would possibly need in a proxy. It is currently only for JS, but expect a
-HTML parser soon!
-
-## Related
-
-It is highly recommended that you install
-[aero middleware](https://github.com/vortexdeveloperlabs/proxy-middleware) for
-enhanced functionality.
-
-## Notable Contributions
-
-- [Percs](https://github.com/Percslol) for implementing Websocket support in
-  aero
-- [ThinLiquid](https://github.com/ThinLiquid) for the logo
-
-Don't be afraid to help 😄 Nobody is unqualified to work on aero Don't worry;
-you will figure out how aero works with our fantastic dev docs. Remember, if you
-have ideas for how to improve the docs, please suggest them I appreciate all of
-you 💖
+aero is being discontinued!
+Check out [Scramjet proxy](https://github.com/MercuryWorkshop/scramjet) if you want an interception proxy with modern features
