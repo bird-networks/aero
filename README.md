@@ -12,7 +12,7 @@ instructions for how to get aero or how to work on aero
 
 ## I just want to use aero
 
-Go to https://aero.sh
+Visit [here](https://aero.sh)
 
 If you want to run a live demo build on your own PC run `cd aero.sh && npm i && npm start`
 
@@ -20,15 +20,18 @@ If you want to run a live demo build on your own PC run `cd aero.sh && npm i && 
 
 First, ensure you have at least NodeJS v21
 
-## aero's SW
-
-1. If you are on NodeJS v21+, run `npm i neverthrow --legacy-peer-deps`
-2. Run `cd aeroSW && npm i && npm run build`
-
 ## AeroSandbox
 
 1. If you are on NodeJS v21+, run `npm i neverthrow --legacy-peer-deps`
 Run `cd AeroSandbox && npm i && npm run build`
+
+## aero's SW
+
+> Build AeroSandbox before you build aero's SW **or you will get an error guarenteed**
+
+1. If you are on NodeJS v21+, run `npm i neverthrow --legacy-peer-deps`
+2. Run `cd aeroSW && npm i && npm run build`
+
 
 ## What is a web proxy?
 
